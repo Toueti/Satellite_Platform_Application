@@ -32,13 +32,15 @@ public class AdminServices {
     /**
      * Creates a new user with the specified username, email, password, and roles.
      *
-     * @param username The username for the new user.
-     * @param email The email address for the new user.
-     * @param password The password for the new user.
+     * @param username  The username for the new user.
+     * @param email     The email address for the new user.
+     * @param password  The password for the new user.
      * @param roleNames A set of role names to assign to the new user.
      * @return The created User object.
-     * @throws UserAlreadyExistsException If the username or email is already in use.
-     * @throws RoleNotFoundException If any of the specified roles are not found.
+     * @throws UserAlreadyExistsException If the username or email is already in
+     *                                    use.
+     * @throws RoleNotFoundException      If any of the specified roles are not
+     *                                    found.
      */
 
     public User createUser(String username, String email, String password, Set<String> roleNames) {
@@ -68,18 +70,21 @@ public class AdminServices {
         return userRepository.save(user);
     }
 
-/**
- * Updates an existing user's information, including username, email, and roles.
- *
- * @param userId The ID of the user to update.
- * @param username The new username for the user.
- * @param email The new email address for the user.
- * @param roleNames A set of role names to assign to the user.
- * @return The updated User object.
- * @throws UsernameNotFoundException If the user with the given ID is not found.
- * @throws UserAlreadyExistsException If the new username or email is already taken by another user.
- * @throws RoleNotFoundException If any of the specified roles are not found.
- */
+    /**
+     * Updates an existing user's information, including username, email, and roles.
+     *
+     * @param userId    The ID of the user to update.
+     * @param username  The new username for the user.
+     * @param email     The new email address for the user.
+     * @param roleNames A set of role names to assign to the user.
+     * @return The updated User object.
+     * @throws UsernameNotFoundException  If the user with the given ID is not
+     *                                    found.
+     * @throws UserAlreadyExistsException If the new username or email is already
+     *                                    taken by another user.
+     * @throws RoleNotFoundException      If any of the specified roles are not
+     *                                    found.
+     */
 
     public User updateUser(ObjectId userId, String username, String email, Set<String> roleNames) {
         User user = userRepository.findById(userId)
@@ -112,7 +117,7 @@ public class AdminServices {
     /**
      * Resets the password for the user with the given ID.
      *
-     * @param userId The ID of the user to reset the password for.
+     * @param userId      The ID of the user to reset the password for.
      * @param newPassword The new password for the user.
      * @throws UsernameNotFoundException If the user with the given ID is not found.
      */
@@ -123,13 +128,12 @@ public class AdminServices {
         userRepository.save(user);
     }
 
-/**
- * Deletes a user by their ID.
- *
- * @param userId The ID of the user to delete.
- * @throws UsernameNotFoundException If the user with the given ID is not found.
- */
-
+    /**
+     * Deletes a user by their ID.
+     *
+     * @param userId The ID of the user to delete.
+     * @throws UsernameNotFoundException If the user with the given ID is not found.
+     */
     public void deleteUser(String userId) {
         ObjectId objectId = new ObjectId(userId);
         User user = userRepository.findById(objectId)
@@ -137,10 +141,22 @@ public class AdminServices {
         userRepository.delete(user);
     }
 
+    /**
+     * Retrieves a list of all users in the system.
+     *
+     * @return A list of User objects.
+     */
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
+    /**
+     * Retrieves a user by their ID.
+     *
+     * @param id The String representation of the user's ID.
+     * @return The user with the given ID.
+     * @throws UsernameNotFoundException If the user with the given ID is not found.
+     */
     public User getUserById(String id) {
         ObjectId objectId = new ObjectId(id);
         return userRepository.findById(objectId)
