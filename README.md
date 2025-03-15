@@ -137,6 +137,7 @@ src/main/java/com/enit/satellite_platform/
  Typical Workflow
 
 **Register new user**
+
 curl -X POST http://localhost:8080/api/signup \
   -H "Content-Type: application/json" \
   -d '{"username":"analyst@geo.com","password":"SecurePass123!","role":"THEMATICIAN"}'

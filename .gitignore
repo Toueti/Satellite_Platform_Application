@@ -36,3 +36,5 @@ build/
 http/
 
 create_project.bat
+
+!**/src/main/resources/application.properties
