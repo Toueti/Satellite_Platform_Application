@@ -1,0 +1,42 @@
+{"properties": [
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "jwt secret key"
+  },
+  {
+    "name": "jwt.expiration",
+    "type": "java.lang.String",
+    "description": "jwt expiration date"
+  },
+  {
+    "name": "thread.pool.size",
+    "type": "java.lang.String",
+    "description": "thread pool size"
+  },
+  {
+    "name": "image.storage.path",
+    "type": "java.lang.String",
+    "description": "the storage path of the images"
+  },
+  {
+    "name": "python.backend.url",
+    "type": "java.lang.String",
+    "description": "the url of the python backend"
+  },
+  {
+    "name": "rateLimit.maxRequests",
+    "type": "java.lang.String",
+    "description": "rate limit max requests"
+  },
+  {
+    "name": "rateLimit.timeWindowMillis",
+    "type": "java.lang.String",
+    "description": "rate limit time window in milliseconds"
+  },
+  {
+    "name": "analysis.validTypes",
+    "type": "java.lang.String",
+    "description": "analysis valid types"
+  }
+]}
