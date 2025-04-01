@@ -1,0 +1,23 @@
+[33mcommit 1c137cedc822295b651c463ebe2fb5e1173d7a76[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Aymen Regaieg <hyperar69@gmail.com>
+Date:   Mon Mar 17 00:14:41 2025 +0100
+
+    Moved backend files into backend/ folder
+
+[33mcommit d1346eece24ee7d73b2778b10aa03b3704b8673a[m
+Author: Toueti <yobtot@gmail.com>
+Date:   Sat Mar 15 18:29:41 2025 +0100
+
+    initial commit
+
+[33mcommit ea9ff81f73287423c499bd8870c8a823f5d6146c[m
+Author: Toueti <yobtot@gmail.com>
+Date:   Sat Mar 15 02:58:42 2025 +0100
+
+    Initial commit of Satellite_Platform
+
+[33mcommit 5c38dae9a390c6fda6909ea31d59266807b1aeac[m
+Author: Toueti <yobtot@gmail.com>
+Date:   Sat Mar 15 02:58:02 2025 +0100
+
+    Initial commit

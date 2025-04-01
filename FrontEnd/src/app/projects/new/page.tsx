@@ -20,9 +20,16 @@ export default function NewProjectPage() {
 
         try {
             await projectsService.createProject(formData);
+            console.error("Project creation successful?");
             router.push('/projects');
-        } catch (err) {
-            setError('Failed to create project. Please try again.');
+        } catch (err:any) {
+            if (err.message === 'You have been rate limited. Please try again later.') {
+                setError(err.message);
+            }
+            else{
+                setError('Failed to create project. Please try again.');
+            }
+
         } finally {
             setLoading(false);
         }
@@ -69,6 +76,7 @@ export default function NewProjectPage() {
                             <textarea
                                 id="description"
                                 rows={4}
+                                required
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-600 focus:ring-primary-600 sm:text-sm"
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}

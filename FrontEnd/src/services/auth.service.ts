@@ -1,90 +1,82 @@
-import { AUTH_ENDPOINTS } from '../config/api';
+import { AUTH_ENDPOINTS } from '../config/api'
+import { httpClient } from '../utils/http-client'
 
 interface LoginCredentials {
-    email: string;
-    password: string;
+  username: string
+  password: string
 }
 
 interface RegisterData extends LoginCredentials {
-    email: string;
-    fullName: string;
+  email: string // Keep email for registration
+  fullName: string
 }
 
 class AuthService {
-    async login(credentials: LoginCredentials) {
-        try {
-            const response = await fetch(AUTH_ENDPOINTS.LOGIN, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(credentials),
-            });
-
-            if (!response.ok) {
-                throw new Error('Login failed');
-            }
-
-            const data = await response.json();
-            // Store the JWT token
-            localStorage.setItem('token', data.token);
-            return data;
-        } catch (error) {
-            throw error;
-        }
+  async login(credentials: LoginCredentials) {
+    try {
+      const response = await httpClient.post(AUTH_ENDPOINTS.LOGIN, credentials, {
+        requiresAuth: false,
+      })
+      
+      // Store the JWT token from the response data structure
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+      } else if (response.token) {
+        localStorage.setItem('token', response.token);
+      } else {
+        throw new Error('No token received from server');
+      }
+      
+      return response;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw new Error(error.message || 'Login failed');
     }
+  }
 
-    async register(data: RegisterData) {
-        try {
-            const response = await fetch(AUTH_ENDPOINTS.REGISTER, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (!response.ok) {
-                throw new Error('Registration failed');
-            }
-
-            return await response.json();
-        } catch (error) {
-            throw error;
-        }
+  async register(email: string, password: string): Promise<void> {
+    try {
+      const response = await httpClient.post(AUTH_ENDPOINTS.REGISTER, {
+        email,
+        password,
+        role: 'THEMATICIAN'  // Explicitly request THEMATICIAN role
+      }, { requiresAuth: false });
+      
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
     }
+  }
 
-    async resetPassword(email: string) {
-        try {
-            const response = await fetch(AUTH_ENDPOINTS.RESET_PASSWORD, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Password reset request failed');
-            }
-
-            return await response.json();
-        } catch (error) {
-            throw error;
-        }
+  async resetPassword(email: string) {
+    try {
+      const response = await httpClient.post(
+        AUTH_ENDPOINTS.RESET_PASSWORD,
+        { email },
+        { requiresAuth: false }
+      )
+      return response
+    } catch (error: any) {
+      throw new Error(error.message || 'Password reset request failed')
     }
+  }
 
-    logout() {
-        localStorage.removeItem('token');
-    }
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
 
-    getToken() {
-        return localStorage.getItem('token');
-    }
+  isAuthenticated(): boolean {
+    const token = this.getToken();
+    return !!token;
+  }
 
-    isAuthenticated() {
-        return !!this.getToken();
-    }
+  logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/auth/login';
+  }
 }
 
-export const authService = new AuthService();
+export const authService = new AuthService()

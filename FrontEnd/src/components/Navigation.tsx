@@ -5,6 +5,11 @@ import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Box, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import MapIcon from '@mui/icons-material/Map';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard' },
@@ -12,6 +17,12 @@ const navigation = [
   { name: 'Analysis', href: '/analysis' },
   { name: 'Storage', href: '/storage' },
 ]
+
+const menuItems = [
+  { text: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
+  { text: 'Map View', href: '/map', icon: <MapIcon /> },
+  { text: 'Settings', href: '/settings', icon: <SettingsIcon /> },
+];
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
@@ -151,6 +162,42 @@ export default function Navigation() {
               </div>
             </div>
           </Disclosure.Panel>
+          <Box component="nav" sx={{ width: 240, flexShrink: 0 }}>
+            <List>
+              {menuItems.map((item) => (
+                <ListItem
+                  key={item.text}
+                  component={Link}
+                  href={item.href}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  }}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItem>
+              ))}
+              <ListItem
+                component="button"
+                onClick={() => {
+                  // Handle logout
+                }}
+                sx={{
+                  width: '100%',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  },
+                }}
+              >
+                <ListItemIcon>
+                  <LogoutIcon />
+                </ListItemIcon>
+                <ListItemText primary="Logout" />
+              </ListItem>
+            </List>
+          </Box>
         </>
       )}
     </Disclosure>

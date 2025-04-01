@@ -48,23 +48,27 @@ public class ProjectController {
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Error creating project")
     })
-    @PostMapping("/create")
-    public ResponseEntity<GenericResponse<?>> createProject(@RequestBody Project project) {
-        try {
-            String email = getCurrentEmail();
-            Project createdProject = projectService.createProject(project, email);
-            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project created successfully", createdProject));
-        } catch (UsernameNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
-        } catch (IllegalArgumentException e) {
+   @PostMapping("/create")
+public ResponseEntity<GenericResponse<?>> createProject(@RequestBody Project project) {
+    try {
+        if (project == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new GenericResponse<>("FAILURE", "Error creating project: " + e.getMessage(), null));
+                .body(new GenericResponse<>("FAILURE", "Project object is null", null));
         }
+        String email = getCurrentEmail();
+        Project createdProject = projectService.createProject(project, email);
+        return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project created successfully", createdProject));
+    } catch (UsernameNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new GenericResponse<>("FAILURE", "Error creating project: " + e.getMessage(), null));
     }
+}
 
 
     @PutMapping("/{id}/rename")
