@@ -14,6 +14,7 @@ import com.enit.satellite_platform.modules.resource_management.image_management.
 import com.enit.satellite_platform.modules.resource_management.image_management.exceptions.ImageNotFoundException;
 import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
 import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingResults;
+import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingStatus; 
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ResultsRepository;
 
@@ -63,6 +64,8 @@ public class ProcessingResultsService {
         ProcessingResults.setData(resultsSaveRequest.getData());
         ProcessingResults.setDate(parseDate(resultsSaveRequest.getDate()));
         ProcessingResults.setType(resultsSaveRequest.getType());
+        // Set status, default to COMPLETED if null in request
+        ProcessingResults.setStatus(resultsSaveRequest.getStatus() != null ? resultsSaveRequest.getStatus() : ProcessingStatus.COMPLETED);
         ProcessingResults.setImage(image);
 
         if (image != null) {
@@ -247,6 +250,8 @@ public class ProcessingResultsService {
         existingResults.setData(updateRequest.getData());
         existingResults.setDate(parseDate(updateRequest.getDate()));
         existingResults.setType(updateRequest.getType());
+        // Update status, default to COMPLETED if null in request
+        existingResults.setStatus(updateRequest.getStatus() != null ? updateRequest.getStatus() : ProcessingStatus.COMPLETED);
         existingResults.setImage(image);
 
         if (image != null && !image.getResults().contains(existingResults)) {
@@ -295,6 +300,8 @@ public class ProcessingResultsService {
             ProcessingResults.setData(request.getData());
             ProcessingResults.setDate(parseDate(request.getDate()));
             ProcessingResults.setType(request.getType());
+            // Set status, default to COMPLETED if null in request
+            ProcessingResults.setStatus(request.getStatus() != null ? request.getStatus() : ProcessingStatus.COMPLETED);
             ProcessingResults.setImage(image);
 
             if (image != null) {
@@ -360,4 +367,3 @@ public class ProcessingResultsService {
         }
     }
 }
-

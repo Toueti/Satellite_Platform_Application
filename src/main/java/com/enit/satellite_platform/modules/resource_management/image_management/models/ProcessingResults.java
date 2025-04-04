@@ -34,6 +34,9 @@ public class ProcessingResults implements CacheableEntity{
     @Field("type")
     private String type;
 
+    @Field("status")
+    private ProcessingStatus status; // Added status field
+
     @DBRef
     @Field("image")
     private Image image;

@@ -118,10 +118,10 @@ public class ProjectController {
             @ApiResponse(responseCode = "404", description = "Project not found"),
             @ApiResponse(responseCode = "500", description = "Error retrieving project")
     })
-    @GetMapping("/{projectID}")
-    public ResponseEntity<GenericResponse<?>> getProject(@PathVariable String projectID) {
+    @GetMapping("/{projectId}")
+    public ResponseEntity<GenericResponse<?>> getProject(@PathVariable String projectId) {
         try {
-            Project project = projectService.getProject(new ObjectId(projectID));
+            Project project = projectService.getProject(new ObjectId(projectId));
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project retrieved successfully", project));
         } catch (ProjectNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -159,10 +159,10 @@ public class ProjectController {
             @ApiResponse(responseCode = "404", description = "Project not found"),
             @ApiResponse(responseCode = "500", description = "Error updating project")
     })
-    @PutMapping("/{projectID}")
-    public ResponseEntity<GenericResponse<?>> updateProject(@PathVariable String projectID, @RequestBody Project project) {
+    @PutMapping("/{projectId}")
+    public ResponseEntity<GenericResponse<?>> updateProject(@PathVariable String projectId, @RequestBody Project project) {
         try {
-            Project updatedProject = projectService.updateProject(new ObjectId(projectID), project);
+            Project updatedProject = projectService.updateProject(new ObjectId(projectId), project);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project updated successfully", updatedProject));
         } catch (ProjectNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -179,11 +179,11 @@ public class ProjectController {
             @ApiResponse(responseCode = "404", description = "Project not found"),
             @ApiResponse(responseCode = "500", description = "Error deleting project")
     })
-    @DeleteMapping("/{projectID}")
-    public ResponseEntity<GenericResponse<?>> deleteProject(@PathVariable String projectID) {
+    @DeleteMapping("/{projectId}")
+    public ResponseEntity<GenericResponse<?>> deleteProject(@PathVariable String projectId) {
         try {
-            projectService.deleteProject(new ObjectId(projectID));
-            String message = String.format("Project with id: %s deleted successfully", projectID);
+            projectService.deleteProject(new ObjectId(projectId));
+            String message = String.format("Project with id: %s deleted successfully", projectId);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", message));
         } catch (ProjectNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -262,11 +262,11 @@ public class ProjectController {
             @ApiResponse(responseCode = "404", description = "Project not found"),
             @ApiResponse(responseCode = "500", description = "Error retrieving shared users")
     })
-    @GetMapping("/{projectID}/shared-users")
-    public ResponseEntity<GenericResponse<?>> getSharedUsers(@PathVariable String projectID) {
+    @GetMapping("/{projectId}/shared-users")
+    public ResponseEntity<GenericResponse<?>> getSharedUsers(@PathVariable String projectId) {
         try {
             String email = getCurrentEmail();
-            Set<User> sharedUsers = projectService.getSharedUsers(new ObjectId(projectID), email);
+            Set<User> sharedUsers = projectService.getSharedUsers(new ObjectId(projectId), email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Shared users retrieved successfully", sharedUsers));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -330,11 +330,11 @@ public class ProjectController {
             @ApiResponse(responseCode = "404", description = "Project not found"),
             @ApiResponse(responseCode = "500", description = "Error archiving project")
     })
-    @PostMapping("/{projectID}/archive")
-    public ResponseEntity<GenericResponse<?>> archiveProject(@PathVariable String projectID) {
+    @PostMapping("/{projectId}/archive")
+    public ResponseEntity<GenericResponse<?>> archiveProject(@PathVariable String projectId) {
         try {
             String email = getCurrentEmail();
-            Project project = projectService.archiveProject(new ObjectId(projectID), email);
+            Project project = projectService.archiveProject(new ObjectId(projectId), email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project archived successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -356,11 +356,11 @@ public class ProjectController {
             @ApiResponse(responseCode = "400", description = "Project is not archived"),
             @ApiResponse(responseCode = "500", description = "Error unarchiving project")
     })
-    @PostMapping("/{projectID}/unarchive")
-    public ResponseEntity<GenericResponse<?>> unarchiveProject(@PathVariable String projectID) {
+    @PostMapping("/{projectId}/unarchive")
+    public ResponseEntity<GenericResponse<?>> unarchiveProject(@PathVariable String projectId) {
         try {
             String email = getCurrentEmail();
-            Project project = projectService.unarchiveProject(new ObjectId(projectID), email);
+            Project project = projectService.unarchiveProject(new ObjectId(projectId), email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project unarchived successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -434,13 +434,13 @@ public class ProjectController {
             @ApiResponse(responseCode = "404", description = "Project not found"),
             @ApiResponse(responseCode = "500", description = "Error adding tag")
     })
-    @PostMapping("/{projectID}/tags")
+    @PostMapping("/{projectId}/tags")
     public ResponseEntity<GenericResponse<?>> addTagToProject(
-            @PathVariable String projectID,
+            @PathVariable String projectId,
             @RequestParam String tag) {
         try {
             String email = getCurrentEmail();
-            Project project = projectService.tagProject(new ObjectId(projectID), tag, email);
+            Project project = projectService.tagProject(new ObjectId(projectId), tag, email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Tag added successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -483,9 +483,9 @@ public class ProjectController {
             @ApiResponse(responseCode = "404", description = "Project not found"),
             @ApiResponse(responseCode = "500", description = "Error duplicating project")
     })
-    @PostMapping("/{projectID}/duplicate")
+    @PostMapping("/{projectId}/duplicate")
     public ResponseEntity<GenericResponse<?>> duplicateProject(
-            @PathVariable String projectID,
+            @PathVariable String projectId,
             @RequestParam String newName) {
         try {
             if (newName == null || newName.trim().isEmpty()) {
@@ -493,7 +493,7 @@ public class ProjectController {
                         .body(new GenericResponse<>("FAILURE", "New project name cannot be empty", null));
             }
             String email = getCurrentEmail();
-            Project project = projectService.duplicateProject(new ObjectId(projectID), newName, email);
+            Project project = projectService.duplicateProject(new ObjectId(projectId), newName, email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project duplicated successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -517,13 +517,13 @@ public class ProjectController {
             @ApiResponse(responseCode = "404", description = "Project not found"),
             @ApiResponse(responseCode = "500", description = "Error updating project status")
     })
-    @PutMapping("/{projectID}/status")
+    @PutMapping("/{projectId}/status")
     public ResponseEntity<GenericResponse<?>> updateProjectStatus(
-            @PathVariable String projectID,
+            @PathVariable String projectId,
             @RequestParam String status) {
         try {
             String email = getCurrentEmail();
-            Project project = projectService.updateProjectStatus(new ObjectId(projectID), status, email);
+            Project project = projectService.updateProjectStatus(new ObjectId(projectId), status, email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project status updated successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -565,11 +565,11 @@ public class ProjectController {
             @ApiResponse(responseCode = "404", description = "Project not found"),
             @ApiResponse(responseCode = "500", description = "Error exporting project")
     })
-    @GetMapping("/{projectID}/export")
-    public ResponseEntity<GenericResponse<?>> exportProject(@PathVariable String projectID) {
+    @GetMapping("/{projectId}/export")
+    public ResponseEntity<GenericResponse<?>> exportProject(@PathVariable String projectId) {
         try {
             String email = getCurrentEmail();
-            Map<String, Object> exportData = projectService.exportProject(new ObjectId(projectID), email);
+            Map<String, Object> exportData = projectService.exportProject(new ObjectId(projectId), email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project data exported successfully", exportData));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -591,10 +591,10 @@ public class ProjectController {
             @ApiResponse(responseCode = "500", description = "Error deleting projects")
     })
     @DeleteMapping("/bulk-delete")
-    public ResponseEntity<GenericResponse<?>> bulkDeleteProjects(@RequestBody List<String> projectIDs) {
+    public ResponseEntity<GenericResponse<?>> bulkDeleteProjects(@RequestBody List<String> projectIds) {
         try {
             String email = getCurrentEmail();
-            List<ObjectId> ids = projectIDs.stream().map(ObjectId::new).toList();
+            List<ObjectId> ids = projectIds.stream().map(ObjectId::new).toList();
             projectService.bulkDeleteProjects(ids, email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Projects deleted successfully"));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {

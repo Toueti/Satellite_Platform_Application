@@ -42,8 +42,8 @@ public class Project {
      * The unique identifier of the project.
      */
     @Id
-    @Field("projectID")
-    private ObjectId projectID;
+    @Field("project_id")
+    private ObjectId projectId;
 
     /**
      * The user who owns the project.

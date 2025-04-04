@@ -142,4 +142,13 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
      */
     @Query("{'sharedUsers.?0': {$exists: true}}")
     List<Project> findBySharedUsersContainsKey(User user);
+
+    /**
+     * Counts projects where the sharedUsers map contains the given user as a key.
+     *
+     * @param user The user to search for in the sharedUsers map.
+     * @return The count of projects shared with the user.
+     */
+    @Query(value = "{'sharedUsers.?0': {$exists: true}}", count = true)
+    long countBySharedUsersContainsKey(User user);
 }

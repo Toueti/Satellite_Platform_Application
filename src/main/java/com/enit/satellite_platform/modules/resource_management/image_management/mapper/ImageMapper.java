@@ -16,7 +16,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface ImageMapper {
 
-    @Mapping(source = "project.projectID", target = "projectId", qualifiedByName = "objectIdToString")
+    @Mapping(source = "project.projectId", target = "projectId", qualifiedByName = "objectIdToString")
     @Mapping(source = "imageData",target = "file", ignore = true)
     ImageDTO toDTO(Image image);
 
@@ -24,7 +24,7 @@ public interface ImageMapper {
     @Mapping(target = "results", ignore = true)
     @Mapping(target = "requestTime", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(source = "file", target = "imageData", qualifiedByName = "multipartFileToByteArray") // Map file to imageData
+    @Mapping(source = "file", target = "imageData", qualifiedByName = "multipartFileToByteArray")
     Image toEntity(ImageDTO imageDTO);
 
     List<ImageDTO> toDTOList(List<Image> images);

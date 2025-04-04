@@ -1,0 +1,236 @@
+2025-04-04 02:15:37.416 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:15:37.427 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:15:37.431 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:15:52.607 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:15:52.625 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:15:52.882 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:15:53.531 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:15:58.682 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:16:01.717 [restartedMain] INFO  c.e.s.m.u.a.services.AuditLogService - Audit log path initialized to: C:\logs\audit.log
+2025-04-04 02:16:09.860 [restartedMain] INFO  c.e.s.m.m.c.RabbitMQListenerConfig - Setting RabbitMQ listener prefetch count to: 10
+2025-04-04 02:16:13.842 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - ProcessingResponseCacheHandler initialized with ResultsRepository and ResultsMapper.
+2025-04-04 02:16:13.857 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - Scheduled cache cleanup task with cron expression: 0 0 3 * * ?
+2025-04-04 02:16:14.019 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - ContextRefreshedEvent received. Adding DatabasePropertySource to environment.
+2025-04-04 02:16:14.020 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Initializing DatabasePropertySource: Loading properties from database...
+2025-04-04 02:16:14.165 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Loaded 0 properties from database into DatabasePropertySource cache.
+2025-04-04 02:16:14.166 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - Successfully added DatabasePropertySource to environment.
+2025-04-04 02:16:14.171 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Started SatellitePlatformApplication in 39.849 seconds (process running for 42.346)
+2025-04-04 02:16:14.336 [restartedMain] DEBUG c.e.s.m.u.config.DataInitializer - Admin user(s) already exist. Skipping initial admin creation.
+2025-04-04 02:19:30.537 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:19:30.538 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:19:30.539 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:19:33.859 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:19:33.861 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:19:33.898 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:19:33.900 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:19:34.434 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:19:35.258 [restartedMain] INFO  c.e.s.m.u.a.services.AuditLogService - Audit log path initialized to: C:\logs\audit.log
+2025-04-04 02:19:37.041 [restartedMain] INFO  c.e.s.m.m.c.RabbitMQListenerConfig - Setting RabbitMQ listener prefetch count to: 10
+2025-04-04 02:19:38.867 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - ProcessingResponseCacheHandler initialized with ResultsRepository and ResultsMapper.
+2025-04-04 02:19:38.869 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - Scheduled cache cleanup task with cron expression: 0 0 3 * * ?
+2025-04-04 02:19:39.005 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - ContextRefreshedEvent received. Adding DatabasePropertySource to environment.
+2025-04-04 02:19:39.006 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Initializing DatabasePropertySource: Loading properties from database...
+2025-04-04 02:19:39.014 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Loaded 0 properties from database into DatabasePropertySource cache.
+2025-04-04 02:19:39.015 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - Successfully added DatabasePropertySource to environment.
+2025-04-04 02:19:39.017 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Started SatellitePlatformApplication in 8.755 seconds (process running for 247.192)
+2025-04-04 02:19:39.050 [restartedMain] DEBUG c.e.s.m.u.config.DataInitializer - Admin user(s) already exist. Skipping initial admin creation.
+2025-04-04 02:19:40.892 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:19:40.893 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:19:40.893 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:19:43.151 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:19:43.151 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:19:43.184 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:19:43.185 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:19:43.577 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:19:44.053 [restartedMain] INFO  c.e.s.m.u.a.services.AuditLogService - Audit log path initialized to: C:\logs\audit.log
+2025-04-04 02:19:45.579 [restartedMain] INFO  c.e.s.m.m.c.RabbitMQListenerConfig - Setting RabbitMQ listener prefetch count to: 10
+2025-04-04 02:19:47.730 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - ProcessingResponseCacheHandler initialized with ResultsRepository and ResultsMapper.
+2025-04-04 02:19:47.733 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - Scheduled cache cleanup task with cron expression: 0 0 3 * * ?
+2025-04-04 02:19:47.833 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - ContextRefreshedEvent received. Adding DatabasePropertySource to environment.
+2025-04-04 02:19:47.834 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Initializing DatabasePropertySource: Loading properties from database...
+2025-04-04 02:19:47.840 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Loaded 0 properties from database into DatabasePropertySource cache.
+2025-04-04 02:19:47.841 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - Successfully added DatabasePropertySource to environment.
+2025-04-04 02:19:47.843 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Started SatellitePlatformApplication in 7.29 seconds (process running for 256.017)
+2025-04-04 02:19:47.874 [restartedMain] DEBUG c.e.s.m.u.config.DataInitializer - Admin user(s) already exist. Skipping initial admin creation.
+2025-04-04 02:20:40.109 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:20:40.110 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:20:40.110 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:20:41.935 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:20:41.936 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:20:41.980 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:20:41.983 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:20:42.314 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:21:02.988 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:21:02.988 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:21:02.989 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:21:04.922 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:21:04.922 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:21:04.952 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:21:04.953 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:21:05.333 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:21:05.777 [restartedMain] INFO  c.e.s.m.u.a.services.AuditLogService - Audit log path initialized to: C:\logs\audit.log
+2025-04-04 02:21:07.032 [restartedMain] INFO  c.e.s.m.m.c.RabbitMQListenerConfig - Setting RabbitMQ listener prefetch count to: 10
+2025-04-04 02:21:08.991 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - ProcessingResponseCacheHandler initialized with ResultsRepository and ResultsMapper.
+2025-04-04 02:21:08.994 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - Scheduled cache cleanup task with cron expression: 0 0 3 * * ?
+2025-04-04 02:21:09.111 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - ContextRefreshedEvent received. Adding DatabasePropertySource to environment.
+2025-04-04 02:21:09.113 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Initializing DatabasePropertySource: Loading properties from database...
+2025-04-04 02:21:09.119 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Loaded 0 properties from database into DatabasePropertySource cache.
+2025-04-04 02:21:09.120 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - Successfully added DatabasePropertySource to environment.
+2025-04-04 02:21:09.122 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Started SatellitePlatformApplication in 6.43 seconds (process running for 337.297)
+2025-04-04 02:21:09.158 [restartedMain] DEBUG c.e.s.m.u.config.DataInitializer - Admin user(s) already exist. Skipping initial admin creation.
+2025-04-04 02:24:53.869 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:24:53.869 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:24:53.870 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:24:55.749 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:24:55.750 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:24:55.778 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:24:55.780 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:24:56.117 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:26:26.507 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:26:26.508 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:26:26.509 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:26:28.325 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:26:28.325 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:26:28.349 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:26:28.350 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:26:28.643 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:27:50.290 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:27:50.290 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:27:50.290 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:27:52.120 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:27:52.120 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:27:52.149 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:27:52.150 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:27:52.409 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:28:46.592 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:28:46.592 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:28:46.594 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:28:48.382 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:28:48.382 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:28:48.405 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:28:48.406 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:28:48.684 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:29:07.799 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:29:07.800 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:29:07.800 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:29:09.670 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:29:09.670 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:29:09.702 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:29:09.704 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:29:10.159 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:29:42.522 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:29:42.540 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:29:42.540 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:29:44.239 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:29:44.240 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:29:44.265 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:29:44.266 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:29:44.527 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:29:44.899 [restartedMain] INFO  c.e.s.m.u.a.services.AuditLogService - Audit log path initialized to: C:\logs\audit.log
+2025-04-04 02:29:46.149 [restartedMain] INFO  c.e.s.m.m.c.RabbitMQListenerConfig - Setting RabbitMQ listener prefetch count to: 10
+2025-04-04 02:29:47.781 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - ProcessingResponseCacheHandler initialized with ResultsRepository and ResultsMapper.
+2025-04-04 02:29:47.784 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - Scheduled cache cleanup task with cron expression: 0 0 3 * * ?
+2025-04-04 02:29:47.874 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - ContextRefreshedEvent received. Adding DatabasePropertySource to environment.
+2025-04-04 02:29:47.874 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Initializing DatabasePropertySource: Loading properties from database...
+2025-04-04 02:29:47.878 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Loaded 0 properties from database into DatabasePropertySource cache.
+2025-04-04 02:29:47.879 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - Successfully added DatabasePropertySource to environment.
+2025-04-04 02:29:47.880 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Started SatellitePlatformApplication in 5.681 seconds (process running for 856.055)
+2025-04-04 02:29:47.915 [restartedMain] DEBUG c.e.s.m.u.config.DataInitializer - Admin user(s) already exist. Skipping initial admin creation.
+2025-04-04 02:30:18.050 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:30:18.050 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:30:18.051 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:30:20.732 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:30:20.733 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:30:20.757 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:30:20.757 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:30:21.035 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:30:21.437 [restartedMain] INFO  c.e.s.m.u.a.services.AuditLogService - Audit log path initialized to: C:\logs\audit.log
+2025-04-04 02:30:22.636 [restartedMain] INFO  c.e.s.m.m.c.RabbitMQListenerConfig - Setting RabbitMQ listener prefetch count to: 10
+2025-04-04 02:30:24.308 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - ProcessingResponseCacheHandler initialized with ResultsRepository and ResultsMapper.
+2025-04-04 02:30:24.313 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - Scheduled cache cleanup task with cron expression: 0 0 3 * * ?
+2025-04-04 02:30:24.419 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - ContextRefreshedEvent received. Adding DatabasePropertySource to environment.
+2025-04-04 02:30:24.420 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Initializing DatabasePropertySource: Loading properties from database...
+2025-04-04 02:30:24.430 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Loaded 0 properties from database into DatabasePropertySource cache.
+2025-04-04 02:30:24.431 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - Successfully added DatabasePropertySource to environment.
+2025-04-04 02:30:24.433 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Started SatellitePlatformApplication in 6.65 seconds (process running for 892.609)
+2025-04-04 02:30:24.475 [restartedMain] DEBUG c.e.s.m.u.config.DataInitializer - Admin user(s) already exist. Skipping initial admin creation.
+2025-04-04 02:30:54.505 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:30:54.506 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:30:54.506 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:30:56.940 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:30:56.940 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:30:56.987 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:30:56.988 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:30:57.402 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:30:57.834 [restartedMain] INFO  c.e.s.m.u.a.services.AuditLogService - Audit log path initialized to: C:\logs\audit.log
+2025-04-04 02:30:59.174 [restartedMain] INFO  c.e.s.m.m.c.RabbitMQListenerConfig - Setting RabbitMQ listener prefetch count to: 10
+2025-04-04 02:31:01.531 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - ProcessingResponseCacheHandler initialized with ResultsRepository and ResultsMapper.
+2025-04-04 02:31:01.535 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - Scheduled cache cleanup task with cron expression: 0 0 3 * * ?
+2025-04-04 02:31:01.656 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - ContextRefreshedEvent received. Adding DatabasePropertySource to environment.
+2025-04-04 02:31:01.657 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Initializing DatabasePropertySource: Loading properties from database...
+2025-04-04 02:31:01.663 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Loaded 0 properties from database into DatabasePropertySource cache.
+2025-04-04 02:31:01.665 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - Successfully added DatabasePropertySource to environment.
+2025-04-04 02:31:01.667 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Started SatellitePlatformApplication in 7.464 seconds (process running for 929.842)
+2025-04-04 02:31:01.696 [restartedMain] DEBUG c.e.s.m.u.config.DataInitializer - Admin user(s) already exist. Skipping initial admin creation.
+2025-04-04 02:31:04.742 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:31:04.743 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:31:04.743 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:31:06.662 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:31:06.663 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:31:06.689 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:31:06.689 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:31:06.961 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:31:07.328 [restartedMain] INFO  c.e.s.m.u.a.services.AuditLogService - Audit log path initialized to: C:\logs\audit.log
+2025-04-04 02:31:08.559 [restartedMain] INFO  c.e.s.m.m.c.RabbitMQListenerConfig - Setting RabbitMQ listener prefetch count to: 10
+2025-04-04 02:31:10.174 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - ProcessingResponseCacheHandler initialized with ResultsRepository and ResultsMapper.
+2025-04-04 02:31:10.176 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - Scheduled cache cleanup task with cron expression: 0 0 3 * * ?
+2025-04-04 02:31:10.283 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - ContextRefreshedEvent received. Adding DatabasePropertySource to environment.
+2025-04-04 02:31:10.284 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Initializing DatabasePropertySource: Loading properties from database...
+2025-04-04 02:31:10.288 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Loaded 0 properties from database into DatabasePropertySource cache.
+2025-04-04 02:31:10.288 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - Successfully added DatabasePropertySource to environment.
+2025-04-04 02:31:10.290 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Started SatellitePlatformApplication in 5.987 seconds (process running for 938.465)
+2025-04-04 02:31:10.321 [restartedMain] DEBUG c.e.s.m.u.config.DataInitializer - Admin user(s) already exist. Skipping initial admin creation.
+2025-04-04 02:31:28.648 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:31:28.649 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:31:28.649 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:31:31.556 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:31:31.558 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:31:31.583 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:31:31.585 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:31:31.992 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:31:35.052 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:31:35.052 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:31:35.053 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:31:37.444 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:31:37.446 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:31:37.474 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:31:37.474 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:31:37.752 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:31:38.224 [restartedMain] INFO  c.e.s.m.u.a.services.AuditLogService - Audit log path initialized to: C:\logs\audit.log
+2025-04-04 02:31:39.619 [restartedMain] INFO  c.e.s.m.m.c.RabbitMQListenerConfig - Setting RabbitMQ listener prefetch count to: 10
+2025-04-04 02:31:41.323 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - ProcessingResponseCacheHandler initialized with ResultsRepository and ResultsMapper.
+2025-04-04 02:31:41.326 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - Scheduled cache cleanup task with cron expression: 0 0 3 * * ?
+2025-04-04 02:31:41.404 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - ContextRefreshedEvent received. Adding DatabasePropertySource to environment.
+2025-04-04 02:31:41.405 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Initializing DatabasePropertySource: Loading properties from database...
+2025-04-04 02:31:41.410 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Loaded 0 properties from database into DatabasePropertySource cache.
+2025-04-04 02:31:41.411 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - Successfully added DatabasePropertySource to environment.
+2025-04-04 02:31:41.413 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Started SatellitePlatformApplication in 6.691 seconds (process running for 969.587)
+2025-04-04 02:31:41.440 [restartedMain] DEBUG c.e.s.m.u.config.DataInitializer - Admin user(s) already exist. Skipping initial admin creation.
+2025-04-04 02:31:54.442 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Starting SatellitePlatformApplication using Java 17.0.12 with PID 38388 (C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application\target\classes started by HP in C:\Users\HP\OneDrive\Documents\PFA\SatellitePlatformApplication\Satellite_Platform_Application)
+2025-04-04 02:31:54.443 [restartedMain] DEBUG c.e.s.SatellitePlatformApplication - Running with Spring Boot v3.3.10, Spring v6.1.18
+2025-04-04 02:31:54.443 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - No active profile set, falling back to 1 default profile: "default"
+2025-04-04 02:31:57.040 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Secret: N5xG1aT7q8v2Hq1K3rJ6bC9m5W+Pq2L7Jz9P4w==
+2025-04-04 02:31:57.041 [restartedMain] INFO  c.e.s.config.JwtConfig - JWT Expiration: 86400000
+2025-04-04 02:31:57.073 [restartedMain] INFO  c.e.s.config.MongoConfig - Creating MongoClient bean with URI from environment...
+2025-04-04 02:31:57.074 [restartedMain] DEBUG c.e.s.config.MongoConfig - MongoClient created for URI: mongodb://localhost:27017/satellite_platform
+2025-04-04 02:31:57.426 [restartedMain] DEBUG c.e.s.m.u.s.J.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-04-04 02:31:57.835 [restartedMain] INFO  c.e.s.m.u.a.services.AuditLogService - Audit log path initialized to: C:\logs\audit.log
+2025-04-04 02:31:59.182 [restartedMain] INFO  c.e.s.m.m.c.RabbitMQListenerConfig - Setting RabbitMQ listener prefetch count to: 10
+2025-04-04 02:32:00.750 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - ProcessingResponseCacheHandler initialized with ResultsRepository and ResultsMapper.
+2025-04-04 02:32:00.752 [restartedMain] INFO  c.e.s.c.c.ProcessingResponseCacheHandler - Scheduled cache cleanup task with cron expression: 0 0 3 * * ?
+2025-04-04 02:32:00.839 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - ContextRefreshedEvent received. Adding DatabasePropertySource to environment.
+2025-04-04 02:32:00.840 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Initializing DatabasePropertySource: Loading properties from database...
+2025-04-04 02:32:00.844 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySource - Loaded 0 properties from database into DatabasePropertySource cache.
+2025-04-04 02:32:00.845 [restartedMain] INFO  c.e.s.c.e.DatabasePropertySourceAdder - Successfully added DatabasePropertySource to environment.
+2025-04-04 02:32:00.847 [restartedMain] INFO  c.e.s.SatellitePlatformApplication - Started SatellitePlatformApplication in 6.684 seconds (process running for 989.022)
+2025-04-04 02:32:00.888 [restartedMain] DEBUG c.e.s.m.u.config.DataInitializer - Admin user(s) already exist. Skipping initial admin creation.

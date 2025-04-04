@@ -368,7 +368,7 @@ public class UserService {
         if (!ownedProjects.isEmpty()) {
             logger.info("Deleting {} projects owned by user with id: {}", ownedProjects.size(), userId);
             for (Project project : ownedProjects) {
-                imageRepository.deleteAllByProject_ProjectID(project.getProjectID());
+                imageRepository.deleteAllByProject_ProjectId(project.getProjectId());
             }
             projectRepository.deleteAll(ownedProjects);
         } else {

@@ -23,7 +23,10 @@ public class Image {
     private String imageName;
 
     @Field("imageData")
-    private byte[] imageData;
+    private byte[] imageData; // Consider alternatives for large images (e.g., GridFS or storing path)
+
+    @Field("fileSize")
+    private long fileSize; // Added field to store image size in bytes
 
     @Field("requestTime")
     private Date requestTime;

@@ -2,13 +2,15 @@ package com.enit.satellite_platform.modules.resource_management.image_management
 
 import java.util.Map;
 
+import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingStatus;
 import lombok.Data;
 
 @Data
 public class resultsSaveRequest {
-    
+
     public String imageId;
     public Map<String,Object> data;
     public String date;
     private String type;
+    private ProcessingStatus status; // Added status field
 }

@@ -12,4 +12,5 @@ public class ImageDTO {
     private String imageName;
     private Map<String, Object> mettadata;
     private MultipartFile file; // Added field to accept image file
+    private long fileSize;
 }

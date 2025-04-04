@@ -62,8 +62,8 @@ public class ImageService {
         logger.info("Attempting to add image: {}", imageDTO);
         validateImageDTO(imageDTO);
         ObjectId projectId = new ObjectId(imageDTO.getProjectId());
-        if (imageRepository.existsByImageIdAndProject_ProjectID(imageDTO.getImageId(), projectId)) {
-            logger.warn("Image with ID {} already exists in project {}", imageDTO.getImageId(), projectId);
+        if (imageRepository.existsByImageIdAndProject_ProjectId(imageDTO.getImageId(), projectId)) {
+            logger.warn("Image with Id {} already exists in project {}", imageDTO.getImageId(), projectId);
             throw new DuplicationException(
                     "An image with the id '" + imageDTO.getImageId() + "' already exists in this project.");
         }
@@ -73,12 +73,15 @@ public class ImageService {
             image.setProject(project);
             image.setRequestTime(new Date());
             image.setUpdatedAt(new Date());
+            // Set the file size before saving
+            image.setFileSize(image.getImageData() != null ? image.getImageData().length : 0);
+            logger.debug("Setting file size for image {} to {} bytes", image.getImageName(), image.getFileSize());
             image = imageRepository.save(image);
 
             project.getImages().add(image);
             projectRepository.save(project);
 
-            logger.info("Image added successfully with ID: {}", image.getImageId());
+            logger.info("Image added successfully with Id: {}", image.getImageId());
             return imageMapper.toDTO(image);
         } catch (ProjectNotFoundException e) {
             logger.error("Failed to add image: Project not found", e);
@@ -95,16 +98,16 @@ public class ImageService {
 
     @Transactional
     public Image renameImage(String imageId, String newName, ObjectId projectId) {
-        logger.info("Renaming image with ID: {} to new name: {} in project: {}", imageId, newName, projectId);
+        logger.info("Renaming image with Id: {} to new name: {} in project: {}", imageId, newName, projectId);
 
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(() -> {
-                    logger.error("Image not found with ID: {}", imageId);
-                    return new IllegalArgumentException("Image not found with ID: " + imageId);
+                    logger.error("Image not found with Id: {}", imageId);
+                    return new IllegalArgumentException("Image not found with Id: " + imageId);
                 });
 
         // Check if the image belongs to the project
-        if (!image.getProject().getProjectID().equals(projectId)) {
+        if (!image.getProject().getProjectId().equals(projectId)) {
             logger.warn("Image {} does not belong to project {}", imageId, projectId);
             throw new IllegalArgumentException("This image does not belong to the specified project.");
         }
@@ -124,40 +127,40 @@ public class ImageService {
     }
 
     /**
-     * Deletes an image by its ID.
+     * Deletes an image by its Id.
      *
-     * @param id the ID of the image to delete
-     * @throws IllegalArgumentException if the image ID is invalid
+     * @param id the Id of the image to delete
+     * @throws IllegalArgumentException if the image Id is invalid
      * @throws RuntimeException         for any other unexpected errors
      */
     @Transactional
     public void deleteImage(String id) {
-        logger.info("Attempting to delete image with ID: {}", id);
+        logger.info("Attempting to delete image with Id: {}", id);
         validateImageId(id);
 
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> {
-                    logger.error("Image not found with ID: {}", id);
-                    return new IllegalArgumentException("Image not found with ID: " + id);
+                    logger.error("Image not found with Id: {}", id);
+                    return new IllegalArgumentException("Image not found with Id: " + id);
                 });
 
         try {
             // Delete associated GeeResults
             geeResultsRepository.deleteAllByImage_ImageId(id);
-            logger.info("Deleted GeeResults associated with image ID: {}", id);
+            logger.info("Deleted GeeResults associated with image Id: {}", id);
 
             // Remove image from the project's image set
             Project project = image.getProject();
             if (project != null) {
                 project.getImages().removeIf(img -> img.getImageId().equals(id));
                 projectRepository.save(project);
-                logger.info("Removed image ID: {} from project ID: {}", id, project.getProjectID());
+                logger.info("Removed image Id: {} from project Id: {}", id, project.getProjectId());
             }
 
             imageRepository.deleteById(id);
-            logger.info("Image deleted successfully with ID: {}", id);
+            logger.info("Image deleted successfully with Id: {}", id);
         } catch (Exception e) {
-            logger.error("Failed to delete image with ID: {}", id, e);
+            logger.error("Failed to delete image with Id: {}", id, e);
             throw new RuntimeException("Failed to delete image: " + e.getMessage(), e);
         }
     }
@@ -183,21 +186,21 @@ public class ImageService {
     }
 
     /**
-     * Retrieves an image by its name and project ID.
+     * Retrieves an image by its name and project Id.
      *
      * @param name      the name of the image
-     * @param projectId the ID of the project
+     * @param projectId the Id of the project
      * @return an optional containing the image DTO if found, otherwise empty
-     * @throws IllegalArgumentException if the image name or project ID is invalid
+     * @throws IllegalArgumentException if the image name or project Id is invalid
      * @throws RuntimeException         for any other unexpected errors
      */
     public Optional<ImageDTO> getImageByName(String name, ObjectId projectId) {
         logger.info("Retrieving image by name: {} and projectId: {}", name, projectId);
         validateString(name, "Image name");
-        validateObjectId(projectId, "Project ID");
+        validateObjectId(projectId, "Project Id");
 
         try {
-            return imageRepository.findByImageNameAndProject_ProjectID(name, projectId)
+            return imageRepository.findByImageNameAndProject_ProjectId(name, projectId)
                     .map(imageMapper::toDTO);
         } catch (Exception e) {
             logger.error("Failed to retrieve image by name and project", e);
@@ -206,50 +209,50 @@ public class ImageService {
     }
 
     /**
-     * Retrieves an image by its ID.
+     * Retrieves an image by its Id.
      *
-     * @param id the ID of the image
+     * @param id the Id of the image
      * @return the image DTO
-     * @throws IllegalArgumentException if the image ID is invalid
+     * @throws IllegalArgumentException if the image Id is invalid
      * @throws RuntimeException         for any other unexpected errors
      */
     public ImageDTO getImageById(String id) {
-        logger.info("Retrieving image by ID: {}", id);
+        logger.info("Retrieving image by Id: {}", id);
         validateImageId(id);
 
         try {
             return imageRepository.findById(id)
                     .map(imageMapper::toDTO)
                     .orElseThrow(() -> {
-                        logger.error("Image not found with ID: {}", id);
-                        return new IllegalArgumentException("Image not found with ID: " + id);
+                        logger.error("Image not found with Id: {}", id);
+                        return new IllegalArgumentException("Image not found with Id: " + id);
                     });
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("Failed to retrieve image by ID: {}", id, e);
+            logger.error("Failed to retrieve image by Id: {}", id, e);
             throw new RuntimeException("Failed to retrieve image: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Retrieves all images by project ID.
+     * Retrieves all images by project Id.
      *
-     * @param projectId the ID of the project
+     * @param projectId the Id of the project
      * @return a list of image DTOs
-     * @throws IllegalArgumentException if the project ID is invalid
+     * @throws IllegalArgumentException if the project Id is invalid
      * @throws RuntimeException         for any other unexpected errors
      */
     public List<ImageDTO> getImagesByProject(ObjectId projectId) {
-        logger.info("Retrieving images by project ID: {}", projectId);
-        validateObjectId(projectId, "Project ID");
+        logger.info("Retrieving images by project Id: {}", projectId);
+        validateObjectId(projectId, "Project Id");
 
         try {
             getProjectById(projectId); // Validate project exists
-            List<Image> images = imageRepository.findAllByProject_ProjectID(projectId);
+            List<Image> images = imageRepository.findAllByProject_ProjectId(projectId);
             return imageMapper.toDTOList(images);
         } catch (Exception e) {
-            logger.error("Failed to retrieve images by project ID: {}", projectId, e);
+            logger.error("Failed to retrieve images by project Id: {}", projectId, e);
             throw new RuntimeException("Failed to retrieve images: " + e.getMessage(), e);
         }
     }
@@ -257,105 +260,105 @@ public class ImageService {
     /**
      * Deletes all images for a given project.
      *
-     * @param projectId the ID of the project
-     * @throws IllegalArgumentException if the project ID is invalid
+     * @param projectId the Id of the project
+     * @throws IllegalArgumentException if the project Id is invalid
      * @throws ProjectNotFoundException if the project does not exist
      * @throws RuntimeException         for any other unexpected errors
      */
     @Transactional
     public void deleteAllImagesByProject(ObjectId projectId) {
-        logger.info("Deleting all images for project ID: {}", projectId);
-        validateObjectId(projectId, "Project ID");
+        logger.info("Deleting all images for project Id: {}", projectId);
+        validateObjectId(projectId, "Project Id");
 
         try {
             Project project = getProjectById(projectId);
-            List<Image> images = imageRepository.findAllByProject_ProjectID(projectId);
+            List<Image> images = imageRepository.findAllByProject_ProjectId(projectId);
             for (Image image : images) {
                 geeResultsRepository.deleteAllByImage_ImageId(image.getImageId());
-                logger.info("Deleted GeeResults for image ID: {}", image.getImageId());
+                logger.info("Deleted GeeResults for image Id: {}", image.getImageId());
             }
-            imageRepository.deleteAllByProject_ProjectID(projectId);
+            imageRepository.deleteAllByProject_ProjectId(projectId);
             project.getImages().clear();
             projectRepository.save(project);
-            logger.info("All images and GEE results deleted successfully for project ID: {}", projectId);
+            logger.info("All images and GEE results deleted successfully for project Id: {}", projectId);
         } catch (ProjectNotFoundException e) {
             logger.error("Project not found for deleting images: {}", projectId, e);
             throw e;
         } catch (Exception e) {
-            logger.error("Failed to delete images for project ID: {}", projectId, e);
+            logger.error("Failed to delete images for project Id: {}", projectId, e);
             throw new RuntimeException("Failed to delete images: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Retrieves an image by its image ID and project ID.
+     * Retrieves an image by its image Id and project Id.
      *
-     * @param imageId   the ID of the image
-     * @param projectId the ID of the project
+     * @param imageId   the Id of the image
+     * @param projectId the Id of the project
      * @return an optional containing the image DTO if found, otherwise empty
-     * @throws IllegalArgumentException if the image ID or project ID is invalid
+     * @throws IllegalArgumentException if the image Id or project Id is invalid
      * @throws RuntimeException         for any other unexpected errors
      */
     public Optional<ImageDTO> getImageByImageIdAndProject(String imageId, ObjectId projectId) {
-        logger.info("Retrieving image by image ID: {} and project ID: {}", imageId, projectId);
+        logger.info("Retrieving image by image Id: {} and project Id: {}", imageId, projectId);
         validateImageId(imageId);
-        validateObjectId(projectId, "Project ID");
+        validateObjectId(projectId, "Project Id");
 
         try {
-            return imageRepository.findByImageIdAndProject_ProjectID(imageId, projectId)
+            return imageRepository.findByImageIdAndProject_ProjectId(imageId, projectId)
                     .map(imageMapper::toDTO);
         } catch (Exception e) {
-            logger.error("Failed to retrieve image by image ID and project ID", e);
+            logger.error("Failed to retrieve image by image Id and project Id", e);
             throw new RuntimeException("Failed to retrieve image: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Deletes an image by its image ID and project ID.
+     * Deletes an image by its image Id and project Id.
      *
-     * @param imageId   the ID of the image
-     * @param projectId the ID of the project
-     * @throws IllegalArgumentException if the image ID or project ID is invalid
+     * @param imageId   the Id of the image
+     * @param projectId the Id of the project
+     * @throws IllegalArgumentException if the image Id or project Id is invalid
      * @throws RuntimeException         for any other unexpected errors
      */
     @Transactional
     public void deleteImageByProject(String imageId, ObjectId projectId) {
-        logger.info("Deleting image by image ID: {} and project ID: {}", imageId, projectId);
+        logger.info("Deleting image by image Id: {} and project Id: {}", imageId, projectId);
         validateImageId(imageId);
-        validateObjectId(projectId, "Project ID");
+        validateObjectId(projectId, "Project Id");
 
         try {
-            imageRepository.findByImageIdAndProject_ProjectID(imageId, projectId)
+            imageRepository.findByImageIdAndProject_ProjectId(imageId, projectId)
                     .orElseThrow(() -> {
-                        logger.error("Image not found with ID: {} in project: {}", imageId, projectId);
+                        logger.error("Image not found with Id: {} in project: {}", imageId, projectId);
                         return new IllegalArgumentException(
-                                "Image not found with ID: " + imageId + " in project: " + projectId);
+                                "Image not found with Id: " + imageId + " in project: " + projectId);
                     });
             geeResultsRepository.deleteAllByImage_ImageId(imageId);
             Project project = getProjectById(projectId);
             project.getImages().removeIf(img -> img.getImageId().equals(imageId));
             projectRepository.save(project);
-            imageRepository.deleteByImageIdAndProject_ProjectID(imageId, projectId);
-            logger.info("Image and GEE results deleted successfully with ID: {} from project: {}", imageId, projectId);
+            imageRepository.deleteByImageIdAndProject_ProjectId(imageId, projectId);
+            logger.info("Image and GEE results deleted successfully with Id: {} from project: {}", imageId, projectId);
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("Failed to delete image by image ID: {} and project ID: {}", imageId, projectId, e);
+            logger.error("Failed to delete image by image Id: {} and project Id: {}", imageId, projectId, e);
             throw new RuntimeException("Failed to delete image: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Bulk deletes multiple images by their IDs.
+     * Bulk deletes multiple images by their Ids.
      *
-     * @param imageIds the list of image IDs to delete
-     * @throws IllegalArgumentException if the image IDs list is invalid or contains
-     *                                  non-existent IDs
+     * @param imageIds the list of image Ids to delete
+     * @throws IllegalArgumentException if the image Ids list is invalid or contains
+     *                                  non-existent Ids
      * @throws RuntimeException         for any other unexpected errors
      */
     @Transactional
     public void bulkDeleteImages(List<String> imageIds) {
-        logger.info("Attempting to bulk delete images with IDs: {}", imageIds);
+        logger.info("Attempting to bulk delete images with Ids: {}", imageIds);
         validateImageIds(imageIds);
 
         try {
@@ -363,13 +366,13 @@ public class ImageService {
                     .filter(id -> !imageRepository.existsById(id))
                     .collect(Collectors.toList());
             if (!invalidIds.isEmpty()) {
-                logger.error("Images not found with IDs: {}", invalidIds);
-                throw new IllegalArgumentException("Images not found with IDs: " + invalidIds);
+                logger.error("Images not found with Ids: {}", invalidIds);
+                throw new IllegalArgumentException("Images not found with Ids: " + invalidIds);
             }
             for (String id : imageIds) {
                 deleteImage(id); // Reuse deleteImage for cascading GEE deletion
             }
-            logger.info("Bulk deletion successful for image IDs: {}", imageIds);
+            logger.info("Bulk deletion successful for image Ids: {}", imageIds);
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -381,24 +384,24 @@ public class ImageService {
     /**
      * Counts the number of images for a given project.
      *
-     * @param projectId the ID of the project
+     * @param projectId the Id of the project
      * @return the count of images
-     * @throws IllegalArgumentException if the project ID is invalid
+     * @throws IllegalArgumentException if the project Id is invalid
      * @throws ProjectNotFoundException if the project does not exist
      * @throws RuntimeException         for any other unexpected errors
      */
     public long countImagesByProject(ObjectId projectId) {
-        logger.info("Counting images for project ID: {}", projectId);
-        validateObjectId(projectId, "Project ID");
+        logger.info("Counting images for project Id: {}", projectId);
+        validateObjectId(projectId, "Project Id");
 
         try {
             getProjectById(projectId);
-            return imageRepository.countByProject_ProjectID(projectId);
+            return imageRepository.countByProject_ProjectId(projectId);
         } catch (ProjectNotFoundException e) {
             logger.error("Project not found for counting images: {}", projectId, e);
             throw e;
         } catch (Exception e) {
-            logger.error("Failed to count images for project ID: {}", projectId, e);
+            logger.error("Failed to count images for project Id: {}", projectId, e);
             throw new RuntimeException("Failed to count images: " + e.getMessage(), e);
         }
     }
@@ -419,31 +422,31 @@ public class ImageService {
         try {
             new ObjectId(imageDTO.getProjectId());
         } catch (Exception e) {
-            logger.error("Invalid project ID in ImageDTO: {}", imageDTO.getProjectId());
-            throw new IllegalArgumentException("Invalid project ID: " + imageDTO.getProjectId());
+            logger.error("Invalid project Id in ImageDTO: {}", imageDTO.getProjectId());
+            throw new IllegalArgumentException("Invalid project Id: " + imageDTO.getProjectId());
         }
     }
 
     /**
-     * Validates the image ID.
+     * Validates the image Id.
      *
-     * @param id the image ID to validate
-     * @throws IllegalArgumentException if the image ID is invalid
+     * @param id the image Id to validate
+     * @throws IllegalArgumentException if the image Id is invalid
      */
     private void validateImageId(String id) {
-        validateString(id, "Image ID");
+        validateString(id, "Image Id");
     }
 
     /**
-     * Validates the list of image IDs.
+     * Validates the list of image Ids.
      *
-     * @param imageIds the list of image IDs to validate
-     * @throws IllegalArgumentException if the list of image IDs is invalid
+     * @param imageIds the list of image Ids to validate
+     * @throws IllegalArgumentException if the list of image Ids is invalid
      */
     private void validateImageIds(List<String> imageIds) {
         if (imageIds == null || imageIds.isEmpty()) {
-            logger.error("Image IDs list is null or empty");
-            throw new IllegalArgumentException("Image IDs list cannot be null or empty");
+            logger.error("Image Ids list is null or empty");
+            throw new IllegalArgumentException("Image Ids list cannot be null or empty");
         }
     }
 
@@ -489,17 +492,17 @@ public class ImageService {
     }
 
     /**
-     * Retrieves a project by its ID.
+     * Retrieves a project by its Id.
      *
-     * @param projectId the ID of the project
+     * @param projectId the Id of the project
      * @return the project
      * @throws ProjectNotFoundException if the project does not exist
      */
     private Project getProjectById(ObjectId projectId) {
         return projectRepository.findById(projectId)
                 .orElseThrow(() -> {
-                    logger.error("Project not found with ID: {}", projectId);
-                    return new ProjectNotFoundException("Project not found with ID: " + projectId);
+                    logger.error("Project not found with Id: {}", projectId);
+                    return new ProjectNotFoundException("Project not found with Id: " + projectId);
                 });
     }
 }

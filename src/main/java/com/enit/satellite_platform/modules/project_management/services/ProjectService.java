@@ -97,7 +97,7 @@ public class ProjectService {
       Project savedProject = projectRepository.save(project);
       thematician.getProjects().add(savedProject);
       userRepository.save(thematician);
-      logger.info("Project created successfully with ID: {}", savedProject.getProjectID());
+      logger.info("Project created successfully with ID: {}", savedProject.getProjectId());
       return savedProject;
     } catch (DataIntegrityViolationException e) {
       logger.error("Duplicate project name for user: {}", email, e);
@@ -127,7 +127,7 @@ public class ProjectService {
 
     // Check for duplicate name for the same user (excluding this project)
     Optional<Project> existingProject = projectRepository.findByProjectNameAndUserId(owner.getId(), newName);
-    if (existingProject.isPresent() && !existingProject.get().getProjectID().equals(projectId)) {
+    if (existingProject.isPresent() && !existingProject.get().getProjectId().equals(projectId)) {
       logger.warn("Project name '{}' already exists for user '{}'", newName, email);
       throw new DuplicationException("A project with the name '" + newName + "' already exists for this user.");
     }
@@ -179,8 +179,8 @@ public class ProjectService {
 
     for (Project project : allProjects) {
       long imageCount = imageRepository.countByProject(project);
-      imagesPerProject.put(project.getProjectID(), imageCount);
-      projectTimeIntervals.put(project.getProjectID(), project.getLastAccessedTime());
+      imagesPerProject.put(project.getProjectId(), imageCount);
+      projectTimeIntervals.put(project.getProjectId(), project.getLastAccessedTime());
     }
 
     return new ProjectStatisticsDto(totalProjects, imagesPerProject, projectTimeIntervals);
@@ -505,7 +505,7 @@ public class ProjectService {
       throw new AccessDeniedException("User does not have access to export this project");
     }
     Map<String, Object> exportData = new HashMap<>();
-    exportData.put("projectId", project.getProjectID().toString());
+    exportData.put("projectId", project.getProjectId().toString());
     exportData.put("name", project.getProjectName());
     exportData.put("description", project.getDescription());
     exportData.put("owner", project.getOwner().getEmail());
@@ -526,10 +526,10 @@ public class ProjectService {
     List<Project> projects = projectRepository.findAllById(projectIds);
     for (Project project : projects) {
       if (!project.getOwner().equals(user)) {
-        logger.error("User {} does not own project: {}", email, project.getProjectID());
-        throw new AccessDeniedException("User does not own project: " + project.getProjectID());
+        logger.error("User {} does not own project: {}", email, project.getProjectId());
+        throw new AccessDeniedException("User does not own project: " + project.getProjectId());
       }
-      deleteProject(project.getProjectID());
+      deleteProject(project.getProjectId());
     }
     logger.info("Bulk deletion successful for project IDs: {}", projectIds);
   }
@@ -546,7 +546,7 @@ public class ProjectService {
 
       
         Path templatePath = Paths.get( "src/main/resources/project_templates", templateName);
-        Path projectPath = Paths.get(projectBasePath, createdProject.getProjectID().toString());
+        Path projectPath = Paths.get(projectBasePath, createdProject.getProjectId().toString());
 
 
         // 3. Copy the template contents to the new project directory
@@ -616,7 +616,7 @@ public class ProjectService {
   private User validateOwner(Project project, String email, String action) {
     User user = getUserByEmail(email, "User not found: " + email);
     if (!project.getOwner().equals(user)) {
-      logger.error("Access denied for email: {} to {} project: {}", email, action, project.getProjectID());
+      logger.error("Access denied for email: {} to {} project: {}", email, action, project.getProjectId());
       throw new AccessDeniedException("Only the project owner can " + action + " the project");
     }
     return user;
