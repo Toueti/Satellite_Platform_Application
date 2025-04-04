@@ -1,6 +1,6 @@
 ### Dashboard API Tests
 @baseUrl=http://localhost:8080
-@authToken=Bearer tokenHere
+@authToken=User_Token_Here
 
 
 
