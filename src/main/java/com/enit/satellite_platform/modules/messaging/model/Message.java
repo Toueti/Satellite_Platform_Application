@@ -24,6 +24,8 @@ public class Message {
 
     private String senderId; // ID of the user who sent the message
 
+    private String receiverId; // ID of the user who received the message (could be null for group messages)
+
     private String content; // Text content of the message
 
     private LocalDateTime timestamp; // Time when the message was sent/created

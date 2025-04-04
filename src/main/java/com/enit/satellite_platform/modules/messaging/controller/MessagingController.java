@@ -3,11 +3,15 @@ package com.enit.satellite_platform.modules.messaging.controller;
 import com.enit.satellite_platform.modules.messaging.model.Attachment; // Added import
 import com.enit.satellite_platform.modules.messaging.model.Conversation;
 import com.enit.satellite_platform.modules.messaging.model.Message;
-import com.enit.satellite_platform.modules.messaging.model.MessageType; // Assuming MessageType is needed for request
+import com.enit.satellite_platform.modules.messaging.model.MessageType;
 import com.enit.satellite_platform.modules.messaging.service.AttachmentService;
 import com.enit.satellite_platform.modules.messaging.service.MessagingService;
+import com.enit.satellite_platform.modules.user_management.models.User;
+import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,8 +27,8 @@ import org.springframework.core.io.Resource; // For attachment download
 import org.springframework.core.io.UrlResource; // For attachment download
 import org.springframework.http.HttpHeaders; // For attachment download
 
-
 import java.util.List;
+import java.util.Map; // Import Map
 import java.util.Optional;
 
 // Define a DTO for sending messages
@@ -32,7 +36,7 @@ import java.util.Optional;
 class SendMessageRequest {
     private String recipientId;
     private String content;
-    private MessageType messageType; // e.g., USER_TO_USER, USER_TO_ADMIN
+    private MessageType messageType; // e.g., THEMATICIAN_TO_THEMATICIAN, THEMATICIAN_TO_ADMIN
 }
 
 // Define a DTO for adding reactions (example)
@@ -40,7 +44,6 @@ class SendMessageRequest {
 class AddReactionRequest {
     private String reactionType; // e.g., "LIKE"
 }
-
 
 @RestController
 @RequestMapping("/api/v1/messaging") // Base path for messaging endpoints
@@ -50,28 +53,40 @@ public class MessagingController {
 
     private final MessagingService messagingService;
     private final AttachmentService attachmentService;
+    private final UserRepository userRepository; // Inject UserRepository
 
     /**
      * Sends a new message.
      * The sender is determined from the authenticated user context.
      */
     @PostMapping("/messages")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')") // Allow both users and admins to send messages
-    public ResponseEntity<Message> sendMessage(@RequestBody SendMessageRequest request) {
+    @PreAuthorize("hasAnyRole('THEMATICIAN', 'ADMIN')") // Allow both users and admins to send messages
+    public ResponseEntity<?> sendMessage(@RequestBody SendMessageRequest request) { // Return ResponseEntity<?> for
+                                                                                    // better error handling
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String senderId = authentication.getName(); // Assuming username/ID is stored in 'name'
+        String senderEmail = authentication.getName(); // This is the email
 
-        log.info("Received request to send message from {} to {} of type {}", senderId, request.getRecipientId(), request.getMessageType());
+        // Find the actual user by email to get their MongoDB ObjectId
+        Optional<User> senderOpt = userRepository.findByEmail(senderEmail);
+        if (senderOpt.isEmpty()) {
+            log.error("Authenticated user with email {} not found in database.", senderEmail);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Authenticated user not found."));
+        }
+        String senderId = senderOpt.get().getId().toString(); // Get the actual ObjectId string
+
+        log.info("Received request to send message from user ID {} (email: {}) to {} of type {}", senderId, senderEmail,
+                request.getRecipientId(), request.getMessageType());
 
         // Basic validation
         if (request.getContent() == null || request.getContent().isBlank()) {
             return ResponseEntity.badRequest().build(); // Or return error response
         }
         if (request.getRecipientId() == null || request.getRecipientId().isBlank()) {
-             return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().build();
         }
-         if (request.getMessageType() == null) {
-             return ResponseEntity.badRequest().build();
+        if (request.getMessageType() == null) {
+            return ResponseEntity.badRequest().build();
         }
 
         try {
@@ -79,16 +94,16 @@ public class MessagingController {
                     senderId,
                     request.getRecipientId(),
                     request.getContent(),
-                    request.getMessageType()
-            );
+                    request.getMessageType());
             // Return the message object (as sent to queue, not guaranteed saved yet)
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(sentMessage);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) { // Catch IllegalStateException too
             log.error("Error sending message: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(null); // Consider a proper error response DTO
+            // Return specific error messages
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Internal server error sending message", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(Map.of("error", "An unexpected error occurred."));
         }
     }
 
@@ -96,17 +111,26 @@ public class MessagingController {
      * Retrieves all conversations for the currently authenticated user.
      */
     @GetMapping("/conversations")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<List<Conversation>> getUserConversations() {
+    @PreAuthorize("hasAnyRole('THEMATICIAN', 'ADMIN')")
+    public ResponseEntity<?> getUserConversations() { // Return ResponseEntity<?>
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userId = authentication.getName();
-        log.info("Fetching conversations for user {}", userId);
+        String userEmail = authentication.getName();
+
+        Optional<User> userOpt = userRepository.findByEmail(userEmail);
+        if (userOpt.isEmpty()) {
+            log.error("Authenticated user with email {} not found in database.", userEmail);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Authenticated user not found."));
+        }
+        String userId = userOpt.get().getId().toString();
+
+        log.info("Fetching conversations for user ID {} (email: {})", userId, userEmail);
         try {
-            List<Conversation> conversations = messagingService.getConversationsForUser(userId);
+            List<Conversation> conversations = messagingService.getConversationsForUser(userId); // Pass the actual ID
             return ResponseEntity.ok(conversations);
         } catch (IllegalArgumentException e) {
-             log.error("Error fetching conversations for user {}: {}", userId, e.getMessage());
-            return ResponseEntity.notFound().build(); // If user validation fails
+            log.error("Error fetching conversations for user ID {}: {}", userId, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); // Return specific error
         }
     }
 
@@ -115,12 +139,20 @@ public class MessagingController {
      * Ensures the authenticated user is a participant.
      */
     @GetMapping("/conversations/{conversationId}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Conversation> getConversation(@PathVariable String conversationId) {
+    @PreAuthorize("hasAnyRole('THEMATICIAN', 'ADMIN')")
+    public ResponseEntity<?> getConversation(@PathVariable String conversationId) { // Return ResponseEntity<?>
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userId = authentication.getName();
+        String userEmail = authentication.getName();
 
-        log.info("Fetching conversation {} for user {}", conversationId, userId);
+        Optional<User> userOpt = userRepository.findByEmail(userEmail);
+        if (userOpt.isEmpty()) {
+            log.error("Authenticated user with email {} not found in database.", userEmail);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Authenticated user not found."));
+        }
+        String userId = userOpt.get().getId().toString(); // Get the actual ID
+
+        log.info("Fetching conversation {} for user ID {} (email: {})", conversationId, userId, userEmail);
         Optional<Conversation> conversationOpt = messagingService.getConversationById(conversationId);
 
         if (conversationOpt.isEmpty()) {
@@ -137,25 +169,35 @@ public class MessagingController {
         return ResponseEntity.ok(conversation);
     }
 
-     /**
+    /**
      * Uploads an attachment for a specific message.
      */
     @PostMapping("/conversations/{conversationId}/messages/{messageId}/attachments")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('THEMATICIAN', 'ADMIN')")
     public ResponseEntity<?> uploadAttachment(@PathVariable String conversationId,
-                                              @PathVariable String messageId,
-                                              @RequestParam("file") MultipartFile file) {
+            @PathVariable String messageId,
+            @RequestParam("file") MultipartFile file) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userId = authentication.getName();
+        String userEmail = authentication.getName();
 
-        log.info("User {} uploading attachment for message {} in conversation {}", userId, messageId, conversationId);
+        Optional<User> userOpt = userRepository.findByEmail(userEmail);
+        if (userOpt.isEmpty()) {
+            log.error("Authenticated user with email {} not found in database.", userEmail);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Authenticated user not found."));
+        }
+        String userId = userOpt.get().getId().toString(); // Get the actual ID
 
-        // Security check: Ensure user is part of the conversation (optional, depends on requirements)
-         Optional<Conversation> conversationOpt = messagingService.getConversationById(conversationId);
-         if (conversationOpt.isEmpty() || !conversationOpt.get().getParticipants().contains(userId)) {
-              log.warn("User {} attempted upload to conversation {} they are not part of.", userId, conversationId);
-             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-         }
+        log.info("User ID {} (email: {}) uploading attachment for message {} in conversation {}", userId, userEmail,
+                messageId, conversationId);
+
+        // Security check: Ensure user is part of the conversation (optional, depends on
+        // requirements)
+        Optional<Conversation> conversationOpt = messagingService.getConversationById(conversationId);
+        if (conversationOpt.isEmpty() || !conversationOpt.get().getParticipants().contains(userId)) {
+            log.warn("User {} attempted upload to conversation {} they are not part of.", userId, conversationId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         try {
             Attachment attachment = attachmentService.storeAttachment(file, conversationId, messageId, userId);
@@ -169,25 +211,35 @@ public class MessagingController {
         }
     }
 
-     /**
+    /**
      * Downloads a specific attachment.
      */
     @GetMapping("/conversations/{conversationId}/messages/{messageId}/attachments/{attachmentId}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<Resource> downloadAttachment(@PathVariable String conversationId,
-                                                      @PathVariable String messageId,
-                                                      @PathVariable String attachmentId) {
+    @PreAuthorize("hasAnyRole('THEMATICIAN', 'ADMIN')")
+    public ResponseEntity<?> downloadAttachment(@PathVariable String conversationId, // Change return type to
+                                                                                     // ResponseEntity<?>
+            @PathVariable String messageId,
+            @PathVariable String attachmentId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userId = authentication.getName();
+        String userEmail = authentication.getName();
 
-        log.info("User {} requesting download of attachment {} from message {} in conversation {}", userId, attachmentId, messageId, conversationId);
+        Optional<User> userOpt = userRepository.findByEmail(userEmail);
+        if (userOpt.isEmpty()) {
+            log.error("Authenticated user with email {} not found in database.", userEmail);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Authenticated user not found.")); // This is now compatible
+        }
+        String userId = userOpt.get().getId().toString(); // Get the actual ID
+
+        log.info("User ID {} (email: {}) requesting download of attachment {} from message {} in conversation {}",
+                userId, userEmail, attachmentId, messageId, conversationId);
 
         // Security check: Ensure user is part of the conversation
-         Optional<Conversation> conversationOpt = messagingService.getConversationById(conversationId);
-         if (conversationOpt.isEmpty() || !conversationOpt.get().getParticipants().contains(userId)) {
-              log.warn("User {} attempted download from conversation {} they are not part of.", userId, conversationId);
-             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-         }
+        Optional<Conversation> conversationOpt = messagingService.getConversationById(conversationId);
+        if (conversationOpt.isEmpty() || !conversationOpt.get().getParticipants().contains(userId)) {
+            log.warn("User {} attempted download from conversation {} they are not part of.", userId, conversationId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         Optional<Path> attachmentPathOpt = attachmentService.getAttachmentPath(conversationId, messageId, attachmentId);
 
@@ -206,13 +258,13 @@ public class MessagingController {
                     contentType = "application/octet-stream"; // Default content type
                 }
 
-                 // Find original filename from metadata
+                // Find original filename from metadata
                 String originalFilename = conversationOpt.get().getMessages().stream()
-                    .filter(m -> m.getId().equals(messageId)).findFirst()
-                    .flatMap(m -> m.getAttachments().stream().filter(a -> a.getId().equals(attachmentId)).findFirst())
-                    .map(Attachment::getFilename)
-                    .orElse(filePath.getFileName().toString()); // Fallback to stored filename
-
+                        .filter(m -> m.getId().equals(messageId)).findFirst()
+                        .flatMap(m -> m.getAttachments().stream().filter(a -> a.getId().equals(attachmentId))
+                                .findFirst())
+                        .map(Attachment::getFilename)
+                        .orElse(filePath.getFileName().toString()); // Fallback to stored filename
 
                 return ResponseEntity.ok()
                         .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
@@ -227,7 +279,6 @@ public class MessagingController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
 
     // TODO: Add endpoints for adding/removing reactions
 

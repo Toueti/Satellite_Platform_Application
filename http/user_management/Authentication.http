@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8080/api
-@email = yobtot2@gmail.com
+@email = yobtot8@gmail.com
 @password = 97025244
 @username = testuser
 @userId = # Will be set after signup or retrieved manually
@@ -15,7 +15,7 @@ Content-Type: application/json
   "username": "{{username}}",
   "email": "{{email}}",
   "password": "{{password}}",
-  "roles": ["THEMATICIAN" ]
+  "roles": ["THEMATICIAN"]
 }
 
 ### Authenticate user (Sign in)

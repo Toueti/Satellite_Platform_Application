@@ -103,14 +103,13 @@ public class MessagingService {
         checkMessagingFeatureEnabled(messageType);
         // *****************************************************
 
-        // Validate sender and recipient exist (optional but recommended)
-        validateUserExists(senderId);
         // Recipient validation might depend on type (user, admin role, bot ID)
-        // validateRecipientExists(recipientId, messageType);
+        validateRecipientExists(recipientId, messageType);
 
         Message message = new Message();
         message.setId(UUID.randomUUID().toString()); // Generate unique ID
         message.setSenderId(senderId);
+        message.setReceiverId(recipientId);
         message.setContent(content);
         message.setMessageType(messageType);
         message.setTimestamp(LocalDateTime.now());
@@ -128,6 +127,41 @@ public class MessagingService {
         return message; // Return the message object (not yet guaranteed saved)
     }
 
+
+    private void validateRecipientExists(String recipientId, MessageType messageType) {
+        switch (messageType) {
+            case USER_TO_USER:
+                validateUserExists(recipientId);
+                break;
+            case USER_TO_ADMIN:
+                validateAdminExists(recipientId);
+                break;
+            case USER_TO_BOT:
+                validateBotExists(recipientId);
+                break;
+            default:
+                // No validation needed for other message types
+                break;
+        }
+    }
+
+    private void validateBotExists(String recipientId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'validateBotExists'");
+    }
+
+    private void validateAdminExists(String recipientId) {
+        try {
+            ObjectId userObjectId = new ObjectId(recipientId);
+            if (!userRepository.existsById(userObjectId) || !userRepository.isAdmin(userObjectId)) {
+                log.error("User with ID {} not found.", recipientId);
+                throw new IllegalArgumentException("User not found: " + recipientId); // Or a custom exception
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid format for user ID {}: {}", recipientId, e.getMessage());
+            throw new IllegalArgumentException("Invalid user ID format: " + recipientId);
+        }
+    }
 
     /**
      * Retrieves all conversations for a given user.
@@ -200,8 +234,7 @@ public class MessagingService {
         // or having the recipient ID explicitly in the Message model (needs adding).
         // For USER_TO_USER, it's crucial.
         // Let's assume for now it needs to be added to the Message model.
-        // return message.getRecipientId(); // If added to Message model
-        return null; // Placeholder
+        return message.getReceiverId(); // If added to Message model
     }
 
 
