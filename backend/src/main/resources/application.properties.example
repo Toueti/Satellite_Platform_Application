@@ -27,9 +27,9 @@ management.endpoints.web.exposure.include=*
 springdoc.swagger-ui.path=/swagger-ui.html
 
 # Rate Limiting
-rateLimit.maxRequests=10
-rateLimit.timeWindowMillis=60000
+rate_limit.max_requests=10
+rate_limit.time_window_millis=60000
 
 # Analysis Types
-analysis.validTypes=ndvi,evi,water-bodies,change-detection,land-cover,slope,aspect
+analysis.valid_types=ndvi,evi,water-bodies,change-detection,land-cover,slope,aspect
 

@@ -1,0 +1,32 @@
+@baseUrl = http://localhost:8080/api/admin/roles
+@adminToken = # PASTE_ADMIN_TOKEN_HERE (Get from signing in as an ADMIN user)
+@roleName = NEW_ROLE_EXAMPLE
+
+### Create a new Role
+POST {{baseUrl}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "roleName": "{{roleName}}"
+}
+
+
+### Get All Roles
+GET {{baseUrl}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Get Role by Name
+# Requires a valid roleName
+GET {{baseUrl}}/{{roleName}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Delete Role
+# Requires a valid roleName
+# Be careful using this, especially with default roles like ADMIN, THEMATICIAN, VIEWER
+DELETE {{baseUrl}}/{{roleName}}
+Authorization: Bearer {{adminToken}}

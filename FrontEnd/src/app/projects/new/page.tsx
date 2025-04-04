@@ -7,31 +7,36 @@ import { projectsService } from '@/services/projects.service';
 export default function NewProjectPage() {
     const router = useRouter();
     const [formData, setFormData] = useState({
-        name: '',
-        description: '',
+        projectName: '',
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmitting) return; // Prevent multiple submissions
+        
         setLoading(true);
         setError('');
+        setIsSubmitting(true);
 
         try {
             await projectsService.createProject(formData);
-            console.error("Project creation successful?");
             router.push('/projects');
-        } catch (err:any) {
-            if (err.message === 'You have been rate limited. Please try again later.') {
-                setError(err.message);
+        } catch (err: any) {
+            console.error('Project creation error:', err);
+            if (err.message.includes('rate limited')) {
+                setError('Too many requests. Please wait a moment before trying again.');
+            } else {
+                setError(err.message || 'Failed to create project. Please try again.');
             }
-            else{
-                setError('Failed to create project. Please try again.');
-            }
-
         } finally {
             setLoading(false);
+            // Add a delay before allowing another submission
+            setTimeout(() => {
+                setIsSubmitting(false);
+            }, 2000); // 2 second cooldown
         }
     };
 
@@ -50,55 +55,50 @@ export default function NewProjectPage() {
                 <div className="max-w-2xl mx-auto">
                     <form onSubmit={handleSubmit} className="space-y-8 bg-white shadow-lg rounded-lg p-8">
                         {error && (
-                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md">
-                                {error}
+                            <div className="rounded-md bg-red-50 p-4">
+                                <div className="flex">
+                                    <div className="ml-3">
+                                        <h3 className="text-sm font-medium text-red-800">
+                                            {error}
+                                        </h3>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="projectName" className="block text-sm font-medium text-gray-700">
                                 Project Name
                             </label>
-                            <input
-                                type="text"
-                                id="name"
-                                required
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-600 focus:ring-primary-600 sm:text-sm"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                                Description
-                            </label>
-                            <textarea
-                                id="description"
-                                rows={4}
-                                required
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-600 focus:ring-primary-600 sm:text-sm"
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            />
+                            <div className="mt-1">
+                                <input
+                                    type="text"
+                                    name="projectName"
+                                    id="projectName"
+                                    required
+                                    disabled={loading || isSubmitting}
+                                    value={formData.projectName}
+                                    onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                />
+                            </div>
                         </div>
 
                         <div className="flex justify-end space-x-4">
                             <button
                                 type="button"
                                 onClick={() => router.back()}
-                                className="px-6 py-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-600"
+                                disabled={loading || isSubmitting}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
-                                disabled={loading}
-                                className={`px-6 py-3 text-base font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-600 ${
-                                    loading ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
+                                disabled={loading || isSubmitting}
+                                className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 disabled:cursor-not-allowed"
                             >
-                                {loading ? 'Creating...' : 'Create Project'}
+                                {loading ? 'Creating...' : isSubmitting ? 'Please wait...' : 'Create Project'}
                             </button>
                         </div>
                     </form>

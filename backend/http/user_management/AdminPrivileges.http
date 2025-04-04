@@ -1,0 +1,110 @@
+@baseUrl = http://localhost:8080/api/admin
+@adminToken = eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90QGdtYWlsLmNvbSIsInJvbGVzIjpbIlJPTEVfQURNSU4iXSwiZW1haWwiOiJ5b2J0b3RAZ21haWwuY29tIiwic3ViIjoieW9idG90QGdtYWlsLmNvbSIsImlhdCI6MTc0MzYzNzE1NywiZXhwIjoxNzQzNzIzNTU3fQ.4pjW4rZPEfGyf-lAE5xddwx7rcmHJlOkGzIoAMMyE5Q
+@userIdToManage = # Set this to a specific user ID for management tasks
+@newUsername = managedUser
+@newUserEmail = managed@example.com
+@newUserPassword = securePassword123
+@newUserRoles = THEMATICIAN,VIEWER # Comma-separated roles
+@configKey = jwt.secret # Example config key
+@configValue = new_updated_secret_value
+@signupRequestId = # Set this to a pending admin signup request ID
+
+### ==============================
+### Configuration Management
+### ==============================
+
+### Get Manageable Configuration Properties
+GET {{baseUrl}}/config/manageable
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Update Manageable Configuration Property
+PUT {{baseUrl}}/config/manageable
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "key": "{{configKey}}",
+  "value": "{{configValue}}" 
+  // Set value to null to reset to default: "value": null
+}
+
+
+### Update Runtime Configuration Property (Legacy)
+PUT {{baseUrl}}/config/runtime
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "key": "some.runtime.property",
+  "value": "new_runtime_value"
+}
+
+
+### ==============================
+### User Management
+### ==============================
+
+### Create a New User
+POST {{baseUrl}}/users?username={{newUsername}}&email={{newUserEmail}}&password={{newUserPassword}}&roles={{newUserRoles}}
+Authorization: Bearer {{adminToken}}
+
+
+### Get All Users
+GET {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Update User
+# Requires a valid userIdToManage
+PUT {{baseUrl}}/users/{{userIdToManage}}?username={{newUsername}}_updated&email=updated_{{newUserEmail}}&roles=THEMATICIAN
+Authorization: Bearer {{adminToken}}
+
+
+### Reset User Password
+# Requires a valid userIdToManage
+POST {{baseUrl}}/users/{{userIdToManage}}/reset-password?newPassword=resetPassword789
+Authorization: Bearer {{adminToken}}
+
+
+### Lock User Account
+# Requires a valid userIdToManage
+POST {{baseUrl}}/users/{{userIdToManage}}/true 
+Authorization: Bearer {{adminToken}}
+
+
+### Unlock User Account
+# Requires a valid userIdToManage
+POST {{baseUrl}}/users/{{userIdToManage}}/false
+Authorization: Bearer {{adminToken}}
+
+
+### Delete User
+# Requires a valid userIdToManage
+# Be careful using this!
+DELETE {{baseUrl}}/users/{{userIdToManage}}
+Authorization: Bearer {{adminToken}}
+
+
+### ==============================
+### Admin Signup Request Management
+### ==============================
+
+### Get Pending Admin Signup Requests
+GET {{baseUrl}}/signup-requests/pending
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Approve Admin Signup Request
+# Requires a valid signupRequestId for a PENDING request
+POST {{baseUrl}}/signup-requests/{{signupRequestId}}/approve
+Authorization: Bearer {{adminToken}}
+
+
+### Reject Admin Signup Request
+# Requires a valid signupRequestId for a PENDING request
+POST {{baseUrl}}/signup-requests/{{signupRequestId}}/reject
+Authorization: Bearer {{adminToken}}

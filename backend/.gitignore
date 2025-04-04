@@ -32,9 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 
-### http tests###
-http/
 
 create_project.bat
 
-!**/src/main/resources/application.properties
+!**/src/main/resources/
+

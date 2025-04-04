@@ -31,8 +31,7 @@ export interface Project {
 }
 
 export interface CreateProjectDto {
-  name: string
-  description: string
+  projectName: string;
 }
 
 // Interface for the project sharing request

@@ -12,11 +12,28 @@ interface RegisterData extends LoginCredentials {
 }
 
 class AuthService {
+  private loginAttempts = 0;
+  private readonly maxLoginAttempts = 3;
+  private loginCooldownEnd = 0;
+  private readonly loginCooldownDuration = 60000; // 1 minute cooldown
+
   async login(credentials: LoginCredentials) {
+    const now = Date.now();
+    
+    // Check if we're in a cooldown period
+    if (now < this.loginCooldownEnd) {
+      const remainingSeconds = Math.ceil((this.loginCooldownEnd - now) / 1000);
+      throw new Error(`Too many login attempts. Please wait ${remainingSeconds} seconds before trying again.`);
+    }
+
     try {
       const response = await httpClient.post(AUTH_ENDPOINTS.LOGIN, credentials, {
         requiresAuth: false,
-      })
+      });
+      
+      // Reset login attempts on successful login
+      this.loginAttempts = 0;
+      this.loginCooldownEnd = 0;
       
       // Store the JWT token from the response data structure
       if (response.data?.token) {
@@ -29,6 +46,19 @@ class AuthService {
       
       return response;
     } catch (error: any) {
+      // Handle rate limiting specifically
+      if (error.message.includes('Rate limit')) {
+        this.loginAttempts++;
+        
+        // If we've exceeded max attempts, enforce a cooldown
+        if (this.loginAttempts >= this.maxLoginAttempts) {
+          this.loginCooldownEnd = now + this.loginCooldownDuration;
+          throw new Error(`Too many login attempts. Please wait 60 seconds before trying again.`);
+        }
+        
+        throw new Error('Login temporarily unavailable. Please try again in a few seconds.');
+      }
+      
       console.error('Login error:', error);
       throw new Error(error.message || 'Login failed');
     }

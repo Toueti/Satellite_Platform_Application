@@ -28,7 +28,7 @@ export default function Header({ title }: HeaderProps) {
 
   return (
     <AppBar position="static">
-      <Toolbar>
+      <Toolbar className="justify-between">
         <Typography variant="h6">{title}</Typography>
         <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">
@@ -46,7 +46,7 @@ export default function Header({ title }: HeaderProps) {
           </Link>
         </div>
 
-        <nav className="hidden md:flex space-x-8">
+        <nav className="hidden md:flex items-center space-x-8 ml-auto">
           <Link
             href="/"
             className="text-white hover:text-blue-200 transition-colors"

@@ -4,7 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * The main entry point for the Satellite Platform application. This class configures and runs the Spring Boot
@@ -14,6 +16,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableMongoAuditing
 @EnableAsync
+@EnableScheduling
+@EnableMongoRepositories(basePackages = "com.enit.satellite_platform")
 public class SatellitePlatformApplication {
     /**
      * The main method to run the Satellite Platform application.

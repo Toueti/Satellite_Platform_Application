@@ -17,8 +17,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import com.enit.satellite_platform.user_management.security.JwtAuthenticationFilter;
-import com.enit.satellite_platform.resources_management.config.RateLimitingFilter;
+
+import com.enit.satellite_platform.config.rateLimiter.RateLimitingFilter;
+import com.enit.satellite_platform.modules.user_management.security.Jwt.JwtAuthenticationFilter;
+
 import org.springframework.web.client.RestTemplate;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -60,8 +62,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Restrict DELETE requests to /api/account/** to ADMIN role
                         .requestMatchers(HttpMethod.DELETE, "/api/account/**").hasRole("ADMIN")
-                        // Restrict admin endpoints to users with ROLE_ADMIN
+                        // Restrict admin endpoints (including audit, roles, etc.) to users with ROLE_ADMIN
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Restrict Actuator endpoints to users with ROLE_ADMIN
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
                         // Restrict user endpoints to users with ROLE_THEMATICIAN
                         .requestMatchers("/api/thematician/**").hasRole("THEMATICIAN")
                         // Require authentication for all other requests

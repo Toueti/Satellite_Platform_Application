@@ -25,18 +25,88 @@
     "description": "the url of the python backend"
   },
   {
-    "name": "rateLimit.maxRequests",
+    "name": "rate_limit.max_requests",
     "type": "java.lang.String",
     "description": "rate limit max requests"
   },
   {
-    "name": "rateLimit.timeWindowMillis",
+    "name": "rate_limit.time_window_millis",
     "type": "java.lang.String",
     "description": "rate limit time window in milliseconds"
   },
   {
-    "name": "analysis.validTypes",
+    "name": "analysis.valid_types",
     "type": "java.lang.String",
     "description": "analysis valid types"
+  },
+  {
+    "name": "cache.redis.ttl_seconds",
+    "type": "java.lang.String",
+    "description": "time to live for cache entries in seconds"
+  },
+  {
+    "name": "cache.redis.prefix",
+    "type": "java.lang.String",
+    "description": "cache key prefix"
+  },
+  {
+    "name": "cache.cleanup.max_infrequent_access_count",
+    "type": "java.lang.String",
+    "description": "maximun infrequent access count for cache entries"
+  },
+  {
+    "name": "cache.cleanup.inactivity_threshold_days",
+    "type": "java.lang.String",
+    "description": "inactivity threshold in days for cache entries"
+  },
+  {
+    "name": "cache.cleanup.cron",
+    "type": "java.lang.String",
+    "description": "cron expression for cache cleanup job"
+  },
+  {
+    "name": "project.base.path",
+    "type": "java.lang.String",
+    "description": "A description for 'project.base.path'"
+  },
+  {
+    "name": "rate-limit.cleanup-interval",
+    "type": "java.lang.String",
+    "description": "the interval for cleaning up the rate limit cache"
+  },
+  {
+    "name": "audit.log.path",
+    "type": "java.lang.String",
+    "description": "A description for 'audit.log.Path'"
+  },
+  {
+    "name": "app.initial.admin.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'app.initial.admin.enabled'"
+  },
+  {
+    "name": "app.initial.admin.username",
+    "type": "java.lang.String",
+    "description": "A description for 'app.initial.admin.username'"
+  },
+  {
+    "name": "app.initial.admin.email",
+    "type": "java.lang.String",
+    "description": "A description for 'app.initial.admin.email'"
+  },
+  {
+    "name": "app.initial.admin.password",
+    "type": "java.lang.String",
+    "description": "A description for 'app.initial.admin.password'"
+  },
+  {
+    "name": "messaging.attachments.max.size",
+    "type": "java.lang.String",
+    "description": "A description for 'messaging.attachments.max.size'"
+  },
+  {
+    "name": "messaging.attachments.allowed.types",
+    "type": "java.lang.String",
+    "description": "A description for 'messaging.attachments.allowed.types'"
   }
 ]}

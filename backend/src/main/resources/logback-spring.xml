@@ -1,15 +1,50 @@
 <configuration>
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+            <!-- Apply highlighting to the entire log line based on level -->
+            <pattern>%highlight(%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <!-- WebSocket Appender -->
+    <appender name="WEBSOCKET" class="com.enit.satellite_platform.config.webSocket.WebSocketLogAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!-- Define the pattern for logs sent via WebSocket -->
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %highlight(%-5level) %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
     <!-- Set root logger level to ERROR to filter out INFO and DEBUG logs -->
+    <!-- Send root logs (ERROR level and above) to CONSOLE and WEBSOCKET -->
     <root level="ERROR">
         <appender-ref ref="CONSOLE" />
+        <appender-ref ref="WEBSOCKET" />
     </root>
 
     <!-- Add specific loggers for your packages -->
-    <logger name="com.enit.satellite_platform" level="DEBUG" />
+    <!-- Send com.enit.satellite_platform logs (DEBUG level and above) to WEBSOCKET -->
+    <!-- Set additivity="false" if you DON'T want these logs to also go to the root appenders (CONSOLE, WEBSOCKET) -->
+    <logger name="com.enit.satellite_platform" level="DEBUG" additivity="false">
+         <appender-ref ref="WEBSOCKET" />
+         <!-- Send DEBUG/INFO logs from this package to the console with highlighting -->
+         <appender-ref ref="CONSOLE" />
+         <!-- Also send DEBUG/INFO logs from this package to the audit file -->
+         <appender-ref ref="AUDIT_FILE" />
+    </logger>
+
+    <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/audit.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="AuditLogger" level="INFO" additivity="false">
+        <appender-ref ref="AUDIT_FILE" />
+    </logger>
+
 </configuration>

@@ -1,130 +1,98 @@
-import { api } from '@/utils/api';
-import { Project } from '@/types/project';
+import { httpClient } from '../utils/http-client';
 
-export interface DashboardData {
-  projects: Project[];
-  stats: {
+interface Project {
+    id: string;
+    name: string;
+    description: string;
+    status: string;
+    updatedAt: string;
+    owner: {
+        email: string;
+    };
+}
+
+interface ProjectStatistics {
     totalProjects: number;
     activeProjects: number;
     completedProjects: number;
     archivedProjects: number;
-  };
-  storage: {
-    used: number; // in MB
-    total: number; // in MB
-    percentage: number;
-  };
-  notifications: Notification[];
-  activities: Activity[];
 }
 
-export interface Notification {
-  id: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  timestamp: string;
-  read: boolean;
-}
-
-export interface Activity {
-  id: string;
-  action: string;
-  entity: string;
-  entityId: string;
-  timestamp: string;
-  user: string;
+interface DashboardData {
+    totalProjects: number;
+    activeAnalyses: number;
+    storageUsed: string;
+    mapCoverage: string;
+    recentProjects: Array<{
+        id: number;
+        name: string;
+        description: string;
+        lastModified: string;
+    }>;
+    recentAnalyses: Array<{
+        id: number;
+        name: string;
+        description: string;
+        lastModified: string;
+    }>;
 }
 
 interface ApiResponse<T> {
-  status: string;
-  message: string;
-  data: T;
+    status: string;
+    message: string;
+    data: T;
 }
 
 class DashboardService {
-  private readonly baseUrl = '/thematician/projects';
+    private readonly baseUrl = 'http://localhost:8080/api/thematician/projects';
 
-  async getDashboardData(): Promise<DashboardData> {
-    try {
-      // Get statistics
-      const statsResponse = await api.get<ApiResponse<{
-        totalProjects: number;
-        activeProjects: number;
-        completedProjects: number;
-        archivedProjects: number;
-      }>>(`${this.baseUrl}/statistics`);
+    async getDashboardData(): Promise<DashboardData> {
+        try {
+            // Fetch data from multiple endpoints in parallel
+            const [statsResponse, activeProjectsResponse, recentProjectsResponse] = await Promise.all([
+                httpClient.get(`${this.baseUrl}/statistics`),
+                httpClient.get(`${this.baseUrl}/all`), // Changed to get all projects, we'll filter active ones
+                httpClient.get(`${this.baseUrl}/all`) // Changed to get all projects, we'll get the most recent ones
+            ]);
 
-      // Get all projects
-      const projectsResponse = await api.get<ApiResponse<Project[]>>(`${this.baseUrl}/all`);
-      
-      // Get storage usage
-      const storageResponse = await api.get<ApiResponse<{
-        used: number;
-        total: number;
-        percentage: number;
-      }>>(`${this.baseUrl}/storage`);
-      
-      // Get notifications
-      const notificationsResponse = await api.get<ApiResponse<Notification[]>>(`${this.baseUrl}/notifications`);
-      
-      // Get activities
-      const activitiesResponse = await api.get<ApiResponse<Activity[]>>(`${this.baseUrl}/activities`);
+            const stats = (statsResponse as ApiResponse<ProjectStatistics>).data;
+            const allProjects = (activeProjectsResponse as ApiResponse<Project[]>).data;
+            
+            // Filter active projects
+            const activeProjects = allProjects.filter(p => p.status === 'active');
+            
+            // Sort projects by updatedAt to get the most recent ones
+            const recentProjects = [...allProjects]
+                .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+                .slice(0, 5);
 
-      return {
-        projects: projectsResponse.data,
-        stats: statsResponse.data,
-        storage: storageResponse.data,
-        notifications: notificationsResponse.data || [],
-        activities: activitiesResponse.data || []
-      };
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      // Return partial data if some requests fail
-      return {
-        projects: [],
-        stats: {
-          totalProjects: 0,
-          activeProjects: 0,
-          completedProjects: 0,
-          archivedProjects: 0
-        },
-        storage: {
-          used: 0,
-          total: 1000,
-          percentage: 0
-        },
-        notifications: [],
-        activities: []
-      };
+            // Transform the data to match the dashboard interface
+            return {
+                totalProjects: stats.totalProjects,
+                activeAnalyses: activeProjects.length,
+                storageUsed: '0 GB', // This should come from a storage service if available
+                mapCoverage: '0%', // This should come from a map service if available
+                recentProjects: recentProjects.map(p => ({
+                    id: parseInt(p.id),
+                    name: p.name,
+                    description: p.description || 'No description',
+                    lastModified: new Date(p.updatedAt).toLocaleDateString()
+                })),
+                recentAnalyses: [] // This should come from an analysis service if available
+            };
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error);
+            // Return empty state that matches the interface
+            return {
+                totalProjects: 0,
+                activeAnalyses: 0,
+                storageUsed: '0 GB',
+                mapCoverage: '0%',
+                recentProjects: [],
+                recentAnalyses: []
+            };
+        }
     }
-  }
-
-  async deleteProject(projectId: string): Promise<void> {
-    try {
-      await api.delete(`${this.baseUrl}/${projectId}`);
-    } catch (error) {
-      console.error('Error deleting project:', error);
-      throw error;
-    }
-  }
-
-  async markNotificationAsRead(notificationId: string): Promise<void> {
-    try {
-      await api.put(`${this.baseUrl}/notifications/${notificationId}/read`, {});
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      throw error;
-    }
-  }
-
-  async clearAllNotifications(): Promise<void> {
-    try {
-      await api.delete(`${this.baseUrl}/notifications/clear`);
-    } catch (error) {
-      console.error('Error clearing notifications:', error);
-      throw error;
-    }
-  }
 }
 
 export const dashboardService = new DashboardService();
