@@ -6,6 +6,7 @@ import org.mapstruct.Named;
 
 import com.enit.satellite_platform.modules.resource_management.image_management.dto.ImageDTO;
 import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
+import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository.ImageMetadataProjection; // Import the projection
 
 import org.bson.types.ObjectId;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,8 +18,13 @@ import java.util.List;
 public interface ImageMapper {
 
     @Mapping(source = "project.projectId", target = "projectId", qualifiedByName = "objectIdToString")
-    @Mapping(source = "imageData",target = "file", ignore = true)
+    @Mapping(source = "imageData", target = "file", ignore = true)
     ImageDTO toDTO(Image image);
+
+    // New mapping for the projection
+    @Mapping(source = "project.projectId", target = "projectId", qualifiedByName = "objectIdToString")
+    @Mapping(target = "file", ignore = true) // Ensure file is ignored here too
+    ImageDTO toDTO(ImageMetadataProjection projection);
 
     @Mapping(target = "project", ignore = true)
     @Mapping(target = "results", ignore = true)
@@ -28,6 +34,9 @@ public interface ImageMapper {
     Image toEntity(ImageDTO imageDTO);
 
     List<ImageDTO> toDTOList(List<Image> images);
+
+    // New mapping for list of projections
+    List<ImageDTO> projectionToDTOList(List<ImageMetadataProjection> projections);
 
     @Named("objectIdToString")
     default String objectIdToString(ObjectId id) {

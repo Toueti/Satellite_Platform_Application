@@ -176,6 +176,26 @@ public class Project {
         return this.owner.equals(user) || this.sharedUsers.containsKey(user);
     }
 
+    /**
+     * Checks if the given user has at least READ access to the project.
+     * Owners always have access. Shared users need READ or WRITE permission.
+     *
+     * @param user The user to check.
+     * @return True if the user has read access, false otherwise.
+     */
+    public boolean hasAccess(User user, PermissionLevel requiredLevel) {
+        if (this.owner.equals(user)) {
+            return true; // Owner has all permissions
+        }
+        PermissionLevel grantedLevel = this.sharedUsers.get(user);
+        if (grantedLevel == null) {
+            return false; // Not shared with this user
+        }
+        // Check if granted level is sufficient
+        return grantedLevel.includes(requiredLevel);
+    }
+
+
     public String getProjectDirectory() {
         return projectDirectory;
     }

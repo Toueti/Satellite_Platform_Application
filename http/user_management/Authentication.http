@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8080/api
-@email = yobtot@gmail.com
+@email = yobtot2@gmail.com
 @password = 97025244
 @username = testuser
 @userId = # Will be set after signup or retrieved manually

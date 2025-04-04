@@ -10,7 +10,9 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -18,6 +20,44 @@ import java.util.Optional;
  */
 @Repository
 public interface ImageRepository extends MongoRepository<Image, String> {
+
+    // --- Projection Interface for Metadata (excluding imageData) ---
+    interface ImageMetadataProjection {
+        String getImageId();
+        String getImageName();
+        long getFileSize();
+        Date getRequestTime();
+        Date getUpdatedAt();
+        Map<String, Object> getMettadata();
+        ProjectInfo getProject();
+
+        interface ProjectInfo {
+            ObjectId getProjectId();
+            // Add other project fields if needed by ImageDTO
+        }
+    }
+
+    // --- Methods using Projection ---
+
+    /**
+     * Find all images projected as metadata with pagination.
+     */
+    Page<ImageMetadataProjection> findAllProjectedBy(Pageable pageable);
+
+    /**
+     * Find all images associated with a project ID, projected as metadata.
+     */
+    @Query(value = "{ 'project.$id': ?0 }", fields = "{ 'imageData': 0 }") // Exclude imageData
+    List<ImageMetadataProjection> findAllByProject_ProjectIdProjectedBy(ObjectId projectId);
+
+     /**
+     * Find an image by its ID, projected as metadata.
+     */
+    @Query(value = "{ 'imageId': ?0 }", fields = "{ 'imageData': 0 }") // Exclude imageData
+    Optional<ImageMetadataProjection> findProjectedByImageId(String imageId);
+
+
+    // --- Existing Methods ---
 
     /**
      * Check if an image exists by its ID and project ID.
