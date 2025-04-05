@@ -2,6 +2,8 @@ package com.enit.satellite_platform.modules.project_management.model;
 
 import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
 import com.enit.satellite_platform.modules.user_management.models.User;
+import com.enit.satellite_platform.shared.converters.UserKeyDeserializer; // Import the custom deserializer
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize; // Import annotation
 
 import lombok.Getter;
 import lombok.Setter;
@@ -126,6 +128,7 @@ public class Project {
      * Uses lazy loading to improve performance.
      */
     @DBRef(lazy = true)
+    @JsonDeserialize(keyUsing = UserKeyDeserializer.class) // Use the custom deserializer for map keys
     private Map<User, PermissionLevel> sharedUsers = new HashMap<>();
 
     /**

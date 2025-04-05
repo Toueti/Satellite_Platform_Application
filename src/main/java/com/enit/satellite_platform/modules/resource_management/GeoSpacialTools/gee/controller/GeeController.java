@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 
@@ -31,7 +32,7 @@ public class GeeController {
                         @ApiResponse(responseCode = "500", description = "Internal server error")
         })
         public ResponseEntity<ProcessingResponse> performRequest(
-                        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Analysis request details", required = true) @Valid @RequestBody ServiceRequest requestDto) {
+                        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Analysis request details", required = true) @Valid @org.springframework.web.bind.annotation.RequestBody ServiceRequest requestDto) {
                 ProcessingResponse response = geeService.processGeeRequest(requestDto);
                 return ResponseEntity.ok(response);
         }
