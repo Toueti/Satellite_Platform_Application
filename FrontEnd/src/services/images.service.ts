@@ -29,6 +29,12 @@ export interface ImageFilter {
 }
 
 class ImagesService {
+  private retryCount = 0;
+  private lastRequestTime = 0;
+  private readonly minRequestInterval = 100; // Minimum 100ms between requests
+  private readonly maxRetries = 3;
+  private readonly retryDelays = [1000, 2000, 3000];
+
   async getAllImages(): Promise<Image[]> {
     const response = await httpClient.get(RESOURCE_ENDPOINTS.IMAGES.LIST);
     return response.data.map((image: any) => ({
@@ -57,34 +63,72 @@ class ImagesService {
     };
   }
 
-  async getImagesByProject(projectId: string, filter?: ImageFilter): Promise<SatelliteImage[]> {
-    const queryParams = new URLSearchParams();
-    
-    if (filter) {
-      if (filter.tags?.length) queryParams.set('tags', filter.tags.join(','));
-      if (filter.dateFrom) queryParams.set('dateFrom', filter.dateFrom);
-      if (filter.dateTo) queryParams.set('dateTo', filter.dateTo);
-      if (filter.cloudCoverageMax) queryParams.set('cloudCoverage', filter.cloudCoverageMax.toString());
-      if (filter.satellite) queryParams.set('satellite', filter.satellite);
-      if (filter.sortBy) queryParams.set('sortBy', filter.sortBy);
-      if (filter.sortOrder) queryParams.set('sortOrder', filter.sortOrder);
-      
-      if (filter.location) {
-        queryParams.set('lat', filter.location.latitude.toString());
-        queryParams.set('lng', filter.location.longitude.toString());
-        queryParams.set('radius', filter.location.radiusKm.toString());
-      }
+  async getImagesByProject(projectId: string | string[] | null | undefined, filter?: ImageFilter): Promise<SatelliteImage[]> {
+    // Early return if no projectId
+    if (!projectId) {
+      console.error('No project ID provided');
+      return [];
     }
-    
-    const url = `${PROJECT_ENDPOINTS.GET_IMAGES(projectId)}?${queryParams.toString()}`;
-    const response = await httpClient.get(url);
-    
-    return response.data.map((image: any) => ({
-      ...image,
-      captureDate: image.captureDate || image.metadata?.captureDate,
-      uploadDate: image.createdAt,
-      annotations: image.annotations || []
-    }));
+
+    // Ensure we have a valid string ID
+    let id: string;
+    if (typeof projectId === 'string') {
+      id = projectId;
+    } else if (Array.isArray(projectId) && projectId.length > 0) {
+      id = String(projectId[0]);
+    } else if (typeof projectId === 'object') {
+      console.error('Invalid project ID type (object):', projectId);
+      return [];
+    } else {
+      console.error('Invalid project ID type:', typeof projectId);
+      return [];
+    }
+
+    // Additional validation
+    if (!id || id === 'undefined' || id === 'null' || id === '[object Object]') {
+      console.error('Invalid project ID value:', id);
+      return [];
+    }
+
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (filter) {
+        if (filter.tags?.length) queryParams.set('tags', filter.tags.join(','));
+        if (filter.dateFrom) queryParams.set('dateFrom', filter.dateFrom);
+        if (filter.dateTo) queryParams.set('dateTo', filter.dateTo);
+        if (filter.cloudCoverageMax) queryParams.set('cloudCoverage', filter.cloudCoverageMax.toString());
+        if (filter.satellite) queryParams.set('satellite', filter.satellite);
+        if (filter.sortBy) queryParams.set('sortBy', filter.sortBy);
+        if (filter.sortOrder) queryParams.set('sortOrder', filter.sortOrder);
+        
+        if (filter.location) {
+          queryParams.set('lat', filter.location.latitude.toString());
+          queryParams.set('lng', filter.location.longitude.toString());
+          queryParams.set('radius', filter.location.radiusKm.toString());
+        }
+      }
+      
+      const url = `${PROJECT_ENDPOINTS.GET_IMAGES(id)}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      console.log('Making request to:', url);
+      
+      const response = await httpClient.get(url);
+      const images = Array.isArray(response.data) ? response.data.map((image: any) => ({
+        ...image,
+        captureDate: image.captureDate || image.metadata?.captureDate,
+        uploadDate: image.createdAt,
+        annotations: image.annotations || []
+      })) : [];
+
+      if (images.length === 0) {
+        console.log('No images found for project:', id);
+      }
+
+      return images;
+    } catch (error: any) {
+      console.error('Error fetching images for project:', error);
+      throw error; // Let the component handle the error
+    }
   }
 
   // Assuming an upload endpoint that takes FormData

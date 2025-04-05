@@ -5,7 +5,7 @@ import {
   InputLabel, Button, Divider, Stack, FormControlLabel, Switch
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SortIcon from '@mui/icons-material/Sort';
@@ -13,6 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { ImageFilter as ImageFilterType } from '@/services/images.service';
+import dayjs from 'dayjs';
 
 interface ImageFilterProps {
   availableTags: string[];
@@ -22,8 +23,8 @@ interface ImageFilterProps {
 }
 
 interface ImageFilters {
-  dateFrom: Date | null;
-  dateTo: Date | null;
+  dateFrom: dayjs.Dayjs | null;
+  dateTo: dayjs.Dayjs | null;
   cloudCoverageMax: number;
   tags: string[];
   satellite: string;
@@ -39,11 +40,11 @@ const ImageFilter: React.FC<ImageFilterProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>(initialFilters?.tags || []);
-  const [dateFrom, setDateFrom] = useState<Date | null>(
-    initialFilters?.dateFrom ? new Date(initialFilters.dateFrom) : null
+  const [dateFrom, setDateFrom] = useState<dayjs.Dayjs | null>(
+    initialFilters?.dateFrom ? dayjs(initialFilters.dateFrom) : null
   );
-  const [dateTo, setDateTo] = useState<Date | null>(
-    initialFilters?.dateTo ? new Date(initialFilters.dateTo) : null
+  const [dateTo, setDateTo] = useState<dayjs.Dayjs | null>(
+    initialFilters?.dateTo ? dayjs(initialFilters.dateTo) : null
   );
   const [satellite, setSatellite] = useState<string>(initialFilters?.satellite || '');
   const [cloudCoverage, setCloudCoverage] = useState<number>(initialFilters?.cloudCoverageMax || 100);
@@ -67,8 +68,8 @@ const ImageFilter: React.FC<ImageFilterProps> = ({
   const handleApplyFilters = () => {
     onFilterChange({
       tags: selectedTags.length > 0 ? selectedTags : undefined,
-      dateFrom: dateFrom ? dateFrom.toISOString().split('T')[0] : undefined,
-      dateTo: dateTo ? dateTo.toISOString().split('T')[0] : undefined,
+      dateFrom: dateFrom ? dateFrom.format('YYYY-MM-DD') : undefined,
+      dateTo: dateTo ? dateTo.format('YYYY-MM-DD') : undefined,
       satellite: satellite || undefined,
       cloudCoverageMax: cloudCoverage < 100 ? cloudCoverage : undefined,
       sortBy: sortBy as any,
@@ -151,13 +152,13 @@ const ImageFilter: React.FC<ImageFilterProps> = ({
               <Typography variant="subtitle2" gutterBottom>
                 Date Range
               </Typography>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <Stack direction="row" spacing={2}>
                   <Box sx={{ width: '50%' }}>
                     <DatePicker
                       label="From"
                       value={dateFrom}
-                      onChange={(newValue: Date | null) => setDateFrom(newValue)}
+                      onChange={(newValue: dayjs.Dayjs | null) => setDateFrom(newValue)}
                       slotProps={{
                         textField: {
                           size: "small",
@@ -170,7 +171,7 @@ const ImageFilter: React.FC<ImageFilterProps> = ({
                     <DatePicker
                       label="To"
                       value={dateTo}
-                      onChange={(newValue: Date | null) => setDateTo(newValue)}
+                      onChange={(newValue: dayjs.Dayjs | null) => setDateTo(newValue)}
                       slotProps={{
                         textField: {
                           size: "small",

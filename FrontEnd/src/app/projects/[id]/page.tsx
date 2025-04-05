@@ -1,16 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import {
-  projectsService,
-  Project,
-  ProjectSharingRequest,
-} from '@/services/projects.service'
-import { Image, ImageFilter } from '@/services/images.service'
-import { imagesService } from '@/services/images.service'
+import { projectsService, ProjectSharingRequest } from '@/services/projects.service'
+import { Project, ProjectStatus } from '@/types/api'
+import { imagesService, ImageFilter, Image } from '@/services/images.service'
 import { SatelliteImage, ImageAnnotation } from '@/types/image'
+import {
+  ArrowLeftIcon,
+  PhotoIcon,
+  TagIcon,
+  UserGroupIcon,
+  ClockIcon,
+  ArchiveBoxIcon,
+  TrashIcon,
+  PencilIcon,
+} from '@heroicons/react/24/outline'
 import Modal from '@/components/Modal' // Import the Modal component
 import ImageGrid from '@/components/ImageGrid/ImageGrid'
 import ImageFilterComponent from '@/components/ImageGrid/ImageFilter'
@@ -29,586 +35,768 @@ import {
 } from '@mui/material'
 
 export default function ProjectDetailPage() {
-  const { id } = useParams()
-  const [project, setProject] = useState<Project | null>(null)
-  const [images, setImages] = useState<Image[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [sharingEmail, setSharingEmail] = useState('')
-  const [sharingError, setSharingError] = useState('')
-  const [sharingSuccess, setSharingSuccess] = useState('')
-  const [isAddImageModalOpen, setIsAddImageModalOpen] = useState(false)
-  const [allImages, setAllImages] = useState<Image[]>([]) // To store all available images
-  const [selectedImages, setSelectedImages] = useState<string[]>([]) // Image IDs to be added
-  const [satelliteImages, setSatelliteImages] = useState<SatelliteImage[]>([])
-  const [imageFilters, setImageFilters] = useState<ImageFilter>({})
-  const [availableTags, setAvailableTags] = useState<string[]>([])
-  const [favoriteImages, setFavoriteImages] = useState<string[]>([])
-  const [selectedImage, setSelectedImage] = useState<SatelliteImage | null>(null)
-  const [isAnnotationModalOpen, setIsAnnotationModalOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState(0)
+    const params = useParams()
+    const projectId = params?.id;
+    const router = useRouter()
+    const [project, setProject] = useState<Project | null>(null)
+    const [images, setImages] = useState<SatelliteImage[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [retryCount, setRetryCount] = useState(0)
+    const maxRetries = 3
+    const retryDelays = [1000, 2000, 3000]
+    const [sharingEmail, setSharingEmail] = useState('')
+    const [sharingError, setSharingError] = useState('')
+    const [sharingSuccess, setSharingSuccess] = useState('')
+    const [isAddImageModalOpen, setIsAddImageModalOpen] = useState(false)
+    const [allImages, setAllImages] = useState<Image[]>([])
+    const [selectedImages, setSelectedImages] = useState<string[]>([])
+    const [satelliteImages, setSatelliteImages] = useState<SatelliteImage[]>([])
+    const [imageFilters, setImageFilters] = useState<ImageFilter>({})
+    const [availableTags, setAvailableTags] = useState<string[]>([])
+    const [favoriteImages, setFavoriteImages] = useState<string[]>([])
+    const [selectedImage, setSelectedImage] = useState<SatelliteImage | null>(null)
+    const [isAnnotationModalOpen, setIsAnnotationModalOpen] = useState(false)
+    const [activeTab, setActiveTab] = useState(0)
+    const [isLoadingImages, setIsLoadingImages] = useState(false)
 
-  useEffect(() => {
-    const fetchProjectData = async () => {
-      if (id && typeof id === 'string') {
-        setLoading(true)
-        try {
-          const [projectData, imagesData] = await Promise.all([
-            projectsService.getProject(id),
-            projectsService.getImagesByProject(id),
-          ])
-          setProject(projectData)
-          setImages(imagesData)
-        } catch (error: any) {
-          setError(error.message || 'Failed to fetch project data.')
-        } finally {
-          setLoading(false)
-        }
-      }
+    if (typeof projectId !== 'string' || !projectId) {
+        return (
+            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md">
+                    Invalid project ID
+                </div>
+            </div>
+        );
     }
 
-    fetchProjectData()
-  }, [id])
+    useEffect(() => {
+        const fetchProjectData = async () => {
+            if (!projectId) {
+                setError('Invalid project ID');
+                setLoading(false);
+                return;
+            }
 
-  // Fetch all images for the "Add Image" modal
-  useEffect(() => {
-    const fetchAllImages = async () => {
-      if (isAddImageModalOpen) {
-        // Only fetch when modal is open
-        try {
-          const imagesData = await imagesService.getAllImages()
-          setAllImages(imagesData)
-        } catch (error: any) {
-          setError(error.message || 'Failed to fetch all images.')
-        }
-      }
+            setLoading(true);
+            setError(null);
+
+            try {
+                const projectData = await projectsService.getProject(projectId);
+                if (projectData) {
+                    setProject(projectData);
+                    setRetryCount(0);
+                } else {
+                    setError('Project not found');
+                }
+            } catch (err: any) {
+                console.error('Error fetching project data:', err);
+                const isRateLimitError = err.message?.includes('429');
+                
+                if (isRateLimitError && retryCount < maxRetries) {
+                    const delay = retryDelays[retryCount];
+                    console.log(`Rate limited. Retrying in ${delay}ms... (Attempt ${retryCount + 1}/${maxRetries})`);
+                    setError(`Rate limit exceeded. Retrying in ${delay / 1000} seconds... (Attempt ${retryCount + 1}/${maxRetries})`);
+                    setRetryCount(prev => prev + 1);
+                    setTimeout(() => fetchProjectData(), delay);
+                    return;
+                }
+                
+                setError(isRateLimitError ? 'Rate limit exceeded. Please try again later.' : 
+                    err.message || 'Failed to fetch project data');
+                setRetryCount(0);
+            } finally {
+                if (!error?.includes('Retrying')) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchProjectData();
+    }, [projectId, retryCount]);
+
+    // Only fetch images if we have project data and its ID
+    useEffect(() => {
+        if (!project?.id) return;
+
+        let isMounted = true;
+        const fetchImages = async () => {
+            setIsLoadingImages(true);
+            try {
+                if (isAddImageModalOpen) {
+                    const allImagesData = await imagesService.getAllImages();
+                    if (isMounted) {
+                        setAllImages(allImagesData);
+                    }
+                }
+
+                const satelliteData = await imagesService.getImagesByProject(project.id, imageFilters);
+                if (isMounted) {
+                    setSatelliteImages(satelliteData);
+                    
+                    const tags = new Set<string>();
+                    satelliteData.forEach(img => {
+                        img.tags?.forEach(tag => tags.add(tag));
+                    });
+                    setAvailableTags(Array.from(tags));
+                    
+                    const savedFavorites = localStorage.getItem('favoriteImages');
+                    if (savedFavorites) {
+                        setFavoriteImages(JSON.parse(savedFavorites));
+                    }
+                }
+            } catch (error: any) {
+                if (isMounted) {
+                    console.error('Error fetching images:', error);
+                    if (!error.message?.includes('429')) {
+                        setError(error.message || 'Failed to fetch images');
+                    }
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoadingImages(false);
+                }
+            }
+        };
+
+        const timeoutId = setTimeout(() => {
+            fetchImages();
+        }, 300);
+
+        return () => {
+            isMounted = false;
+            clearTimeout(timeoutId);
+        };
+    }, [project?.id, imageFilters, isAddImageModalOpen]);
+
+    const handleImageSelection = (imageId: string) => {
+        setSelectedImages((prevSelectedImages) =>
+            prevSelectedImages.includes(imageId)
+                ? prevSelectedImages.filter((id) => id !== imageId)
+                : [...prevSelectedImages, imageId]
+        )
     }
-    fetchAllImages()
-  }, [isAddImageModalOpen])
 
-  // Fetch satellite images with filters
-  useEffect(() => {
-    const fetchSatelliteImages = async () => {
-      if (id && typeof id === 'string') {
-        try {
-          const satelliteData = await imagesService.getImagesByProject(id, imageFilters);
-          setSatelliteImages(satelliteData);
-          
-          // Extract all unique tags from images
-          const tags = new Set<string>();
-          satelliteData.forEach(img => {
-            img.tags.forEach(tag => tags.add(tag));
-          });
-          setAvailableTags(Array.from(tags));
-          
-          // Load favorite images from local storage
-          const savedFavorites = localStorage.getItem('favoriteImages');
-          if (savedFavorites) {
-            setFavoriteImages(JSON.parse(savedFavorites));
-          }
-        } catch (error: any) {
-          console.error('Error fetching satellite images:', error);
+    const handleConfirmAddImages = async () => {
+        if (!projectId || typeof projectId !== 'string') {
+            setError('Invalid project ID.')
+            return
         }
-      }
+        try {
+            for (const imageId of selectedImages) {
+                // We are not able to modify the backend, so we are simulating the adding of images
+                // await projectsService.addImageToProject(projectId, imageId);
+            }
+            //Refetch the images
+            const updatedImages = await imagesService.getImagesByProject(projectId)
+            setImages(updatedImages)
+            setSelectedImages([]) // Clear selected images
+            setIsAddImageModalOpen(false) // Close modal
+        } catch (error: any) {
+            setError(error.message || 'Failed to add images.')
+        }
+    }
+
+    const handleRemoveImage = async (imageId: string) => {
+        if (!projectId || typeof projectId !== 'string') {
+            setError('Invalid project ID.')
+            return
+        }
+        try {
+            // await projectsService.removeImageFromProject(projectId, imageId); // No backend support
+            // Update the images state to remove the deleted image
+            setImages((prevImages) => prevImages.filter((image) => image.id !== imageId))
+        } catch (error: any) {
+            setError(error.message || 'Failed to remove image.')
+        }
+    }
+
+    const handleShareProject = async () => {
+        setSharingError('')
+        setSharingSuccess('')
+        if (!projectId || typeof projectId !== 'string') {
+            setSharingError('Invalid project ID.')
+            return
+        }
+        if (!sharingEmail) {
+            setSharingError('Please enter an email address.')
+            return
+        }
+
+        const request: ProjectSharingRequest = {
+            projectId: projectId,
+            otherEmail: sharingEmail,
+        }
+
+        try {
+            await projectsService.shareProject(request)
+            setSharingSuccess('Project shared successfully!')
+            setSharingEmail('')
+
+            // Refetch project to update sharedUsers
+            const updatedProject = await projectsService.getProject(projectId)
+            setProject(updatedProject)
+        } catch (error: any) {
+            setSharingError(error.message || 'Failed to share project.')
+        }
+    }
+
+    const handleUnshareProject = async (emailToUnshare: string) => {
+        setSharingError('')
+        setSharingSuccess('')
+
+        if (!projectId || typeof projectId !== 'string') {
+            setSharingError('Invalid project ID.')
+            return
+        }
+
+        const request: ProjectSharingRequest = {
+            projectId: projectId,
+            otherEmail: emailToUnshare,
+        }
+
+        try {
+            await projectsService.unshareProject(request)
+            setSharingSuccess(`Project unshared with ${emailToUnshare}.`)
+
+            // Refetch project to update sharedUsers
+            const updatedProject = await projectsService.getProject(projectId)
+            setProject(updatedProject)
+        } catch (error: any) {
+            setSharingError(error.message || 'Failed to unshare project.')
+        }
+    }
+
+    const handleArchiveProject = async () => {
+        if (!projectId || typeof projectId !== 'string') {
+            setError('Invalid project ID.')
+            return
+        }
+
+        try {
+            await projectsService.archiveProject(projectId)
+            setProject((prevProject) => {
+                if (!prevProject) return null
+                return {
+                    ...prevProject,
+                    status: ProjectStatus.ARCHIVED,
+                }
+            })
+        } catch (error: any) {
+            setError(error.message || 'Failed to archive project.')
+        }
+    }
+
+    const handleUnarchiveProject = async () => {
+        if (!projectId || typeof projectId !== 'string') {
+            setError('Invalid project ID.')
+            return
+        }
+
+        try {
+            await projectsService.unarchiveProject(projectId)
+            setProject((prevProject) => {
+                if (!prevProject) return null
+                return {
+                    ...prevProject,
+                    status: ProjectStatus.ACTIVE,
+                }
+            })
+        } catch (error: any) {
+            setError(error.message || 'Failed to unarchive project.')
+        }
+    }
+
+    const handleDeleteProject = async () => {
+        if (!projectId || typeof projectId !== 'string') return;
+
+        if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+            try {
+                await projectsService.deleteProject(projectId);
+                router.push('/projects');
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to delete project');
+            }
+        }
+    };
+
+    const handleFilterChange = (filters: ImageFilter) => {
+        setImageFilters(filters);
     };
     
-    fetchSatelliteImages();
-  }, [id, imageFilters]);
-
-  const handleImageSelection = (imageId: string) => {
-    setSelectedImages((prevSelectedImages) =>
-      prevSelectedImages.includes(imageId)
-        ? prevSelectedImages.filter((id) => id !== imageId)
-        : [...prevSelectedImages, imageId]
-    )
-  }
-
-  const handleConfirmAddImages = async () => {
-    if (!id || typeof id !== 'string') {
-      setError('Invalid project ID.')
-      return
-    }
-    try {
-      for (const imageId of selectedImages) {
-        // We are not able to modify the backend, so we are simulating the adding of images
-        // await projectsService.addImageToProject(id, imageId);
-      }
-      //Refetch the images
-      const updatedImages = await projectsService.getImagesByProject(id)
-      setImages(updatedImages)
-      setSelectedImages([]) // Clear selected images
-      setIsAddImageModalOpen(false) // Close modal
-    } catch (error: any) {
-      setError(error.message || 'Failed to add images.')
-    }
-  }
-
-  const handleRemoveImage = async (imageId: string) => {
-    if (!id || typeof id !== 'string') {
-      setError('Invalid project ID.')
-      return
-    }
-    try {
-      // await projectsService.removeImageFromProject(id, imageId); // No backend support
-      // Update the images state to remove the deleted image
-      setImages((prevImages) => prevImages.filter((image) => image.id !== imageId))
-    } catch (error: any) {
-      setError(error.message || 'Failed to remove image.')
-    }
-  }
-
-  const handleShareProject = async () => {
-    setSharingError('')
-    setSharingSuccess('')
-    if (!id || typeof id !== 'string') {
-      setSharingError('Invalid project ID.')
-      return
-    }
-    if (!sharingEmail) {
-      setSharingError('Please enter an email address.')
-      return
-    }
-
-    const request: ProjectSharingRequest = {
-      projectId: id,
-      otherEmail: sharingEmail,
-    }
-
-    try {
-      await projectsService.shareProject(request)
-      setSharingSuccess('Project shared successfully!')
-      setSharingEmail('')
-
-      // Refetch project to update sharedUsers
-      const updatedProject = await projectsService.getProject(id)
-      setProject(updatedProject)
-    } catch (error: any) {
-      setSharingError(error.message || 'Failed to share project.')
-    }
-  }
-
-  const handleUnshareProject = async (emailToUnshare: string) => {
-    setSharingError('')
-    setSharingSuccess('')
-
-    if (!id || typeof id !== 'string') {
-      setSharingError('Invalid project ID.')
-      return
-    }
-
-    const request: ProjectSharingRequest = {
-      projectId: id,
-      otherEmail: emailToUnshare,
-    }
-
-    try {
-      await projectsService.unshareProject(request)
-      setSharingSuccess(`Project unshared with ${emailToUnshare}.`)
-
-      // Refetch project to update sharedUsers
-      const updatedProject = await projectsService.getProject(id)
-      setProject(updatedProject)
-    } catch (error: any) {
-      setSharingError(error.message || 'Failed to unshare project.')
-    }
-  }
-
-  const handleArchiveProject = async () => {
-    if (!id || typeof id !== 'string') {
-      setError('Invalid project ID.')
-      return
-    }
-
-    try {
-      await projectsService.archiveProject(id)
-      setProject((prevProject) => {
-        if (!prevProject) return null
-        return {
-          ...prevProject,
-          archived: true,
-        }
-      })
-    } catch (error: any) {
-      setError(error.message || 'Failed to archive project.')
-    }
-  }
-
-  const handleUnarchiveProject = async () => {
-    if (!id || typeof id !== 'string') {
-      setError('Invalid project ID.')
-      return
-    }
-
-    try {
-      await projectsService.unarchiveProject(id)
-      setProject((prevProject) => {
-        if (!prevProject) return null
-        return {
-          ...prevProject,
-          archived: false,
-        }
-      })
-    } catch (error: any) {
-      setError(error.message || 'Failed to unarchive project.')
-    }
-  }
-
-  const handleFilterChange = (filters: ImageFilter) => {
-    setImageFilters(filters);
-  };
-  
-  const handleImageSelect = (image: SatelliteImage) => {
-    setSelectedImage(image);
-  };
-  
-  const handleAnnotateImage = (image: SatelliteImage) => {
-    setSelectedImage(image);
-    setIsAnnotationModalOpen(true);
-  };
-  
-  const handleToggleFavorite = (imageId: string) => {
-    let newFavorites: string[];
+    const handleImageSelect = (image: SatelliteImage) => {
+        setSelectedImage(image);
+    };
     
-    if (favoriteImages.includes(imageId)) {
-      newFavorites = favoriteImages.filter(id => id !== imageId);
-    } else {
-      newFavorites = [...favoriteImages, imageId];
-    }
+    const handleAnnotateImage = (image: SatelliteImage) => {
+        setSelectedImage(image);
+        setIsAnnotationModalOpen(true);
+    };
     
-    setFavoriteImages(newFavorites);
-    localStorage.setItem('favoriteImages', JSON.stringify(newFavorites));
-  };
-  
-  const handleSaveAnnotations = async (imageId: string, annotations: ImageAnnotation[]) => {
-    try {
-      // In a real implementation, this would call an API to save the annotations
-      // For now, we'll just update the local state
-      const updatedImages = satelliteImages.map(img => 
-        img.id === imageId ? { ...img, annotations } : img
-      );
-      setSatelliteImages(updatedImages);
-    } catch (error) {
-      console.error('Error saving annotations:', error);
-    }
-  };
-  
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
+    const handleToggleFavorite = (imageId: string) => {
+        let newFavorites: string[];
+        
+        if (favoriteImages.includes(imageId)) {
+            newFavorites = favoriteImages.filter(id => id !== imageId);
+        } else {
+            newFavorites = [...favoriteImages, imageId];
+        }
+        
+        setFavoriteImages(newFavorites);
+        localStorage.setItem('favoriteImages', JSON.stringify(newFavorites));
+    };
+    
+    const handleSaveAnnotations = async (imageId: string, annotations: ImageAnnotation[]) => {
+        try {
+            const updatedImages = satelliteImages.map(img => 
+                img.id === imageId ? { ...img, annotations } : img
+            );
+            setSatelliteImages(updatedImages);
+            setIsAnnotationModalOpen(false);
+        } catch (error) {
+            console.error('Error saving annotations:', error);
+        }
+    };
+    
+    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+        setActiveTab(newValue);
+    };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-      </div>
-    )
-  }
+    const handleProjectClick = (projectId: string | number) => {
+        router.push(`/projects/${projectId}`);
+    };
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md">
-          {error}
-        </div>
-      </div>
-    )
-  }
+    const handleAnalysisClick = (projectId: string | number) => {
+        router.push(`/analysis?projectId=${String(projectId)}`);
+    };
 
-  if (!project) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-md">
-          Project not found
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
-            <div className="flex space-x-2">
-              <Link href="/projects" className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                Back to Projects
-              </Link>
-              <Link href={`/analysis?projectId=${project.id}`} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
-                Run Analysis
-              </Link>
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
             </div>
-          </div>
-          <p className="mt-2 text-sm text-gray-500">
-            {project.description || 'No description provided'}
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {project.metadata?.tags?.map((tag) => (
-              <span key={tag} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
+        );
+    }
 
-        <Paper sx={{ width: '100%', mb: 4 }}>
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            indicatorColor="primary"
-            textColor="primary"
-            variant="fullWidth"
-          >
-            <Tab label="Project Details" />
-            <Tab label="Images" />
-            <Tab label="Analysis Results" />
-          </Tabs>
-        </Paper>
-
-        {/* Project Details Tab */}
-        {activeTab === 0 && (
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={4}>
-            <Box sx={{ width: { xs: '100%', md: '50%' } }}>
-              <Paper sx={{ p: 3, height: '100%' }}>
-                <Typography variant="h6" gutterBottom>
-                  Project Information
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Last Updated:</strong> {new Date(project.updatedAt).toLocaleDateString()}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Status:</strong> {project.status}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Owner:</strong> {project.owner}
-                  </Typography>
-                  {project.metadata?.location && (
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Location:</strong> {project.metadata.location.lat}, {project.metadata.location.lng}
-                    </Typography>
-                  )}
-                </Box>
-              </Paper>
-            </Box>
-
-            <Box sx={{ width: { xs: '100%', md: '50%' } }}>
-              <Paper sx={{ p: 3, height: '100%' }}>
-                <Typography variant="h6" gutterBottom>
-                  Sharing & Collaboration
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" gutterBottom>
-                    Share this project with others:
-                  </Typography>
-                  <div className="flex space-x-2 mt-2">
-                    <input
-                      type="email"
-                      value={sharingEmail}
-                      onChange={(e) => setSharingEmail(e.target.value)}
-                      placeholder="Enter email address"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    />
+    if (error && !error.includes('Retrying')) {
+        return (
+            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md">
+                    <p>{error}</p>
                     <button
-                      onClick={handleShareProject}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
+                        onClick={() => window.location.reload()}
+                        className="mt-4 bg-red-200 text-red-700 px-4 py-2 rounded hover:bg-red-300 transition-colors"
                     >
-                      Share
+                        Try Again
                     </button>
-                  </div>
-                  {sharingError && (
-                    <p className="mt-2 text-sm text-red-600">{sharingError}</p>
-                  )}
-                  {sharingSuccess && (
-                    <p className="mt-2 text-sm text-green-600">{sharingSuccess}</p>
-                  )}
+                </div>
+            </div>
+        );
+    }
 
-                  <div className="mt-4">
-                    <Typography variant="body2" gutterBottom>
-                      Collaborators:
-                    </Typography>
-                    {project.collaborators && project.collaborators.length > 0 ? (
-                      <div className="space-y-2 mt-2">
-                        {project.collaborators.map((email) => (
-                          <div
-                            key={email}
-                            className="flex justify-between items-center p-2 bg-gray-50 rounded-md"
-                          >
-                            <span>{email}</span>
-                            <button
-                              onClick={() => handleUnshareProject(email)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No collaborators yet</p>
-                    )}
-                  </div>
-                </Box>
-              </Paper>
-            </Box>
-          </Stack>
-        )}
+    if (!project) {
+        return (
+            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+                <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-md">
+                    Project not found
+                </div>
+            </div>
+        );
+    }
 
-        {/* Images Tab */}
-        {activeTab === 1 && (
-          <div>
-            <ImageFilterComponent 
-              availableTags={availableTags}
-              onFilterChange={handleFilterChange}
-              initialFilters={imageFilters}
-            />
-            
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h6">
-                Project Images ({satelliteImages.length})
-              </Typography>
-              <Button 
-                variant="contained" 
-                color="primary"
-                onClick={() => setIsAddImageModalOpen(true)}
-              >
-                Add Images
-              </Button>
-            </Box>
-            
-            <ImageGrid 
-              images={satelliteImages}
-              loading={loading}
-              onSelectImage={handleImageSelect}
-              onAnnotateImage={handleAnnotateImage}
-              onToggleFavorite={handleToggleFavorite}
-              favorites={favoriteImages}
-              onDeleteImage={(imageId) => handleRemoveImage(imageId)}
-            />
-          </div>
-        )}
+    const statusColors = {
+        [ProjectStatus.ACTIVE]: 'bg-green-100 text-green-800',
+        [ProjectStatus.COMPLETED]: 'bg-blue-100 text-blue-800',
+        [ProjectStatus.ARCHIVED]: 'bg-gray-100 text-gray-800',
+        [ProjectStatus.DRAFT]: 'bg-yellow-100 text-yellow-800',
+    };
 
-        {/* Analysis Results Tab */}
-        {activeTab === 2 && (
-          <div>
-            <Box sx={{ textAlign: 'center', py: 8 }}>
-              <Typography variant="h6" gutterBottom>
-                No analysis results yet
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                Run an analysis on this project to see results here
-              </Typography>
-              <Link href={`/analysis?projectId=${project.id}`} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
-                Start New Analysis
-              </Link>
-            </Box>
-          </div>
-        )}
+    const ProjectCard = ({ project }: { project: Project }) => {
+        // Make absolutely sure project has the required properties
+        if (!project) return null;
+        
+        // Ensure we have a valid string ID
+        const projectId = typeof project.id === 'object' 
+            ? `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+            : String(project.id || `project-${project.name}-${Date.now()}`);
+        
+        return (
+            <div 
+                onClick={() => handleProjectClick(projectId)}
+                className="cursor-pointer block bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+            >
+                <h3 className="font-medium text-gray-900">{project.name || 'Unnamed Project'}</h3>
+                <p className="text-sm text-gray-500 mt-1">{project.description || 'No description'}</p>
+                <div className="flex items-center mt-2 text-sm text-gray-500">
+                    <ClockIcon className="h-4 w-4 mr-1" />
+                    <span>Updated {new Date(project.updatedAt || Date.now()).toLocaleDateString()}</span>
+                </div>
+            </div>
+        );
+    };
 
-        {/* Add Image Modal */}
-        <Modal
-          open={isAddImageModalOpen}
-          onClose={() => setIsAddImageModalOpen(false)}
-          title="Add Images to Project"
-          content={
-            <Box sx={{ p: 2 }}>
-              {allImages.length > 0 ? (
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
-                  {allImages.map((image) => (
-                    <Box
-                      key={image.id}
-                      sx={{
-                        position: 'relative',
-                        border: 1,
-                        borderRadius: 1,
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        borderColor: selectedImages.includes(image.id) ? 'primary.main' : 'grey.300',
-                        boxShadow: selectedImages.includes(image.id) ? 2 : 0
-                      }}
-                      onClick={() => handleImageSelection(image.id)}
+    return (
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="mb-8">
+                    <Link
+                        href="/projects"
+                        className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
                     >
-                      <img
-                        src={image.url}
-                        alt={image.name}
-                        style={{
-                          width: '100%',
-                          height: '160px',
-                          objectFit: 'cover'
-                        }}
-                      />
-                      <Box sx={{ p: 1 }}>
-                        <Typography variant="subtitle2" noWrap>
-                          {image.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(image.createdAt).toLocaleDateString()}
-                        </Typography>
-                      </Box>
-                      {selectedImages.includes(image.id) && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: 8,
-                            right: 8,
-                            bgcolor: 'primary.main',
-                            color: 'white',
-                            borderRadius: '50%',
-                            p: 0.5
-                          }}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </Box>
-                      )}
-                    </Box>
-                  ))}
-                </Box>
-              ) : (
-                <Typography color="text.secondary" align="center">
-                  No images available
-                </Typography>
-              )}
-            </Box>
-          }
-          actions={[
-            {
-              label: 'Cancel',
-              onClick: () => {
-                setIsAddImageModalOpen(false);
-                setSelectedImages([]);
-              }
-            },
-            {
-              label: 'Add Selected',
-              onClick: handleConfirmAddImages,
-              color: 'primary',
-              disabled: selectedImages.length === 0
-            }
-          ]}
-        />
+                        <ArrowLeftIcon className="h-4 w-4 mr-1" />
+                        Back to Projects
+                    </Link>
+                    <div className="mt-4 flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+                            <p className="mt-1 text-sm text-gray-500">{project.description}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href={project && project.id && typeof project.id !== 'object' 
+                                    ? `/projects/${String(project.id)}/edit` 
+                                    : '/projects'}
+                                className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                                <PencilIcon className="h-4 w-4 mr-1" />
+                                Edit
+                            </Link>
+                            {project.status === ProjectStatus.ARCHIVED ? (
+                                <button
+                                    onClick={handleUnarchiveProject}
+                                    className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                >
+                                    <ArchiveBoxIcon className="h-4 w-4 mr-1" />
+                                    Unarchive
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleArchiveProject}
+                                    className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                >
+                                    <ArchiveBoxIcon className="h-4 w-4 mr-1" />
+                                    Archive
+                                </button>
+                            )}
+                            <button
+                                onClick={handleDeleteProject}
+                                className="inline-flex items-center px-3 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50"
+                            >
+                                <TrashIcon className="h-4 w-4 mr-1" />
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-        {/* Image Annotation Dialog */}
-        <ImageAnnotationDialog
-          open={isAnnotationModalOpen}
-          onClose={() => setIsAnnotationModalOpen(false)}
-          image={selectedImage}
-          onSave={handleSaveAnnotations}
-        />
-      </div>
-    </div>
-  )
+                <Paper sx={{ width: '100%', mb: 4 }}>
+                    <Tabs
+                        value={activeTab}
+                        onChange={handleTabChange}
+                        indicatorColor="primary"
+                        textColor="primary"
+                        variant="fullWidth"
+                    >
+                        <Tab label="Project Details" />
+                        <Tab label="Images" />
+                        <Tab label="Analysis Results" />
+                    </Tabs>
+                </Paper>
+
+                {/* Project Details Tab */}
+                {activeTab === 0 && (
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={4}>
+                        <Box sx={{ width: { xs: '100%', md: '50%' } }}>
+                            <Paper sx={{ p: 3, height: '100%' }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Project Information
+                                </Typography>
+                                <Box sx={{ mt: 2 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        <strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        <strong>Last Updated:</strong> {new Date(project.updatedAt).toLocaleDateString()}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        <strong>Status:</strong> {project.status}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        <strong>Owner:</strong> {project.owner}
+                                    </Typography>
+                                    {project.metadata?.location && (
+                                        <Typography variant="body2" color="text.secondary">
+                                            <strong>Location:</strong> {project.metadata.location.lat}, {project.metadata.location.lng}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </Paper>
+                        </Box>
+
+                        <Box sx={{ width: { xs: '100%', md: '50%' } }}>
+                            <Paper sx={{ p: 3, height: '100%' }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Sharing & Collaboration
+                                </Typography>
+                                <Box sx={{ mt: 2 }}>
+                                    <Typography variant="body2" gutterBottom>
+                                        Share this project with others:
+                                    </Typography>
+                                    <div className="flex space-x-2 mt-2">
+                                        <input
+                                            type="email"
+                                            value={sharingEmail}
+                                            onChange={(e) => setSharingEmail(e.target.value)}
+                                            placeholder="Enter email address"
+                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                                        />
+                                        <button
+                                            onClick={handleShareProject}
+                                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
+                                        >
+                                            Share
+                                        </button>
+                                    </div>
+                                    {sharingError && (
+                                        <p className="mt-2 text-sm text-red-600">{sharingError}</p>
+                                    )}
+                                    {sharingSuccess && (
+                                        <p className="mt-2 text-sm text-green-600">{sharingSuccess}</p>
+                                    )}
+
+                                    <div className="mt-4">
+                                        <Typography variant="body2" gutterBottom>
+                                            Collaborators:
+                                        </Typography>
+                                        {project.collaborators && project.collaborators.length > 0 ? (
+                                            <div className="space-y-2 mt-2">
+                                                {project.collaborators.map((email) => (
+                                                    <div
+                                                        key={`collaborator-${email}-${Date.now()}`}
+                                                        className="flex justify-between items-center p-2 bg-gray-50 rounded-md"
+                                                    >
+                                                        <span>{email}</span>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleUnshareProject(email);
+                                                            }}
+                                                            className="text-red-600 hover:text-red-800"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-gray-500">No collaborators yet</p>
+                                        )}
+                                    </div>
+                                </Box>
+                            </Paper>
+                        </Box>
+                    </Stack>
+                )}
+
+                {/* Images Tab */}
+                {activeTab === 1 && (
+                    <div>
+                        <ImageFilterComponent 
+                            availableTags={availableTags}
+                            onFilterChange={handleFilterChange}
+                            initialFilters={imageFilters}
+                        />
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                            <Typography variant="h6">
+                                Project Images ({satelliteImages.length})
+                            </Typography>
+                            <Button 
+                                variant="contained" 
+                                color="primary"
+                                onClick={() => setIsAddImageModalOpen(true)}
+                            >
+                                Add Images
+                            </Button>
+                        </Box>
+
+                        {isLoadingImages ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+                            </Box>
+                        ) : error ? (
+                            <Box sx={{ textAlign: 'center', py: 8 }}>
+                                <Typography color="error" gutterBottom>
+                                    {error}
+                                </Typography>
+                                <Button 
+                                    onClick={() => window.location.reload()} 
+                                    variant="outlined" 
+                                    color="primary"
+                                    sx={{ mt: 2 }}
+                                >
+                                    Retry
+                                </Button>
+                            </Box>
+                        ) : satelliteImages.length === 0 ? (
+                            <Box sx={{ 
+                                textAlign: 'center', 
+                                py: 8,
+                                px: 4,
+                                bgcolor: 'background.paper',
+                                borderRadius: 1,
+                                boxShadow: 1
+                            }}>
+                                <PhotoIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                                <Typography variant="h6" gutterBottom>
+                                    No Images Yet
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                                    This project doesn't have any images yet. Click "Add Images" to get started.
+                                </Typography>
+                                <Button 
+                                    variant="contained" 
+                                    color="primary"
+                                    onClick={() => setIsAddImageModalOpen(true)}
+                                >
+                                    Add Your First Image
+                                </Button>
+                            </Box>
+                        ) : (
+                            <ImageGrid 
+                                images={satelliteImages}
+                                loading={loading}
+                                onSelectImage={handleImageSelect}
+                                onAnnotateImage={handleAnnotateImage}
+                                onToggleFavorite={handleToggleFavorite}
+                                favorites={favoriteImages}
+                                onDeleteImage={(imageId) => handleRemoveImage(imageId)}
+                            />
+                        )}
+                    </div>
+                )}
+
+                {/* Analysis Results Tab */}
+                {activeTab === 2 && (
+                    <div>
+                        <Box sx={{ textAlign: 'center', py: 8 }}>
+                            <Typography variant="h6" gutterBottom>
+                                No analysis results yet
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                                Run an analysis on this project to see results here
+                            </Typography>
+                            <button
+                                onClick={() => handleAnalysisClick(project.id)}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
+                            >
+                                Start New Analysis
+                            </button>
+                        </Box>
+                    </div>
+                )}
+
+                {/* Add Image Modal */}
+                <Modal
+                    open={isAddImageModalOpen}
+                    onClose={() => setIsAddImageModalOpen(false)}
+                    title="Add Images to Project"
+                    content={
+                        <Box sx={{ p: 2 }}>
+                            {allImages.length > 0 ? (
+                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+                                    {allImages.map((image) => (
+                                        <Box
+                                            key={image.id}
+                                            sx={{
+                                                position: 'relative',
+                                                border: 1,
+                                                borderRadius: 1,
+                                                overflow: 'hidden',
+                                                cursor: 'pointer',
+                                                borderColor: selectedImages.includes(image.id) ? 'primary.main' : 'grey.300',
+                                                boxShadow: selectedImages.includes(image.id) ? 2 : 0
+                                            }}
+                                            onClick={() => handleImageSelection(image.id)}
+                                        >
+                                            <img
+                                                src={image.thumbnailUrl}
+                                                alt={image.name}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '160px',
+                                                    objectFit: 'cover'
+                                                }}
+                                            />
+                                            <Box sx={{ p: 1 }}>
+                                                <Typography variant="subtitle2" noWrap>
+                                                    {image.name}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {new Date(image.createdAt).toLocaleDateString()}
+                                                </Typography>
+                                            </Box>
+                                            {selectedImages.includes(image.id) && (
+                                                <Box
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        top: 8,
+                                                        right: 8,
+                                                        bgcolor: 'primary.main',
+                                                        color: 'white',
+                                                        borderRadius: '50%',
+                                                        p: 0.5
+                                                    }}
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        className="h-4 w-4"
+                                                        viewBox="0 0 20 20"
+                                                        fill="currentColor"
+                                                    >
+                                                        <path
+                                                            fillRule="evenodd"
+                                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                            clipRule="evenodd"
+                                                        />
+                                                    </svg>
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    ))}
+                                </Box>
+                            ) : (
+                                <Typography color="text.secondary" align="center">
+                                    No images available
+                                </Typography>
+                            )}
+                        </Box>
+                    }
+                    actions={[
+                        {
+                            label: 'Cancel',
+                            onClick: () => {
+                                setIsAddImageModalOpen(false);
+                                setSelectedImages([]);
+                            }
+                        },
+                        {
+                            label: 'Add Selected',
+                            onClick: handleConfirmAddImages,
+                            color: 'primary',
+                            disabled: selectedImages.length === 0
+                        }
+                    ]}
+                />
+
+                {/* Image Annotation Dialog */}
+                <ImageAnnotationDialog
+                    open={isAnnotationModalOpen}
+                    onClose={() => setIsAnnotationModalOpen(false)}
+                    image={selectedImage}
+                    onSave={handleSaveAnnotations}
+                />
+            </div>
+        </div>
+    )
 }

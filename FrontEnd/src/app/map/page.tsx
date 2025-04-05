@@ -76,11 +76,12 @@ const MapPage: React.FC<MapPageProps> = () => {
       }
 
       const data = await response.json();
-      console.log('Received response:', data);
-      
+      console.log('Received full response data:', data); // Log the entire response object
+
       if (!data.tile_url) {
         throw new Error('No tile URL in response');
       }
+      console.log('Successfully received tile URL:', data.tile_url); // Log the specific tile URL
 
       setImageLayer(data.tile_url);
       setIsModalOpen(false);

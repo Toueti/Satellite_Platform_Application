@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { projectsService, Project } from '@/services/projects.service';
+import { projectsService } from '@/services/projects.service';
+import { Project } from '@/types/api';
 import { geeService, GeeParams } from '@/services/gee.service';
 
 export default function AnalysisPage() {
@@ -92,11 +93,20 @@ export default function AnalysisPage() {
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-600 focus:border-primary-600 rounded-md"
               >
                 <option value="">Select a project</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
+                {projects.map((project, index) => {
+                  if (!project) return null;
+                  
+                  // Create a guaranteed unique project ID string
+                  const projectId = typeof project.id === 'object'
+                    ? `project-${index}-${Date.now()}`
+                    : String(project.id || `project-${project.name || index}-${Date.now()}`);
+                  
+                  return (
+                    <option key={projectId} value={projectId}>
+                      {project.name || 'Unnamed Project'}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 

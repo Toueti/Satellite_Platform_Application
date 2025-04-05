@@ -4,8 +4,9 @@ import { Fragment } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Box, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { HomeIcon, FolderIcon, ChartBarIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 
 const navigation = [
   { name: 'Projects', href: '/projects' },
@@ -18,7 +19,19 @@ function classNames(...classes: string[]) {
 }
 
 export default function Navigation() {
-  const pathname = usePathname()
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+  };
+
+  const navigationItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: HomeIcon },
+    { name: 'Projects', path: '/projects', icon: FolderIcon },
+    { name: 'Analysis', path: '/analysis', icon: ChartBarIcon },
+    { name: 'Settings', path: '/settings', icon: Cog6ToothIcon },
+  ];
 
   return (
     <Disclosure as="nav" className="bg-white shadow">
@@ -33,19 +46,19 @@ export default function Navigation() {
                   </Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                  {navigation.map((item) => (
-                    <Link
+                  {navigationItems.map((item) => (
+                    <div
                       key={item.name}
-                      href={item.href}
-                      className={classNames(
-                        pathname === item.href
-                          ? 'border-primary-500 text-gray-900'
-                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                        'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium'
-                      )}
+                      onClick={() => handleNavigation(item.path)}
+                      className={`cursor-pointer group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold ${
+                        pathname === item.path
+                          ? 'bg-gray-800 text-white'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      }`}
                     >
+                      <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
                       {item.name}
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -65,13 +78,13 @@ export default function Navigation() {
 
           <Disclosure.Panel className="sm:hidden">
             <div className="space-y-1 pb-3 pt-2">
-              {navigation.map((item) => (
+              {navigationItems.map((item) => (
                 <Disclosure.Button
                   key={item.name}
                   as={Link}
-                  href={item.href}
+                  href={item.path}
                   className={classNames(
-                    pathname === item.href
+                    pathname === item.path
                       ? 'border-primary-500 bg-primary-50 text-primary-700'
                       : 'border-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700',
                     'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'

@@ -2,6 +2,7 @@ package com.enit.satellite_platform.modules.project_management.model;
 
 import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
 import com.enit.satellite_platform.modules.user_management.models.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -31,7 +32,9 @@ import java.util.Set;
 @CompoundIndexes({
     @CompoundIndex(name = "owner_projectName_unique", 
                    def = "{'owner': 1, 'projectName': 1}", 
-                   unique = true)
+                   unique = true),
+    @CompoundIndex(name = "owner_lastAccessedTime", 
+                   def = "{'owner': 1, 'lastAccessedTime': -1}")
 })
 @Document(collection = "projects")
 @Getter
@@ -119,6 +122,7 @@ public class Project {
      * Uses lazy loading to improve performance.
      */
     @DBRef(lazy = true)
+    @JsonIgnore
     private Set<Image> images = new HashSet<>();
 
     /**
@@ -126,6 +130,7 @@ public class Project {
      * Uses lazy loading to improve performance.
      */
     @DBRef(lazy = true)
+    @JsonIgnore
     private Map<User, PermissionLevel> sharedUsers = new HashMap<>();
 
     /**

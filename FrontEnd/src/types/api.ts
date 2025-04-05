@@ -8,8 +8,17 @@ export interface ApiResponse<T> {
 
 // Project related types
 export interface Project {
-  id: string;
-  name: string;
+  id?: string;
+  _id?: string;  // MongoDB's default ID field
+  projectId?: string | { 
+    id?: string;
+    _id?: string;
+    $oid?: string;
+    timestamp?: number;
+    date?: string;
+  };
+  name?: string;
+  projectName?: string;  // Backend uses projectName
   description: string;
   createdAt: string;
   updatedAt: string;

@@ -28,6 +28,7 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
      * @param user The owner of the projects.
      * @return A list of projects owned by the user.
      */
+    @Query("{ 'owner': ?0 }")
     List<Project> findByOwner(User user);
 
     /**
@@ -44,6 +45,7 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
      * @param user The user with whom the projects are shared.
      * @return A list of projects shared with the user.
      */
+    @Query("{ 'sharedUsers': ?0 }")
     List<Project> findBySharedUsersContaining(User user);
 
     /**
@@ -53,6 +55,17 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
      * @param pageable Pagination information.
      * @return A list of projects owned by the user, ordered by last accessed time.
      */
+    @Query("{ 'owner.email': ?0 }")
+    List<Project> findByOwner_Email(String email);
+
+    /**
+     * Finds projects owned by a user, ordered by last accessed time in descending order.
+     *
+     * @param email    The email of the owner.
+     * @param pageable Pagination information.
+     * @return A list of projects owned by the user, ordered by last accessed time.
+     */
+    @Query("{ 'owner.email': ?0 }")
     List<Project> findByOwner_EmailOrderByLastAccessedTimeDesc(String email, Pageable pageable);
 
     /**
@@ -62,6 +75,7 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
      * @param pageable Pagination information.
      * @return A list of projects shared with the user, ordered by last accessed time.
      */
+    @Query("{ 'sharedUsers': ?0 }")
     List<Project> findBySharedUsersContainingOrderByLastAccessedTimeDesc(User user, Pageable pageable);
 
     /**
@@ -151,4 +165,35 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
      */
     @Query(value = "{'sharedUsers.?0': {$exists: true}}", count = true)
     long countBySharedUsersContainsKey(User user);
+
+    /**
+     * Finds projects owned by a user, ordered by last accessed time in descending order.
+     *
+     * @param user     The owner of the projects.
+     * @param pageable Pagination information.
+     * @return A list of projects owned by the user, ordered by last accessed time.
+     */
+    @Query("{ 'owner': ?0 }")
+    List<Project> findByOwnerOrderByLastAccessedTimeDesc(User user, Pageable pageable);
+
+    /**
+     * Finds projects owned by a user by ID, ordered by last accessed time in descending order.
+     *
+     * @param ownerId  The ID of the owner of the projects.
+     * @param pageable Pagination information.
+     * @return A list of projects owned by the user, ordered by last accessed time.
+     */
+    @Query("{ 'owner.$id': ?0 }")
+    List<Project> findByOwner_IdOrderByLastAccessedTimeDesc(ObjectId ownerId, Pageable pageable);
+
+    /**
+     * Finds projects where the sharedUsers map contains the given user as a key,
+     * ordered by last accessed time in descending order.
+     *
+     * @param user     The user to search for in the sharedUsers map.
+     * @param pageable Pagination information.
+     * @return A list of projects shared with the user, ordered by last accessed time.
+     */
+    @Query("{'sharedUsers.?0': {$exists: true}}")
+    List<Project> findBySharedUsersContainsKeyOrderByLastAccessedTimeDesc(User user, Pageable pageable);
 }

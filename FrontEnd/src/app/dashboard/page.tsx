@@ -1,205 +1,261 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Navigation from '@/components/Navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
     ChartBarIcon,
     FolderIcon,
     ClockIcon,
     CheckCircleIcon,
-    ExclamationCircleIcon
+    ExclamationCircleIcon,
+    PhotoIcon,
+    ArchiveBoxIcon,
+    ShareIcon,
+    UserGroupIcon,
+    ArrowPathIcon
 } from '@heroicons/react/24/outline'
-import { dashboardService } from '@/services/dashboard.service'
-import { Alert, CircularProgress } from '@mui/material'
-
-interface DashboardData {
-    totalProjects: number;
-    activeAnalyses: number;
-    storageUsed: string;
-    mapCoverage: string;
-    recentProjects: Array<{
-        id: number;
-        name: string;
-        description: string;
-        lastModified: string;
-    }>;
-    recentAnalyses: Array<{
-        id: number;
-        name: string;
-        description: string;
-        lastModified: string;
-    }>;
-}
+import { dashboardService, DashboardData } from '@/services/dashboard.service'
+import { projectsService } from '@/services/projects.service'
+import { CircularProgress, Alert } from '@mui/material'
+import { Project } from '@/types/api'
 
 export default function Dashboard() {
-    const [dashboardData, setDashboardData] = useState<DashboardData>({
-        totalProjects: 0,
-        activeAnalyses: 0,
-        storageUsed: '0 GB',
-        mapCoverage: '0%',
-        recentProjects: [],
-        recentAnalyses: []
-    });
+    const router = useRouter()
+    const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [retryCount, setRetryCount] = useState(0);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                setLoading(true);
                 const data = await dashboardService.getDashboardData();
                 setDashboardData(data);
-                setError('');
-                setRetryCount(0);
-            } catch (error: any) {
-                console.error('Dashboard error:', error);
-                setError(error.message || 'Failed to fetch dashboard data');
-                
-                // Implement exponential backoff for retries
-                if (retryCount < 3) {
-                    const timeout = setTimeout(() => {
-                        setRetryCount(prev => prev + 1);
-                    }, Math.pow(2, retryCount) * 1000);
-                    return () => clearTimeout(timeout);
-                }
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data');
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [retryCount]); // Retry when retryCount changes
-
-    const stats = [
-        { 
-            name: 'Total Projects', 
-            stat: dashboardData.totalProjects, 
-            icon: FolderIcon,
-            color: 'text-blue-600'
-        },
-        { 
-            name: 'Active Projects', 
-            stat: dashboardData.activeAnalyses, 
-            icon: ChartBarIcon,
-            color: 'text-green-600'
-        },
-        { 
-            name: 'Recent Activities', 
-            stat: dashboardData.recentProjects.length, 
-            icon: ClockIcon,
-            color: 'text-purple-600'
-        }
-    ];
+    }, []);
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <CircularProgress />
+            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
             </div>
         );
     }
 
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md">
+                    {error}
+                </div>
+            </div>
+        );
+    }
+
+    if (!dashboardData) {
+        return (
+            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+                <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-md">
+                    No dashboard data available
+                </div>
+            </div>
+        );
+    }
+
+    const stats = [
+        {
+            name: 'Total Projects',
+            value: dashboardData.totalProjects,
+            icon: FolderIcon,
+            color: 'bg-blue-500',
+        },
+        {
+            name: 'Active Projects',
+            value: dashboardData.activeProjects,
+            icon: ArrowPathIcon,
+            color: 'bg-green-500',
+        },
+        {
+            name: 'Completed Projects',
+            value: dashboardData.completedProjects,
+            icon: CheckCircleIcon,
+            color: 'bg-purple-500',
+        },
+        {
+            name: 'Archived Projects',
+            value: dashboardData.archivedProjects,
+            icon: ArchiveBoxIcon,
+            color: 'bg-gray-500',
+        },
+        {
+            name: 'Total Images',
+            value: dashboardData.totalImages,
+            icon: PhotoIcon,
+            color: 'bg-yellow-500',
+        },
+        {
+            name: 'Shared Projects',
+            value: dashboardData.sharedProjectsCount,
+            icon: UserGroupIcon,
+            color: 'bg-indigo-500',
+        },
+    ];
+
+    const handleProjectClick = (projectId: string) => {
+        // Debug log
+        console.log('Attempting to navigate to project with ID:', projectId);
+        
+        // Only navigate if we have a valid ID
+        if (!projectId || projectId === '[object Object]' || projectId.includes('temp-')) {
+            console.error('Invalid project ID detected:', projectId);
+            return;
+        }
+        
+        router.push(`/projects/${projectId}`);
+    };
+
+    const ProjectCard = ({ project }: { project: Project }) => {
+        if (!project) {
+            console.error('ProjectCard received null project');
+            return null;
+        }
+
+        // Extract ID - prefer MongoDB ObjectId for navigation
+        let projectId: string;
+        
+        try {
+            // Debug log the project structure
+            console.log('Project data:', project);
+            
+            // First try to get MongoDB ObjectId
+            if (project._id) {
+                projectId = project._id;
+            } else if (project.projectId && typeof project.projectId === 'object' && project.projectId._id) {
+                projectId = project.projectId._id;
+            } else if (project.id && /^[0-9a-fA-F]{24}$/.test(project.id)) {
+                projectId = project.id;
+            } else {
+                throw new Error('No valid MongoDB ObjectId found');
+            }
+
+            // Validate MongoDB ObjectId format
+            if (!projectId || projectId.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(projectId)) {
+                throw new Error('Invalid MongoDB ObjectId format');
+            }
+
+            console.log('Using MongoDB ObjectId for navigation:', projectId);
+
+        } catch (error) {
+            console.error('Failed to extract valid MongoDB ObjectId:', error);
+            return null;
+        }
+
+        // Get the project name from either projectName (backend) or name (frontend)
+        const displayName = (project as any).projectName || project.name || 'Unnamed Project';
+        
+        return (
+            <div 
+                onClick={() => handleProjectClick(projectId)}
+                className="cursor-pointer block bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+            >
+                <h3 className="font-medium text-gray-900">{displayName}</h3>
+                <p className="text-sm text-gray-500 mt-1">{project.description || 'No description'}</p>
+                <div className="flex items-center mt-2 text-sm text-gray-500">
+                    <ClockIcon className="h-4 w-4 mr-1" />
+                    <span>Updated {new Date(project.updatedAt || Date.now()).toLocaleDateString()}</span>
+                </div>
+            </div>
+        );
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50">
-            <Navigation />
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                    <Link
+                        href="/projects/new"
+                        className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
+                    >
+                        New Project
+                    </Link>
+                </div>
 
-            <main className="py-6">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center">
-                        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-                        {error && (
-                            <Alert 
-                                severity="error" 
-                                action={
-                                    <button
-                                        onClick={() => setRetryCount(prev => prev + 1)}
-                                        className="bg-red-50 text-red-600 px-3 py-1 rounded-md text-sm font-medium hover:bg-red-100"
-                                    >
-                                        Retry
-                                    </button>
-                                }
-                            >
-                                {error}
-                            </Alert>
-                        )}
-                    </div>
-
-                    {/* Stats */}
-                    <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                        {stats.map((item) => (
-                            <div
-                                key={item.name}
-                                className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6"
-                            >
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <item.icon className={`h-6 w-6 ${item.color}`} aria-hidden="true" />
-                                    </div>
-                                    <div className="ml-5 w-0 flex-1">
-                                        <dt className="truncate text-sm font-medium text-gray-500">{item.name}</dt>
-                                        <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
-                                            {item.stat}
-                                        </dd>
-                                    </div>
-                                </div>
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    {stats.map((stat) => (
+                        <div
+                            key={stat.name}
+                            className="bg-white rounded-lg shadow-sm p-6 flex items-center"
+                        >
+                            <div className={`${stat.color} p-3 rounded-lg`}>
+                                <stat.icon className="h-6 w-6 text-white" />
                             </div>
-                        ))}
-                    </div>
+                            <div className="ml-4">
+                                <p className="text-sm font-medium text-gray-600">{stat.name}</p>
+                                <p className="text-2xl font-semibold text-gray-900">
+                                    {stat.value}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
 
-                    {/* Recent Projects */}
-                    <div className="mt-8">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-medium text-gray-900">Recent Projects</h2>
-                            <Link
-                                href="/projects/new"
-                                className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                            >
-                                Create New Project
-                            </Link>
-                        </div>
-                        <div className="mt-4 overflow-hidden bg-white shadow sm:rounded-md">
-                            {dashboardData.recentProjects.length === 0 ? (
-                                <div className="p-4 text-center text-gray-500">
-                                    No recent projects found
+                {/* Recent Projects */}
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                        Recent Projects
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {dashboardData.recentProjects.map((project, index) => {
+                            // Ensure we have a valid project object
+                            if (!project) return null;
+                            
+                            // Create a guaranteed unique key
+                            const key = typeof project.id === 'object'
+                                ? `recent-${index}-${Date.now()}`
+                                : String(project.id || `recent-project-${index}`);
+                            
+                            return (
+                                <div key={key}>
+                                    <ProjectCard project={project} />
                                 </div>
-                            ) : (
-                                <ul role="list" className="divide-y divide-gray-200">
-                                    {dashboardData.recentProjects.map((project) => (
-                                        <li key={project.id}>
-                                            <Link href={`/projects/${project.id}`} className="block hover:bg-gray-50">
-                                                <div className="px-4 py-4 sm:px-6">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="truncate">
-                                                            <div className="flex items-center">
-                                                                {project.name.toLowerCase().includes('active') ? (
-                                                                    <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
-                                                                ) : (
-                                                                    <ExclamationCircleIcon className="h-5 w-5 text-yellow-500 mr-2" />
-                                                                )}
-                                                                <p className="truncate text-sm font-medium text-blue-600">
-                                                                    {project.name}
-                                                                </p>
-                                                            </div>
-                                                            <p className="mt-1 truncate text-sm text-gray-500">
-                                                                {project.description}
-                                                            </p>
-                                                        </div>
-                                                        <div className="ml-4 flex flex-shrink-0">
-                                                            <p className="text-sm text-gray-500">{project.lastModified}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
+                            );
+                        })}
                     </div>
                 </div>
-            </main>
+
+                {/* Last Accessed Projects */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                        Last Accessed Projects
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {dashboardData.lastAccessedProjects.map((project, index) => {
+                            // Ensure we have a valid project object
+                            if (!project) return null;
+                            
+                            // Create a guaranteed unique key
+                            const key = typeof project.id === 'object'
+                                ? `last-accessed-${index}-${Date.now()}`
+                                : String(project.id || `last-accessed-${index}`);
+                            
+                            return (
+                                <div key={key}>
+                                    <ProjectCard project={project} />
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
