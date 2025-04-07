@@ -1,10 +1,12 @@
 package com.enit.satellite_platform.modules.resource_management.image_management.controllers;
 
 import com.enit.satellite_platform.exceptions.DuplicationException;
+import com.enit.satellite_platform.exceptions.ResourceNotFoundException; // Import
 import com.enit.satellite_platform.modules.resource_management.image_management.dto.ImageDTO;
 import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
 import com.enit.satellite_platform.modules.resource_management.image_management.services.ImageService;
 import com.enit.satellite_platform.shared.dto.GenericResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,12 +17,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders; // Import
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType; // Import
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException; // Import
+import org.springframework.security.core.Authentication; // Import
+import org.springframework.security.core.context.SecurityContextHolder; // Import
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+
+import lombok.Data; // For Request DTO
 
 @RestController
 @RequestMapping("/geospatial/images")
@@ -31,6 +40,15 @@ public class ImageController {
 
   @Autowired
   private ImageService imageService;
+
+  // --- Inner DTO for Import Request ---
+  @Data
+  static class ImageImportRequest {
+      private String sourceProjectId;
+      private String targetProjectId;
+      private List<String> imageIds;
+  }
+  // ------------------------------------
 
   @Operation(summary = "Add a new image to a project")
   @ApiResponses(value = {
@@ -121,6 +139,45 @@ public class ImageController {
       logger.error("Error retrieving image: {}", e.getMessage());
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(new GenericResponse<>("FAILURE", "Error retrieving image: " + e.getMessage(), null));
+    }
+  }
+
+  @Operation(summary = "Get raw image data by ID")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Image data retrieved successfully"),
+      @ApiResponse(responseCode = "404", description = "Image or image data not found"),
+      @ApiResponse(responseCode = "400", description = "Invalid image ID"),
+      @ApiResponse(responseCode = "500", description = "Error retrieving image data")
+  })
+  @GetMapping("/{id}/data")
+  public ResponseEntity<?> getImageData(
+      @Parameter(description = "Image ID") @PathVariable String id) {
+    logger.info("Received request to fetch image data for ID: {}", id);
+    try {
+      byte[] imageData = imageService.getImageData(id);
+      // Determine content type - defaulting to octet-stream, could be refined
+      // e.g., by checking metadata if available: image.getMettadata().get("contentType")
+      MediaType contentType = MediaType.APPLICATION_OCTET_STREAM;
+      // Potentially get filename from metadata too
+      String filename = id + "_data"; // Default filename
+
+      return ResponseEntity.ok()
+          .contentType(contentType)
+          .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+          .body(imageData);
+    } catch (ResourceNotFoundException e) {
+      logger.error("Image or data not found: {}", e.getMessage());
+      // Return a standard error response body instead of just 404
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+    } catch (IllegalArgumentException e) {
+        logger.error("Invalid image ID format: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(new GenericResponse<>("FAILURE", "Invalid image ID format: " + e.getMessage(), null));
+    } catch (RuntimeException e) {
+      logger.error("Error retrieving image data: {}", e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new GenericResponse<>("FAILURE", "Error retrieving image data: " + e.getMessage(), null));
     }
   }
 
@@ -332,5 +389,53 @@ public class ImageController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(new GenericResponse<>("FAILURE", "Error counting images: " + e.getMessage(), null));
     }
+  }
+
+  @Operation(summary = "Import images from another project")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Images imported successfully"),
+      @ApiResponse(responseCode = "400", description = "Invalid request data (IDs, project IDs)"),
+      @ApiResponse(responseCode = "403", description = "User lacks permissions for source or target project"),
+      @ApiResponse(responseCode = "404", description = "Source/Target project or source images not found"),
+      @ApiResponse(responseCode = "500", description = "Error importing images")
+  })
+  @PostMapping("/import")
+  public ResponseEntity<GenericResponse<?>> importImages(@RequestBody ImageImportRequest request) {
+      // Get current user's email from security context
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      if (authentication == null || !authentication.isAuthenticated()) {
+          return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+              .body(new GenericResponse<>("FAILURE", "User not authenticated", null));
+      }
+      String userEmail = authentication.getName(); // Assumes email is used as username
+
+      logger.info("Received request to import images by user {}: {}", userEmail, request);
+
+      try {
+          List<ImageDTO> importedImages = imageService.importImagesFromProject(
+              request.getSourceProjectId(),
+              request.getTargetProjectId(),
+              request.getImageIds(),
+              userEmail
+          );
+          return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Images imported successfully", importedImages));
+      } catch (IllegalArgumentException e) {
+          logger.error("Invalid import request data: {}", e.getMessage());
+          return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+              .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+      } catch (ResourceNotFoundException | com.enit.satellite_platform.modules.project_management.exceptions.ProjectNotFoundException e) {
+          // Catching specific not found exceptions from service
+          logger.error("Resource not found during import: {}", e.getMessage());
+          return ResponseEntity.status(HttpStatus.NOT_FOUND)
+              .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+      } catch (AccessDeniedException e) {
+          logger.warn("Access denied during import for user {}: {}", userEmail, e.getMessage());
+          return ResponseEntity.status(HttpStatus.FORBIDDEN)
+              .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+      } catch (RuntimeException e) {
+          logger.error("Error importing images: {}", e.getMessage(), e); // Log stack trace for runtime errors
+          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+              .body(new GenericResponse<>("FAILURE", "Error importing images: " + e.getMessage(), null));
+      }
   }
 }

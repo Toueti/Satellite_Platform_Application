@@ -1,25 +1,36 @@
 package com.enit.satellite_platform.modules.resource_management.image_management.services;
 
+// Keep only one set of imports
 import com.enit.satellite_platform.exceptions.DuplicationException;
+import com.enit.satellite_platform.exceptions.ResourceNotFoundException; // Import the new exception
 import com.enit.satellite_platform.modules.project_management.exceptions.ProjectNotFoundException;
+import com.enit.satellite_platform.modules.project_management.model.PermissionLevel; // Import PermissionLevel
 import com.enit.satellite_platform.modules.project_management.model.Project;
 import com.enit.satellite_platform.modules.project_management.repositories.ProjectRepository;
 import com.enit.satellite_platform.modules.resource_management.image_management.dto.ImageDTO;
 import com.enit.satellite_platform.modules.resource_management.image_management.mapper.ImageMapper;
 import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
+import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository.ImageMetadataProjection; // Import projection
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ResultsRepository;
+import com.enit.satellite_platform.modules.user_management.models.User; // Import User
+import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository; // Import UserRepository
 
 import org.bson.types.ObjectId;
+// Keep only one set of imports
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException; // Import AccessDeniedException
+import org.springframework.security.core.userdetails.UsernameNotFoundException; // Import UsernameNotFoundException
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +54,9 @@ public class ImageService {
 
     @Autowired
     private ResultsRepository geeResultsRepository;
+
+    @Autowired
+    private UserRepository userRepository; // Inject UserRepository
 
     @Autowired
     private ImageMapper imageMapper;
@@ -82,6 +96,7 @@ public class ImageService {
             projectRepository.save(project);
 
             logger.info("Image added successfully with Id: {}", image.getImageId());
+            // Return DTO based on the saved full entity
             return imageMapper.toDTO(image);
         } catch (ProjectNotFoundException e) {
             logger.error("Failed to add image: Project not found", e);
@@ -121,9 +136,10 @@ public class ImageService {
         }
 
         image.setImageName(newName);
+        image.setUpdatedAt(new Date()); // Update timestamp on rename
         Image updatedImage = imageRepository.save(image);
         logger.info("Image renamed successfully to: {}", newName);
-        return updatedImage;
+        return updatedImage; // Returning entity, consider returning DTO if needed by controller
     }
 
     /**
@@ -178,7 +194,11 @@ public class ImageService {
         validatePageable(pageable);
 
         try {
-            return imageRepository.findAll(pageable).map(imageMapper::toDTO);
+            // Use projection method
+            Page<ImageMetadataProjection> page = imageRepository.findAllProjectedBy(pageable);
+            // Map projection page to DTO page
+            List<ImageDTO> dtoList = imageMapper.projectionToDTOList(page.getContent());
+            return new PageImpl<>(dtoList, pageable, page.getTotalElements());
         } catch (Exception e) {
             logger.error("Failed to retrieve images", e);
             throw new RuntimeException("Failed to retrieve images: " + e.getMessage(), e);
@@ -221,17 +241,48 @@ public class ImageService {
         validateImageId(id);
 
         try {
-            return imageRepository.findById(id)
-                    .map(imageMapper::toDTO)
-                    .orElseThrow(() -> {
-                        logger.error("Image not found with Id: {}", id);
-                        return new IllegalArgumentException("Image not found with Id: " + id);
-                    });
+            // Use projection method
+            return imageRepository.findProjectedByImageId(id)
+                    .map(imageMapper::toDTO) // Map projection to DTO
+                    // Correct orElseThrow syntax
+                    .orElseThrow(() -> new ResourceNotFoundException("Image metadata not found with Id: " + id));
+        } catch (ResourceNotFoundException e) {
+            throw e;
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("Failed to retrieve image by Id: {}", id, e);
-            throw new RuntimeException("Failed to retrieve image: " + e.getMessage(), e);
+            logger.error("Failed to retrieve image metadata by Id: {}", id, e);
+            throw new RuntimeException("Failed to retrieve image metadata: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Retrieves the raw image data (byte array) for a given image ID.
+     *
+     * @param id The ID of the image.
+     * @return The byte array of the image data.
+     * @throws ResourceNotFoundException if the image is not found.
+     * @throws RuntimeException          for any other unexpected errors.
+     */
+    public byte[] getImageData(String id) {
+        logger.info("Retrieving image data for Id: {}", id);
+        validateImageId(id);
+        try {
+            Image image = imageRepository.findById(id)
+                    // Correct orElseThrow syntax
+                    .orElseThrow(() -> new ResourceNotFoundException("Image not found with Id: " + id));
+            if (image.getImageData() == null) {
+                 logger.warn("Image data is null for Id: {}", id);
+                 // Depending on requirements, could return empty array or throw exception
+                 return new byte[0];
+            }
+            logger.debug("Returning image data for Id: {} (Size: {} bytes)", id, image.getImageData().length);
+            return image.getImageData();
+        } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Failed to retrieve image data for Id: {}", id, e);
+            throw new RuntimeException("Failed to retrieve image data: " + e.getMessage(), e);
         }
     }
 
@@ -249,8 +300,9 @@ public class ImageService {
 
         try {
             getProjectById(projectId); // Validate project exists
-            List<Image> images = imageRepository.findAllByProject_ProjectId(projectId);
-            return imageMapper.toDTOList(images);
+            // Use projection method
+            List<ImageMetadataProjection> projections = imageRepository.findAllByProject_ProjectIdProjectedBy(projectId);
+            return imageMapper.projectionToDTOList(projections); // Map projections to DTOs
         } catch (Exception e) {
             logger.error("Failed to retrieve images by project Id: {}", projectId, e);
             throw new RuntimeException("Failed to retrieve images: " + e.getMessage(), e);
@@ -406,6 +458,125 @@ public class ImageService {
         }
     }
 
+
+    /**
+     * Imports images from a source project to a target project.
+     *
+     * @param sourceProjectId The ID of the source project.
+     * @param targetProjectId The ID of the target project.
+     * @param imageIds        The list of image IDs to import.
+     * @param userEmail       The email of the user performing the import.
+     * @return A list of DTOs for the newly imported images.
+     * @throws ProjectNotFoundException  if source or target project not found.
+     * @throws ResourceNotFoundException if any source image ID is not found.
+     * @throws AccessDeniedException     if the user lacks necessary permissions.
+     * @throws UsernameNotFoundException if the user performing the action is not found.
+     * @throws RuntimeException          for other unexpected errors.
+     */
+    @Transactional
+    public List<ImageDTO> importImagesFromProject(String sourceProjectId, String targetProjectId, List<String> imageIds, String userEmail) {
+        logger.info("Importing images {} from project {} to project {} by user {}", imageIds, sourceProjectId, targetProjectId, userEmail);
+
+        ObjectId sourceProjId = parseObjectId(sourceProjectId, "Source Project ID");
+        ObjectId targetProjId = parseObjectId(targetProjectId, "Target Project ID");
+        validateImageIds(imageIds);
+        validateString(userEmail, "User Email");
+
+        if (sourceProjId.equals(targetProjId)) {
+            throw new IllegalArgumentException("Source and target project cannot be the same.");
+        }
+
+        User user = getUserByEmail(userEmail, "User performing import not found");
+        Project sourceProject = getProjectById(sourceProjId);
+        Project targetProject = getProjectById(targetProjId);
+
+        // --- Permission Checks ---
+        // Assuming Project model has methods like hasReadAccess/hasWriteAccess
+        // Adjust these checks based on the actual implementation in Project.java
+        if (!sourceProject.hasAccess(user, PermissionLevel.READ)) { // Check for READ access on source
+             logger.warn("User {} lacks READ access to source project {}", userEmail, sourceProjectId);
+             throw new AccessDeniedException("User does not have read access to the source project.");
+        }
+        if (!targetProject.hasAccess(user, PermissionLevel.WRITE)) { // Check for WRITE access on target
+             logger.warn("User {} lacks WRITE access to target project {}", userEmail, targetProjectId);
+             throw new AccessDeniedException("User does not have write access to the target project.");
+        }
+        // --- End Permission Checks ---
+
+
+        List<Image> sourceImages = imageRepository.findAllById(imageIds);
+        if (sourceImages.size() != imageIds.size()) {
+            List<String> foundIds = sourceImages.stream().map(Image::getImageId).collect(Collectors.toList());
+            List<String> missingIds = new ArrayList<>(imageIds); // Create a mutable list of requested IDs
+            missingIds.removeAll(foundIds); // Remove the IDs that were found
+            logger.error("Some source images not found: {}", missingIds);
+            throw new ResourceNotFoundException("Could not find source images with IDs: " + missingIds);
+        }
+
+        List<Image> importedImages = new ArrayList<>();
+        for (Image sourceImage : sourceImages) {
+            // Verify the image actually belongs to the source project (paranoid check)
+            if (!sourceImage.getProject().getProjectId().equals(sourceProjId)) {
+                 logger.error("Image {} does not belong to source project {}", sourceImage.getImageId(), sourceProjId);
+                 // Handle this inconsistency - skip or throw error
+                 continue; // Skipping for now
+            }
+
+            Image newImage = new Image();
+            String originalName = sourceImage.getImageName();
+            String newName = findAvailableName(originalName, targetProjId);
+
+            newImage.setImageName(newName);
+            newImage.setImageData(sourceImage.getImageData()); // Copy image data
+            newImage.setFileSize(sourceImage.getFileSize());
+            newImage.setMettadata(sourceImage.getMettadata() != null ? new java.util.HashMap<>(sourceImage.getMettadata()) : null); // Deep copy metadata map
+            newImage.setProject(targetProject); // Set target project
+            newImage.setRequestTime(new Date()); // Set new timestamps
+            newImage.setUpdatedAt(new Date());
+            // Results are not copied
+
+            try {
+                Image savedImage = imageRepository.save(newImage);
+                targetProject.getImages().add(savedImage); // Add to target project's list
+                importedImages.add(savedImage);
+                logger.info("Successfully imported image {} as {} to project {}", sourceImage.getImageId(), savedImage.getImageName(), targetProjId);
+            } catch (DataIntegrityViolationException e) {
+                 // This might happen if findAvailableName logic fails or due to race conditions
+                 logger.error("Data integrity violation while saving imported image '{}' to project {}", newName, targetProjId, e);
+                 // Decide how to handle: skip this image, retry with different name, or throw
+                 throw new RuntimeException("Failed to save imported image due to potential name conflict: " + newName, e);
+            }
+        }
+
+        projectRepository.save(targetProject); // Save changes to target project's image list
+        logger.info("Finished importing {} images to project {}", importedImages.size(), targetProjId);
+
+        return imageMapper.toDTOList(importedImages);
+    }
+
+    /**
+     * Finds an available name in the target project, appending _copy_n if necessary.
+     */
+    private String findAvailableName(String originalName, ObjectId targetProjectId) {
+        String currentName = originalName;
+        int copyCount = 0;
+        // Check if the original name exists
+        while (imageRepository.existsByNameAndProjectId(currentName, targetProjectId)) {
+            copyCount++;
+            currentName = originalName + "_copy_" + copyCount;
+            // Optional: Add a limit to prevent infinite loops in edge cases
+            if (copyCount > 100) { // Example limit
+                 logger.error("Could not find available name for '{}' in project {} after {} attempts", originalName, targetProjectId, copyCount);
+                 throw new RuntimeException("Failed to find an available name for import: " + originalName);
+            }
+        }
+        if (copyCount > 0) {
+            logger.debug("Name conflict for '{}', using '{}' instead in project {}", originalName, currentName, targetProjectId);
+        }
+        return currentName;
+    }
+
+
     // Validation Helpers
 
     /**
@@ -424,6 +595,25 @@ public class ImageService {
         } catch (Exception e) {
             logger.error("Invalid project Id in ImageDTO: {}", imageDTO.getProjectId());
             throw new IllegalArgumentException("Invalid project Id: " + imageDTO.getProjectId());
+        }
+        // Removed imageData validation as it's handled by MultipartFile
+    }
+
+    /**
+     * Parses a string into an ObjectId.
+     *
+     * @param idString  The string to parse.
+     * @param fieldName The name of the field for error messages.
+     * @return The ObjectId.
+     * @throws IllegalArgumentException if the string is not a valid ObjectId.
+     */
+    private ObjectId parseObjectId(String idString, String fieldName) {
+        validateString(idString, fieldName);
+        try {
+            return new ObjectId(idString);
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid {} format: {}", fieldName, idString);
+            throw new IllegalArgumentException("Invalid " + fieldName + " format: " + idString);
         }
     }
 
@@ -476,6 +666,23 @@ public class ImageService {
             logger.error("{} cannot be null", fieldName);
             throw new IllegalArgumentException(fieldName + " cannot be null");
         }
+    }
+
+    /**
+     * Retrieves a user by email.
+     *
+     * @param email        The email of the user.
+     * @param errorMessage The error message if the user is not found.
+     * @return The User entity.
+     * @throws UsernameNotFoundException if the user is not found.
+     */
+    private User getUserByEmail(String email, String errorMessage) {
+        validateString(email, "Email");
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    logger.error(errorMessage + ": {}", email);
+                    return new UsernameNotFoundException(errorMessage + ": " + email);
+                });
     }
 
     /**

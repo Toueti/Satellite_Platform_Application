@@ -28,4 +28,11 @@ public interface UserRepository extends MongoRepository<User, ObjectId> {
 
     // Find all users that have the specified authority in their authorities list
     List<User> findByAuthoritiesContains(Authority authority); // Added method
+
+    default boolean isAdmin(ObjectId userObjectId) {
+        Optional<User> userOpt = findById(userObjectId);
+        return userOpt.map(user -> user.getAuthorities().stream()
+                .anyMatch(auth -> "ADMIN".equals(auth.getAuthority())))
+                .orElse(false);
+    }
 }

@@ -624,21 +624,4 @@ public class ProjectController {
                     .body(new GenericResponse<>("FAILURE", "Error creating project from template: " + e.getMessage(), null));
         }
     }
-
-    @Operation(summary = "Test the last accessed projects query")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Test successful"),
-            @ApiResponse(responseCode = "500", description = "Error testing last accessed projects")
-    })
-    @GetMapping("/test-last-accessed")
-    public ResponseEntity<GenericResponse<?>> testLastAccessedProjects() {
-        try {
-            String email = getCurrentEmail();
-            List<Project> projects = projectService.testLastAccessedProjects(email);
-            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Test successful", projects));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new GenericResponse<>("FAILURE", "Error testing last accessed projects: " + e.getMessage(), null));
-        }
-    }
 }

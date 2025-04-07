@@ -4,7 +4,6 @@ import org.bson.types.ObjectId;
 
 import java.util.Date;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * DTO for representing project statistics.
@@ -17,11 +16,11 @@ public class ProjectStatisticsDto {
     /**
      * A map containing the number of images per project, keyed by project ID.
      */
-    private Map<String, Long> imagesPerProject;
+    private Map<ObjectId, Long> imagesPerProject;
     /**
      * A map containing the last access time for each project, keyed by project ID.
      */
-    private Map<String, Date> lastAcccessTime;
+    private Map<ObjectId, Date> lastAcccessTime;
 
     /**
      * Constructs a ProjectStatisticsDto with the given statistics.
@@ -32,24 +31,8 @@ public class ProjectStatisticsDto {
      */
     public ProjectStatisticsDto(long totalProjects, Map<ObjectId, Long> imagesPerProject, Map<ObjectId, Date> lastAcccessTime) {
         this.totalProjects = totalProjects;
-        this.imagesPerProject = convertObjectIdMapToStringMap(imagesPerProject);
-        this.lastAcccessTime = convertObjectIdMapToStringMap(lastAcccessTime);
-    }
-
-    /**
-     * Converts a map with ObjectId keys to a map with String keys.
-     *
-     * @param map The map to convert.
-     * @return A new map with String keys.
-     */
-    private <T> Map<String, T> convertObjectIdMapToStringMap(Map<ObjectId, T> map) {
-        Map<String, T> result = new HashMap<>();
-        if (map != null) {
-            for (Map.Entry<ObjectId, T> entry : map.entrySet()) {
-                result.put(entry.getKey().toString(), entry.getValue());
-            }
-        }
-        return result;
+        this.imagesPerProject = imagesPerProject;
+        this.lastAcccessTime = lastAcccessTime;
     }
 
     /**
@@ -75,7 +58,7 @@ public class ProjectStatisticsDto {
      *
      * @return The map of images per project.
      */
-    public Map<String, Long> getImagesPerProject() {
+    public Map<ObjectId, Long> getImagesPerProject() {
         return imagesPerProject;
     }
 
@@ -84,7 +67,7 @@ public class ProjectStatisticsDto {
      *
      * @param imagesPerProject The map of images per project to set.
      */
-    public void setImagesPerProject(Map<String, Long> imagesPerProject) {
+    public void setImagesPerProject(Map<ObjectId, Long> imagesPerProject) {
         this.imagesPerProject = imagesPerProject;
     }
 
@@ -93,7 +76,7 @@ public class ProjectStatisticsDto {
      *
      * @return The map of last access times.
      */
-    public Map<String, Date> getlastAcccessTime() {
+    public Map<ObjectId, Date> getlastAcccessTime() {
         return lastAcccessTime;
     }
 
@@ -102,7 +85,7 @@ public class ProjectStatisticsDto {
      *
      * @param lastAcccessTime The map of last access times to set.
      */
-    public void setlastAcccessTime(Map<String, Date> lastAcccessTime) {
+    public void setlastAcccessTime(Map<ObjectId, Date> lastAcccessTime) {
         this.lastAcccessTime = lastAcccessTime;
     }
 }

@@ -2,7 +2,8 @@ package com.enit.satellite_platform.modules.project_management.model;
 
 import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
 import com.enit.satellite_platform.modules.user_management.models.User;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.enit.satellite_platform.shared.converters.UserKeyDeserializer; // Import the custom deserializer
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize; // Import annotation
 
 import lombok.Getter;
 import lombok.Setter;
@@ -32,9 +33,7 @@ import java.util.Set;
 @CompoundIndexes({
     @CompoundIndex(name = "owner_projectName_unique", 
                    def = "{'owner': 1, 'projectName': 1}", 
-                   unique = true),
-    @CompoundIndex(name = "owner_lastAccessedTime", 
-                   def = "{'owner': 1, 'lastAccessedTime': -1}")
+                   unique = true)
 })
 @Document(collection = "projects")
 @Getter
@@ -122,7 +121,6 @@ public class Project {
      * Uses lazy loading to improve performance.
      */
     @DBRef(lazy = true)
-    @JsonIgnore
     private Set<Image> images = new HashSet<>();
 
     /**
@@ -130,7 +128,7 @@ public class Project {
      * Uses lazy loading to improve performance.
      */
     @DBRef(lazy = true)
-    @JsonIgnore
+    @JsonDeserialize(keyUsing = UserKeyDeserializer.class) // Use the custom deserializer for map keys
     private Map<User, PermissionLevel> sharedUsers = new HashMap<>();
 
     /**
@@ -180,6 +178,26 @@ public class Project {
     public boolean hasAccess(User user) {
         return this.owner.equals(user) || this.sharedUsers.containsKey(user);
     }
+
+    /**
+     * Checks if the given user has at least READ access to the project.
+     * Owners always have access. Shared users need READ or WRITE permission.
+     *
+     * @param user The user to check.
+     * @return True if the user has read access, false otherwise.
+     */
+    public boolean hasAccess(User user, PermissionLevel requiredLevel) {
+        if (this.owner.equals(user)) {
+            return true; // Owner has all permissions
+        }
+        PermissionLevel grantedLevel = this.sharedUsers.get(user);
+        if (grantedLevel == null) {
+            return false; // Not shared with this user
+        }
+        // Check if granted level is sufficient
+        return grantedLevel.includes(requiredLevel);
+    }
+
 
     public String getProjectDirectory() {
         return projectDirectory;

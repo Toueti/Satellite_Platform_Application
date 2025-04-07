@@ -196,21 +196,8 @@ public class ProjectService {
    */
   public List<Project> getAllProjects(String email) {
     logger.info("Fetching all projects for email: {}", email);
-    
-    // Get the user by email
     User user = getUserByEmail(email, "User not found");
-    
-    // Find projects by the user object
-    List<Project> projects = projectRepository.findByOwner(user);
-    
-    // Eagerly load the necessary data to prevent lazy loading issues
-    for (Project project : projects) {
-      // Initialize collections to prevent lazy loading
-      project.getImages().size(); // Force initialization
-      project.getSharedUsers().size(); // Force initialization
-    }
-    
-    return projects;
+    return projectRepository.findByOwner(user);
   }
 
   /**
@@ -389,16 +376,13 @@ public class ProjectService {
       logger.error("Limit must be positive: {}", n);
       throw new IllegalArgumentException("Limit must be positive");
     }
-    
-    // First get the user by email
-    User user = getUserByEmail(email, "User not found");
-    
-    // Then find projects by the user's ID instead of the User object
     Pageable pageable = PageRequest.of(0, n);
-    List<Project> projects = projectRepository.findByOwner_IdOrderByLastAccessedTimeDesc(user.getId(), pageable);
+    List<Project> projects = projectRepository.findByOwner_EmailOrderByLastAccessedTimeDesc(email, pageable);
 
     if (projects.size() < n) {
-      List<Project> sharedProjects = projectRepository.findBySharedUsersContainsKeyOrderByLastAccessedTimeDesc(user, pageable);
+      User user = getUserByEmail(email, "User not found");
+      List<Project> sharedProjects = projectRepository.findBySharedUsersContainingOrderByLastAccessedTimeDesc(user,
+          pageable);
       Set<Project> combinedProjects = new LinkedHashSet<>(projects);
       combinedProjects.addAll(sharedProjects);
       projects = new ArrayList<>(combinedProjects);
@@ -636,30 +620,5 @@ public class ProjectService {
       throw new AccessDeniedException("Only the project owner can " + action + " the project");
     }
     return user;
-  }
-
-  /**
-   * Test method to verify the fix for the last accessed projects query.
-   * This method can be called from a controller or test class.
-   *
-   * @param email The email of the user.
-   * @return A list of projects owned by the user, ordered by last accessed time.
-   */
-  public List<Project> testLastAccessedProjects(String email) {
-    logger.info("Testing last accessed projects for email: {}", email);
-    
-    // First get the user by email
-    User user = getUserByEmail(email, "User not found");
-    
-    // Create a query to find projects by owner and sort by lastAccessedTime
-    Pageable pageable = PageRequest.of(0, 5);
-    List<Project> projects = projectRepository.findByOwnerOrderByLastAccessedTimeDesc(user, pageable);
-    
-    // Log the results
-    for (Project project : projects) {
-      logger.info("Project: {}, Last accessed: {}", project.getProjectName(), project.getLastAccessedTime());
-    }
-    
-    return projects;
   }
 }

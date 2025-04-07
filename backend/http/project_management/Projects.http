@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8080/api/thematician/projects
-@token = # PASTE_TOKEN_HERE (Get from Authentication.http signin response)
+@token = eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJlbWFpbCI6InlvYnRvdDhAZ21haWwuY29tIiwicm9sZXMiOlsiUk9MRV9USEVNQVRJQ0lBTiJdLCJzdWIiOiJ5b2J0b3Q4QGdtYWlsLmNvbSIsImlhdCI6MTc0MzgzNzQ2MywiZXhwIjoxNzQzOTIzODYzfQ.44Wn0XHDOQ2NW_1NEo9xf5wKG4ytAu0LC92T1Q2YqKA
 @projectId = # Set this after creating a project
 @otherUserEmail = collaborator@example.com
 @projectName = My New Project
@@ -15,11 +15,10 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "{{projectName}}",
+  "projectName": "{{projectName}}",
   "description": "{{projectDescription}}",
   "tags": ["initial", "data"],
   "status": "CREATED"
-  // Add other project fields as needed based on the Project model
 }
 
 > {%
