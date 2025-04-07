@@ -1,0 +1,198 @@
+@baseUrl = http://localhost:8080/api/thematician/projects
+@token = eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJlbWFpbCI6InlvYnRvdDhAZ21haWwuY29tIiwicm9sZXMiOlsiUk9MRV9USEVNQVRJQ0lBTiJdLCJzdWIiOiJ5b2J0b3Q4QGdtYWlsLmNvbSIsImlhdCI6MTc0MzgzNzQ2MywiZXhwIjoxNzQzOTIzODYzfQ.44Wn0XHDOQ2NW_1NEo9xf5wKG4ytAu0LC92T1Q2YqKA
+@projectId = # Set this after creating a project
+@otherUserEmail = collaborator@example.com
+@projectName = My New Project
+@projectDescription = A description for the new project.
+@projectTag = research
+@projectStatus = IN_PROGRESS
+@templateName = basic_ndvi # Example template name
+
+### Create a new project
+# @name createProject
+POST {{baseUrl}}/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "projectName": "{{projectName}}",
+  "description": "{{projectDescription}}",
+  "tags": ["initial", "data"],
+  "status": "CREATED"
+}
+
+> {%
+    // Capture the created project ID if possible (depends on response structure)
+    // Example: client.global.set("projectId", response.body.data.id); 
+%}
+
+
+### Rename Project
+# Requires a valid projectId
+PUT {{baseUrl}}/{{projectId}}/rename?newName=Renamed Project Name
+Authorization: Bearer {{token}}
+
+
+### Get Project Statistics
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Get Project by ID
+# Requires a valid projectId
+GET {{baseUrl}}/{{projectId}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Get All Projects for User
+GET {{baseUrl}}/all
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Update Project
+# Requires a valid projectId
+PUT {{baseUrl}}/{{projectId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "{{projectName}} Updated",
+  "description": "{{projectDescription}} - Updated",
+  "tags": ["initial", "data", "updated"],
+  "status": "ACTIVE"
+  // Include other fields to update
+}
+
+
+### Share Project
+# Requires a valid projectId and otherUserEmail
+POST {{baseUrl}}/share
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "otherEmail": "{{otherUserEmail}}",
+  "permission": "EDITOR" # Options: VIEWER, EDITOR, OWNER (case-insensitive)
+}
+
+
+### Unshare Project
+# Requires a valid projectId and otherUserEmail
+POST {{baseUrl}}/unshare
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "otherEmail": "{{otherUserEmail}}"
+}
+
+
+### Get Shared Users for Project
+# Requires a valid projectId
+GET {{baseUrl}}/{{projectId}}/shared-users
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Get Projects Shared With Me
+GET {{baseUrl}}/shared-with-me
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Get Last N Accessed Projects
+GET {{baseUrl}}/last-accessed?n=5
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Archive Project
+# Requires a valid projectId
+POST {{baseUrl}}/{{projectId}}/archive
+Authorization: Bearer {{token}}
+
+
+### Unarchive Project
+# Requires a valid projectId
+POST {{baseUrl}}/{{projectId}}/unarchive
+Authorization: Bearer {{token}}
+
+
+### Get Archived Projects
+GET {{baseUrl}}/archived
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Search Projects
+GET {{baseUrl}}/search?query=Updated&page=0&size=5
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Add Tag to Project
+# Requires a valid projectId
+POST {{baseUrl}}/{{projectId}}/tags?tag={{projectTag}}
+Authorization: Bearer {{token}}
+
+
+### Get Projects by Tag
+GET {{baseUrl}}/by-tag?tag={{projectTag}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Duplicate Project
+# Requires a valid projectId
+POST {{baseUrl}}/{{projectId}}/duplicate?newName=Duplicated Project Name
+Authorization: Bearer {{token}}
+
+
+### Update Project Status
+# Requires a valid projectId
+PUT {{baseUrl}}/{{projectId}}/status?status={{projectStatus}}
+Authorization: Bearer {{token}}
+
+
+### Get Projects by Status
+GET {{baseUrl}}/by-status?status={{projectStatus}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Export Project Data
+# Requires a valid projectId
+GET {{baseUrl}}/{{projectId}}/export
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Create Project From Template
+POST {{baseUrl}}/createFromTemplate?templateName={{templateName}}&newProjectName=Project From Template
+Authorization: Bearer {{token}}
+
+
+### Delete Project
+# Requires a valid projectId
+# Be careful using this!
+DELETE {{baseUrl}}/{{projectId}}
+Authorization: Bearer {{token}}
+
+
+### Bulk Delete Projects
+# Requires a list of project IDs in the body
+# Be careful using this!
+DELETE {{baseUrl}}/bulk-delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+[
+  "project_id_1", 
+  "project_id_2" 
+  // Add actual project IDs to delete
+]

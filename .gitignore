@@ -32,9 +32,13 @@ yarn-error.log*
 .idea/
 *.iml
 .vscode/
+*.iws
+*.ipr
+.settings
+.springBeans
+.sts4-cache
 
 # Maven
-target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -48,3 +52,24 @@ logs/
 
 # Cache files
 .cache/
+
+# Java Build Tools
+HELP.md
+.apt_generated
+.classpath
+.factorypath
+.project
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Scripts
+create_project.bat
+
+# Keep source resources
+!**/src/main/resources/

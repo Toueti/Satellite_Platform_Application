@@ -1,0 +1,111 @@
+@baseUrl = http://localhost:8080/geospatial/processing
+@token = # PASTE_TOKEN_HERE (If authentication is needed for these endpoints)
+@imageId = # Set this based on an existing image
+@resultId = # Set this after saving a result
+
+### Save Processing Results
+# @name saveResult
+POST {{baseUrl}}/save
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+Content-Type: application/json
+
+{
+  "imageId": "{{imageId}}",
+  "analysisType": "NDVI",
+  "resultsData": {
+    "mean_ndvi": 0.75,
+    "max_ndvi": 0.9,
+    "min_ndvi": 0.1
+  },
+  "status": "COMPLETED",
+  "parameters": {
+    "bands": ["B4", "B5"],
+    "threshold": 0.5
+  }
+  // Add other fields based on resultsSaveRequest DTO
+}
+
+> {%
+    // Capture the created result ID if possible (depends on response structure)
+    // Example: client.global.set("resultId", response.body.id); 
+%}
+
+
+### Get Processing Results by ID
+# Requires valid resultId
+GET {{baseUrl}}/{{resultId}}
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+Accept: application/json
+
+
+### Get Processing Results by Image ID
+# Requires valid imageId
+GET {{baseUrl}}/image/{{imageId}}
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+Accept: application/json
+
+
+### Get All Processing Results (Paginated)
+GET {{baseUrl}}?page=0&size=5&sort=analysisDate,desc
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+Accept: application/json
+
+
+### Update Processing Results
+# Requires valid resultId
+PUT {{baseUrl}}/{{resultId}}
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+Content-Type: application/json
+
+{
+  "imageId": "{{imageId}}", // Usually imageId shouldn't change, but include if needed
+  "analysisType": "NDVI_Updated",
+  "resultsData": {
+    "mean_ndvi": 0.78,
+    "max_ndvi": 0.92,
+    "min_ndvi": 0.11,
+    "notes": "Re-analyzed with updated parameters"
+  },
+  "status": "REVISED",
+  "parameters": {
+    "bands": ["B4", "B5"],
+    "threshold": 0.55
+  }
+}
+
+
+### Bulk Save Processing Results
+POST {{baseUrl}}/bulk-save
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+Content-Type: application/json
+
+[
+  {
+    "imageId": "{{imageId}}",
+    "analysisType": "SAVI",
+    "resultsData": {"mean_savi": 0.6},
+    "status": "COMPLETED",
+    "parameters": {"L": 0.5}
+  },
+  {
+    "imageId": "{{imageId}}", // Can be different image IDs
+    "analysisType": "EVI",
+    "resultsData": {"mean_evi": 0.5},
+    "status": "PENDING",
+    "parameters": {}
+  }
+]
+
+
+### Delete Processing Results by ID
+# Requires valid resultId
+# Be careful using this!
+DELETE {{baseUrl}}/{{resultId}}
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+
+
+### Delete Processing Results by Image ID and Result ID
+# Requires valid imageId and resultId
+# Be careful using this!
+DELETE {{baseUrl}}/image/{{imageId}}/{{resultId}}
+# Authorization: Bearer {{token}} # Uncomment if auth is required

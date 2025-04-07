@@ -1,0 +1,7 @@
+@baseUrl = http://localhost:8080/admin/storage
+@adminToken = # PASTE_ADMIN_TOKEN_HERE (If authentication is needed)
+
+### Get Storage Usage
+GET {{baseUrl}}/usage
+# Authorization: Bearer {{adminToken}} # Uncomment if auth is required
+Accept: text/plain # Assuming the response is plain text based on controller return type
