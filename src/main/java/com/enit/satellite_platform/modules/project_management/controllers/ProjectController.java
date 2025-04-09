@@ -8,7 +8,7 @@ import com.enit.satellite_platform.modules.project_management.exceptions.Project
 import com.enit.satellite_platform.modules.project_management.model.PermissionLevel;
 import com.enit.satellite_platform.modules.project_management.model.Project;
 import com.enit.satellite_platform.modules.project_management.services.ProjectService;
-import com.enit.satellite_platform.modules.user_management.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

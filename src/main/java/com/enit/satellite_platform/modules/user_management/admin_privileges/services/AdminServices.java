@@ -6,7 +6,6 @@ import java.util.Set;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import com.enit.satellite_platform.modules.user_management.services.UserManagementCoreService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,12 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.enit.satellite_platform.exceptions.DuplicationException;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.repository.AdminSignupRequestRepository;
-import com.enit.satellite_platform.modules.user_management.exceptions.RoleNotFoundException;
-import com.enit.satellite_platform.modules.user_management.models.AdminSignupRequest;
-import com.enit.satellite_platform.modules.user_management.models.Authority;
-import com.enit.satellite_platform.modules.user_management.models.User;
-import com.enit.satellite_platform.modules.user_management.services.RoleService;
-import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.RoleNotFoundException;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.AdminSignupRequest;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.Authority;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.services.RoleService;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.services.UserManagementCoreService;
+import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;

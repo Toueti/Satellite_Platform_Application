@@ -5,8 +5,9 @@ import com.enit.satellite_platform.config.dto.UpdatePropertyRequestDto;
 import com.enit.satellite_platform.exceptions.DuplicationException;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.services.AdminServices;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.services.ConfigManagementService;
-import com.enit.satellite_platform.modules.user_management.models.AdminSignupRequest; // Added import
-import com.enit.satellite_platform.modules.user_management.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.RoleNotFoundException;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.AdminSignupRequest;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
 import com.enit.satellite_platform.shared.dto.GenericResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema; // Added import
@@ -24,7 +25,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 
-import com.enit.satellite_platform.modules.user_management.exceptions.RoleNotFoundException; // Added import
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Set;

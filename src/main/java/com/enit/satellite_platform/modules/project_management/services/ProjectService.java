@@ -8,8 +8,8 @@ import com.enit.satellite_platform.modules.resource_management.image_management.
 import com.enit.satellite_platform.modules.resource_management.image_management.services.ImageService;
 import com.enit.satellite_platform.exceptions.DuplicationException;
 import com.enit.satellite_platform.modules.project_management.dto.ProjectStatisticsDto;
-import com.enit.satellite_platform.modules.user_management.models.User;
-import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;

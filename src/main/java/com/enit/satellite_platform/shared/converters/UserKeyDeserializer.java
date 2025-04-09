@@ -1,6 +1,6 @@
 package com.enit.satellite_platform.shared.converters;
 
-import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository; // Corrected import path
+import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import org.bson.types.ObjectId;

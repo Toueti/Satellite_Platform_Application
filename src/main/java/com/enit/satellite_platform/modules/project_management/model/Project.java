@@ -1,7 +1,7 @@
 package com.enit.satellite_platform.modules.project_management.model;
 
 import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
-import com.enit.satellite_platform.modules.user_management.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
 import com.enit.satellite_platform.shared.converters.UserKeyDeserializer; // Import the custom deserializer
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize; // Import annotation
 

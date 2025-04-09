@@ -5,8 +5,8 @@ import com.enit.satellite_platform.modules.messaging.model.Conversation;
 import com.enit.satellite_platform.modules.messaging.model.Message;
 import com.enit.satellite_platform.modules.messaging.service.AttachmentService;
 import com.enit.satellite_platform.modules.messaging.service.MessagingService;
-import com.enit.satellite_platform.modules.user_management.models.User;
-import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 import com.enit.satellite_platform.modules.messaging.dto.SendMessageRequest;
 //import com.enit.satellite_platform.modules.messaging.dto.AddReactionRequest;
 

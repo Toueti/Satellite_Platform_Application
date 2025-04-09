@@ -13,8 +13,8 @@ import com.enit.satellite_platform.modules.resource_management.image_management.
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository.ImageMetadataProjection; // Import projection
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ResultsRepository;
-import com.enit.satellite_platform.modules.user_management.models.User; // Import User
-import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository; // Import UserRepository
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 
 import org.bson.types.ObjectId;
 // Keep only one set of imports

@@ -19,7 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.enit.satellite_platform.config.rateLimiter.RateLimitingFilter;
-import com.enit.satellite_platform.modules.user_management.security.Jwt.JwtAuthenticationFilter;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.security.Jwt.JwtAuthenticationFilter;
 
 import org.springframework.web.client.RestTemplate;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

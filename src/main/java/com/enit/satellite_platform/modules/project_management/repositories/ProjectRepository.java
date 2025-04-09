@@ -1,7 +1,7 @@
 package com.enit.satellite_platform.modules.project_management.repositories;
 
 import com.enit.satellite_platform.modules.project_management.model.Project;
-import com.enit.satellite_platform.modules.user_management.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
 
 import org.bson.types.ObjectId;
 

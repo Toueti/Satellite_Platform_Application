@@ -4,8 +4,8 @@ import com.enit.satellite_platform.modules.messaging.model.Conversation;
 import com.enit.satellite_platform.modules.messaging.model.Message;
 import com.enit.satellite_platform.modules.messaging.model.MessageType;
 import com.enit.satellite_platform.modules.messaging.repository.ConversationRepository;
-//import com.enit.satellite_platform.modules.user_management.models.User;
-import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository; // Assuming UserRepository exists
+import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
