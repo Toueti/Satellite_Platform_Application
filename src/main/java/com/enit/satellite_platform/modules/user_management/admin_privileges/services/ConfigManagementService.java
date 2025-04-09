@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.scheduling.support.CronExpression;
@@ -36,6 +38,9 @@ public class ConfigManagementService {
 
     private static final Logger log = LoggerFactory.getLogger(ConfigManagementService.class);
     private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
+    private static final String RUNTIME_OVERRIDES_PROPERTY_SOURCE = "runtimeOverrides";
+
     private static final Set<String> VALID_LOG_LEVELS = Set.of("TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL",
             "OFF"); // Added for log level validation
 
@@ -47,6 +52,9 @@ public class ConfigManagementService {
 
     @Autowired(required = false)
     private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private AuditLogService auditLogService;
 
     /**
      * A map of manageable properties and their descriptions.
@@ -115,19 +123,14 @@ public class ConfigManagementService {
         properties.put("messaging.user-to-user.enabled", "Enable/disable direct user-to-user messaging");
         properties.put("messaging.user-to-admin.enabled", "Enable/disable user-to-admin support chat");
         properties.put("messaging.user-to-bot.enabled", "Enable/disable chatbot interactions");
-        // properties.put("messaging.max.messages.per.user.daily", "Limit messages per user per day (0 to disable)"); // Add later
 
         // Messaging Configuration - RabbitMQ & Queue Settings
         properties.put("messaging.rabbitmq.enabled", "Globally enable/disable the messaging module");
-        // properties.put("messaging.rabbitmq.exchange", "Name of the main direct exchange (Requires restart)"); // Harder to make dynamic
-        // properties.put("messaging.rabbitmq.user.queue", "Name of the main user queue (Requires restart)"); // Harder to make dynamic
-        // properties.put("messaging.rabbitmq.admin.queue", "Name of the admin queue (Requires restart)"); // Harder to make dynamic
         properties.put("messaging.rabbitmq.routing.user.direct", "Routing key for direct user messages (if using static key)"); // Example if not using userId
         properties.put("messaging.rabbitmq.routing.admin.topic", "Base routing key for admin topic messages (e.g., 'admin.message')");
         properties.put("messaging.rabbitmq.routing.bot.topic", "Base routing key for bot topic messages (e.g., 'bot.message')");
         properties.put("messaging.queue.dlx.enabled", "Enable Dead Letter Queue (DLQ) for failed messages");
         properties.put("messaging.queue.prefetch.count", "Number of messages a consumer processes at once");
-        // properties.put("messaging.queue.autoAck", "Automatically acknowledge messages (true/false) - Not recommended to change dynamically");
 
         // TODO: Add other messaging properties here later
 
@@ -153,6 +156,11 @@ public class ConfigManagementService {
         return true;
     }
 
+    /**
+     * Retrieves all manageable configuration properties with their current and default values.
+     *
+     * @return List of {@link ManageablePropertyDto} ManageablePropertyDto objects representing the list of manageable properties.
+     */
     public List<ManageablePropertyDto> getManageableProperties() {
         List<ConfigProperty> overrides = configPropertyRepository.findAllById(MANAGEABLE_PROPERTIES.keySet());
         Map<String, ConfigProperty> overrideMap = overrides.stream()
@@ -202,6 +210,80 @@ public class ConfigManagementService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves all configuration properties that start with the specified prefix.
+     * This includes their current and default values, along with metadata such as description and last updated time.
+     *
+     * @param prefix The prefix to filter configuration properties by.
+     * @return A List of {@link ManageablePropertyDto} ManageablePropertyDto objects representing the list of manageable properties matching the prefix.
+     */
+    public List<ManageablePropertyDto> getAllConfigs(String prefix){
+        List<ConfigProperty> overrides = configPropertyRepository.findAllById(MANAGEABLE_PROPERTIES.keySet());
+        Map<String, ConfigProperty> overrideMap = overrides.stream()
+                .collect(Collectors.toMap(ConfigProperty::getId, prop -> prop));
+
+        return MANAGEABLE_PROPERTIES.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(prefix))
+                .map(entry -> {
+                    String key = entry.getKey();
+                    // Always get description from the definitive MANAGEABLE_PROPERTIES map
+                    String description = MANAGEABLE_PROPERTIES.getOrDefault(key, "No description available.");
+                    ConfigProperty override = overrideMap.get(key);
+
+                    // Get the value currently active in the environment (might include overrides already)
+                    String environmentValue = environment.getProperty(key, "");
+
+                    // Determine the current value to display
+                    String currentValue;
+                    if (override != null && override.getValue() != null) {
+                        // If there's an active override in the DB (value is not null), that's the current value
+                        currentValue = override.getValue();
+                    } else {
+                        // Otherwise, the value from the environment (which might be the original default or another override) is the current one
+                        currentValue = environmentValue;
+                    }
+
+                    // Determine the default value to display
+                    String defaultValue;
+                    if (override != null && override.getDefaultValue() != null) {
+                        // Use the default value stored in the ConfigProperty entity if available and not null
+                        defaultValue = override.getDefaultValue();
+                    } else {
+                        // Fallback: If not stored in ConfigProperty or is null, use the current environment value
+                        // This might not be the *original* default if other overrides exist.
+                        defaultValue = environmentValue;
+                        if (override != null) { // Log only if an override exists but lacks a default value
+                             log.trace("Default value for key '{}' not found in ConfigProperty override; using environment value '{}'.", key, environmentValue);
+                        }
+                    }
+
+                    String lastUpdated = (override != null && override.getLastUpdated() != null)
+                            ? override.getLastUpdated().format(ISO_FORMATTER)
+                            : null;
+
+                    return new ManageablePropertyDto(key, currentValue, defaultValue, description, lastUpdated);
+                })
+                .sorted(Comparator.comparing(ManageablePropertyDto::getKey))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Updates a specific configuration property at runtime using the provided value.
+     * If the new value is null, the property will be reset to its original default value.
+     * If the property is already set to its default value, this method does nothing.
+     * If the property is not designated as manageable, an IllegalArgumentException is thrown.
+     * If the new value is invalid according to the property's validators, an IllegalArgumentException is thrown.
+     * If the property is successfully updated, the ConfigProperty entity is returned, reflecting the new value.
+     * The returned ConfigProperty instance always has the defaultValue field populated.
+     * If the property is reset to default, the returned ConfigProperty instance has the value field set to the original default value.
+     * If the property is already set to its default value, the returned ConfigProperty instance is the existing entity.
+     * If the property is not found in the DB, a new ConfigProperty entity is created with the default value set.
+     * The environment is always updated with the new value or the original default value.
+     * The DatabasePropertySource cache is updated with the new value or the original default value if present.
+     * If the event publisher is set, a refresh event is published with the updated property key.
+     * @param request the request containing the key and new value to update.
+     * @return the updated {@link ConfigProperty} entity or representation of the reset state.
+     */
     @Transactional
     public ConfigProperty updateProperty(UpdatePropertyRequestDto request) {
         String key = request.getKey();
@@ -262,6 +344,49 @@ public class ConfigManagementService {
 
         return property;
     }
+    
+    
+    /**
+     * Updates a specific configuration property at runtime.
+     * @param updateRequest The request containing the key and value to update.
+     */
+    public void updateConfigurationProperty(UpdatePropertyRequestDto updateRequest) {
+        if (updateRequest == null || updateRequest.getKey() == null || updateRequest.getKey().isBlank()) {
+            throw new IllegalArgumentException("Configuration key cannot be null or blank.");
+        }
+
+        MutablePropertySources propertySources = environment.getPropertySources();
+        Map<String, Object> map;
+
+        if (propertySources.contains(RUNTIME_OVERRIDES_PROPERTY_SOURCE)) {
+            //* Get existing map if property source exists
+            MapPropertySource propertySource = (MapPropertySource) propertySources.get(RUNTIME_OVERRIDES_PROPERTY_SOURCE);
+            //* Need to create a new map as the underlying source map might be unmodifiable
+            map = new HashMap<>(propertySource.getSource());
+        } else {
+            // *Create new map if property source doesn't exist
+            map = new HashMap<>();
+        }
+
+        // Add or update the property
+        map.put(updateRequest.getKey(), updateRequest.getValue());
+
+        // Replace or add the property source with high precedence
+        if (propertySources.contains(RUNTIME_OVERRIDES_PROPERTY_SOURCE)) {
+            propertySources.replace(RUNTIME_OVERRIDES_PROPERTY_SOURCE, new MapPropertySource(RUNTIME_OVERRIDES_PROPERTY_SOURCE, map));
+        } else {
+            // Add it just after systemProperties to ensure it overrides most other sources
+            propertySources.addFirst(new MapPropertySource(RUNTIME_OVERRIDES_PROPERTY_SOURCE, map));
+        }
+
+        // Optionally: Log the change or trigger a refresh event if using Spring Cloud Config
+        log.info("Updated configuration property: {} = {}", updateRequest.getKey(), updateRequest.getValue()); // Use logger
+        // Audit Log
+        auditLogService.logAuditEvent(AdminServices.getCurrentUsername(), "CONFIG_UPDATED", "Property updated: " + updateRequest.getKey() + "=" + updateRequest.getValue());
+    }
+
+    
+    
     /**
      * Gets the effective value of a property, checking overrides first, then the environment.
      * Primarily for internal use or potentially exposing read-only values.
@@ -418,5 +543,12 @@ public class ConfigManagementService {
         } catch (InvalidPathException e) {
             throw new IllegalArgumentException("Invalid path format '" + value + "' for '" + key + "': " + e.getMessage());
         }
+
+        auditLogService.logAuditEvent(AdminServices.getCurrentUsername(), "CONFIG_VALIDATION", "Property validated: " + key + "=" + value);
+        log.info("Validated configuration property: {} = {}", key, value);
     }
+
+
+
+
 }

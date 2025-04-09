@@ -261,8 +261,8 @@ public class AuditAspect {
     }
 
     private String extractProjectIdFromResult(Object result) {
-        if (result instanceof Project project && project.getProjectId() != null) {
-            return project.getProjectId().toString();
+        if (result instanceof Project project && project.getId() != null) {
+            return project.getId().toString();
         }
         // Add reflection fallback if needed, e.g., for methods returning just the ID
         if (result instanceof ObjectId objectId) {

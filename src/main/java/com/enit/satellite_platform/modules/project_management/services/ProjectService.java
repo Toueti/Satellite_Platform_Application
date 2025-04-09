@@ -26,6 +26,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,6 +72,7 @@ public class ProjectService {
   @Autowired
   private ImageService imageService;
 
+
   /**
    * Creates a new project.
    *
@@ -97,7 +99,9 @@ public class ProjectService {
       Project savedProject = projectRepository.save(project);
       thematician.getProjects().add(savedProject);
       userRepository.save(thematician);
-      logger.info("Project created successfully with ID: {}", savedProject.getProjectId());
+      logger.info("Project created successfully with ID: {}", savedProject.getId());
+
+
       return savedProject;
     } catch (DataIntegrityViolationException e) {
       logger.error("Duplicate project name for user: {}", email, e);
@@ -126,8 +130,8 @@ public class ProjectService {
     }
 
     // Check for duplicate name for the same user (excluding this project)
-    Optional<Project> existingProject = projectRepository.findByProjectNameAndUserId(owner.getId(), newName);
-    if (existingProject.isPresent() && !existingProject.get().getProjectId().equals(projectId)) {
+    Optional<Project> existingProject = projectRepository.findByProjectNameAndUserId(new ObjectId(owner.getId()), newName);
+    if (existingProject.isPresent() && !existingProject.get().getId().equals(projectId.toHexString())) {
       logger.warn("Project name '{}' already exists for user '{}'", newName, email);
       throw new DuplicationException("A project with the name '" + newName + "' already exists for this user.");
     }
@@ -179,8 +183,8 @@ public class ProjectService {
 
     for (Project project : allProjects) {
       long imageCount = imageRepository.countByProject(project);
-      imagesPerProject.put(project.getProjectId(), imageCount);
-      projectTimeIntervals.put(project.getProjectId(), project.getLastAccessedTime());
+      imagesPerProject.put(new ObjectId(project.getId()), imageCount);
+      projectTimeIntervals.put(new ObjectId(project.getId()), project.getLastAccessedTime());
     }
 
     return new ProjectStatisticsDto(totalProjects, imagesPerProject, projectTimeIntervals);
@@ -255,6 +259,8 @@ public class ProjectService {
       imageService.deleteAllImagesByProject(projectId);
       projectRepository.deleteById(projectId);
       logger.info("Project and associated images deleted successfully with ID: {}", projectId);
+
+
     } catch (Exception e) {
       logger.error("Failed to delete project with ID: {}", projectId, e);
       throw new RuntimeException("Failed to delete project: " + e.getMessage(), e);
@@ -287,6 +293,8 @@ public class ProjectService {
     userToShare.getSharedProjects().add(project);
     userRepository.save(userToShare);
     logger.info("Project shared successfully with user: {}", otherEmail);
+
+
     return project;
   }
 
@@ -505,7 +513,7 @@ public class ProjectService {
       throw new AccessDeniedException("User does not have access to export this project");
     }
     Map<String, Object> exportData = new HashMap<>();
-    exportData.put("projectId", project.getProjectId().toString());
+    exportData.put("projectId", project.getId().toString());
     exportData.put("name", project.getProjectName());
     exportData.put("description", project.getDescription());
     exportData.put("owner", project.getOwner().getEmail());
@@ -526,10 +534,10 @@ public class ProjectService {
     List<Project> projects = projectRepository.findAllById(projectIds);
     for (Project project : projects) {
       if (!project.getOwner().equals(user)) {
-        logger.error("User {} does not own project: {}", email, project.getProjectId());
-        throw new AccessDeniedException("User does not own project: " + project.getProjectId());
+        logger.error("User {} does not own project: {}", email, project.getId());
+        throw new AccessDeniedException("User does not own project: " + project.getId());
       }
-      deleteProject(project.getProjectId());
+      deleteProject(new ObjectId(project.getId()));
     }
     logger.info("Bulk deletion successful for project IDs: {}", projectIds);
   }
@@ -546,7 +554,7 @@ public class ProjectService {
 
       
         Path templatePath = Paths.get( "src/main/resources/project_templates", templateName);
-        Path projectPath = Paths.get(projectBasePath, createdProject.getProjectId().toString());
+        Path projectPath = Paths.get(projectBasePath, createdProject.getId().toString());
 
 
         // 3. Copy the template contents to the new project directory
@@ -616,7 +624,7 @@ public class ProjectService {
   private User validateOwner(Project project, String email, String action) {
     User user = getUserByEmail(email, "User not found: " + email);
     if (!project.getOwner().equals(user)) {
-      logger.error("Access denied for email: {} to {} project: {}", email, action, project.getProjectId());
+      logger.error("Access denied for email: {} to {} project: {}", email, action, project.getId());
       throw new AccessDeniedException("Only the project owner can " + action + " the project");
     }
     return user;

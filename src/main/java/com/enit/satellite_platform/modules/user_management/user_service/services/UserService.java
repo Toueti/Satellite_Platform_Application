@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -81,6 +84,7 @@ public class UserService {
 
     @Autowired // Added injection for ActivityLogService
     private ActivityLogService activityLogService;
+
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
@@ -178,9 +182,9 @@ public class UserService {
         user.setAuthorities(roles);
 
         // Save the non-admin user using Core Service
-        userManagementCoreService.saveUser(user);
+        userManagementCoreService.saveUser(user); // Capture the saved user
         logger.info("User signed up successfully with email: {}", signUpRequest.getEmail());
-        // --- End Non-Admin Signup ---
+
     }
 
     /**
@@ -368,7 +372,7 @@ public class UserService {
         if (!ownedProjects.isEmpty()) {
             logger.info("Deleting {} projects owned by user with id: {}", ownedProjects.size(), userId);
             for (Project project : ownedProjects) {
-                imageRepository.deleteAllByProject_ProjectId(project.getProjectId());
+                imageRepository.deleteAllByProject_Id(new ObjectId(project.getId()));
             }
             projectRepository.deleteAll(ownedProjects);
         } else {

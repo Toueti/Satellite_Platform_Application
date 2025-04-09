@@ -43,7 +43,6 @@ public class RoleController {
     @DeleteMapping("/{roleName}")
     public ResponseEntity<GenericResponse<Void>> deleteRole(@PathVariable String roleName) {
         roleService.deleteRole(roleName);
-        // Use the constructor without data for Void responses
         return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Role deleted successfully"));
     }
 }

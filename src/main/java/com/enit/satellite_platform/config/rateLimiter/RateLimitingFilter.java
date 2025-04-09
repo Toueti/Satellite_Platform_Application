@@ -3,15 +3,17 @@ package com.enit.satellite_platform.config.rateLimiter;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.Collection;
 
 @Component
-@Order(1)
 @Slf4j
 public class RateLimitingFilter implements Filter {
 
@@ -30,6 +32,15 @@ public class RateLimitingFilter implements Filter {
             HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
             HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
 
+            // Check if the user is an admin
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && isAdmin(authentication.getAuthorities())) {
+                // Admin users bypass rate limiting
+                filterChain.doFilter(servletRequest, servletResponse);
+                return;
+            }
+
+            // Apply rate limiting for non-admin users
             String key = extractKey(httpRequest);
             RateLimitResult result = rateLimiter.checkLimit(key);
 
@@ -60,5 +71,10 @@ public class RateLimitingFilter implements Filter {
         response.setContentType("application/json");
         response.getWriter().write("{\"error\": \"Rate limit exceeded\", \"retry_after\": " + 
             properties.getTimeWindowMillis() / 1000 + "}");
+    }
+
+    private boolean isAdmin(Collection<? extends GrantedAuthority> authorities) {
+        return authorities.stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
     }
 }

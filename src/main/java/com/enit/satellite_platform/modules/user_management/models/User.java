@@ -124,4 +124,8 @@ public class User implements UserDetails {
     public int hashCode() {
         return Objects.hash(id, email);
     }
+
+    public String getId() {
+        return id != null ? id.toHexString() : null;
+    }
 }

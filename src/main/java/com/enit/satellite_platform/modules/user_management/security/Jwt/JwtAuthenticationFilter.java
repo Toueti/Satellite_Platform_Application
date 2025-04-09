@@ -16,9 +16,13 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.slf4j.Logger; // Add Logger import
+import org.slf4j.LoggerFactory; // Add LoggerFactory import
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class); // Declare logger
 
     @Autowired
     private JwtUtil jwtUtil;

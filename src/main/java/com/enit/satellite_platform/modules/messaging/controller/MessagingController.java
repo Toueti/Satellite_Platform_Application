@@ -3,11 +3,12 @@ package com.enit.satellite_platform.modules.messaging.controller;
 import com.enit.satellite_platform.modules.messaging.model.Attachment; // Added import
 import com.enit.satellite_platform.modules.messaging.model.Conversation;
 import com.enit.satellite_platform.modules.messaging.model.Message;
-import com.enit.satellite_platform.modules.messaging.model.MessageType;
 import com.enit.satellite_platform.modules.messaging.service.AttachmentService;
 import com.enit.satellite_platform.modules.messaging.service.MessagingService;
 import com.enit.satellite_platform.modules.user_management.models.User;
 import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository;
+import com.enit.satellite_platform.modules.messaging.dto.SendMessageRequest;
+//import com.enit.satellite_platform.modules.messaging.dto.AddReactionRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,45 +16,31 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication; // To get current user
-import org.springframework.security.core.context.SecurityContextHolder; // To get current user
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile; // For attachments
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files; // Added import
-import java.nio.file.Path; // For attachment download
-import org.springframework.core.io.Resource; // For attachment download
-import org.springframework.core.io.UrlResource; // For attachment download
-import org.springframework.http.HttpHeaders; // For attachment download
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 
 import java.util.List;
-import java.util.Map; // Import Map
+import java.util.Map;
 import java.util.Optional;
 
-// Define a DTO for sending messages
-@lombok.Data
-class SendMessageRequest {
-    private String recipientId;
-    private String content;
-    private MessageType messageType; // e.g., THEMATICIAN_TO_THEMATICIAN, THEMATICIAN_TO_ADMIN
-}
-
-// Define a DTO for adding reactions (example)
-@lombok.Data
-class AddReactionRequest {
-    private String reactionType; // e.g., "LIKE"
-}
-
 @RestController
-@RequestMapping("/api/v1/messaging") // Base path for messaging endpoints
+@RequestMapping("/api/v1/messaging")
 @RequiredArgsConstructor
 @Slf4j
 public class MessagingController {
 
     private final MessagingService messagingService;
     private final AttachmentService attachmentService;
-    private final UserRepository userRepository; // Inject UserRepository
+    private final UserRepository userRepository;
 
     /**
      * Sends a new message.

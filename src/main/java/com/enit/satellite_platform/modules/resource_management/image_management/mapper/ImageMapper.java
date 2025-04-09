@@ -17,13 +17,13 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface ImageMapper {
 
-    @Mapping(source = "project.projectId", target = "projectId", qualifiedByName = "objectIdToString")
+    @Mapping(source = "project.id", target = "projectId")
     @Mapping(source = "imageData", target = "file", ignore = true)
     ImageDTO toDTO(Image image);
 
     // New mapping for the projection
     @Mapping(source = "project.projectId", target = "projectId", qualifiedByName = "objectIdToString")
-    @Mapping(target = "file", ignore = true) // Ensure file is ignored here too
+    @Mapping(target = "file", ignore = true)
     ImageDTO toDTO(ImageMetadataProjection projection);
 
     @Mapping(target = "project", ignore = true)
@@ -35,7 +35,6 @@ public interface ImageMapper {
 
     List<ImageDTO> toDTOList(List<Image> images);
 
-    // New mapping for list of projections
     List<ImageDTO> projectionToDTOList(List<ImageMetadataProjection> projections);
 
     @Named("objectIdToString")

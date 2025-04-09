@@ -21,20 +21,20 @@ public class ActivityLog {
 
     @Indexed
     @Field("user_id")
-    private String userId; // Store as String for flexibility, can be ObjectId.toString()
+    private String userId;
 
     @Indexed
-    @Field("username") // Typically email in this application
+    @Field("username")
     private String username;
 
     @Indexed
     @Field("action")
-    private String action; // e.g., "USER_LOGIN", "PROJECT_CREATED"
+    private String action;
 
     @Field("details")
-    private String details; // Optional details, e.g., IP address, project ID
+    private String details;
 
-    @CreatedDate // Automatically set by Spring Data MongoDB Auditing (if enabled)
+    @CreatedDate
     @Field("timestamp")
     private LocalDateTime timestamp;
 
@@ -43,6 +43,6 @@ public class ActivityLog {
         this.username = username;
         this.action = action;
         this.details = details;
-        this.timestamp = LocalDateTime.now(); // Set time explicitly if auditing isn't enabled
+        this.timestamp = LocalDateTime.now();
     }
 }

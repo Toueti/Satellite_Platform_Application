@@ -48,7 +48,7 @@ public interface ImageRepository extends MongoRepository<Image, String> {
      * Find all images associated with a project ID, projected as metadata.
      */
     @Query(value = "{ 'project.$id': ?0 }", fields = "{ 'imageData': 0 }") // Exclude imageData
-    List<ImageMetadataProjection> findAllByProject_ProjectIdProjectedBy(ObjectId projectId);
+    List<ImageMetadataProjection> findAllByProject_IdProjectedBy(ObjectId projectId);
 
      /**
      * Find an image by its ID, projected as metadata.
@@ -62,39 +62,39 @@ public interface ImageRepository extends MongoRepository<Image, String> {
     /**
      * Check if an image exists by its ID and project ID.
      */
-    boolean existsByImageIdAndProject_ProjectId(String imageId, ObjectId projectId);
+    boolean existsByImageIdAndProject_Id(String imageId, ObjectId projectId);
 
     /**
      * Find an image by its name and project ID.
      */
-    Optional<Image> findByImageNameAndProject_ProjectId(String imageName, ObjectId projectId);
+    Optional<Image> findByImageNameAndProject_Id(String imageName, ObjectId projectId);
 
     /**
      * Find all images associated with a project ID.
      */
     @Query("{ 'project.$id': ?0 }")
-    List<Image> findAllByProject_ProjectId(ObjectId projectId);
+    List<Image> findAllByProject_Id(ObjectId projectId);
 
     /**
      * Find all images associated with a project ID with pagination.
      */
     @Query("{ 'project.$id': ?0 }")
-    Page<Image> findAllByProject_ProjectId(ObjectId projectId, Pageable pageable);
+    Page<Image> findAllByProject_Id(ObjectId projectId, Pageable pageable);
 
     /**
      * Delete all images associated with a project ID.
      */
-    void deleteAllByProject_ProjectId(ObjectId projectId);
+    void deleteAllByProject_Id(ObjectId projectId);
 
     /**
      * Find an image by its ID and project ID.
      */
-    Optional<Image> findByImageIdAndProject_ProjectId(String imageId, ObjectId projectId);
+    Optional<Image> findByImageIdAndProject_Id(String imageId, ObjectId projectId);
 
     /**
      * Delete an image by its ID and project ID.
      */
-    void deleteByImageIdAndProject_ProjectId(String imageId, ObjectId projectId);
+    void deleteByImageIdAndProject_Id(String imageId, ObjectId projectId);
 
     /**
      * Find an image by its name (across all projects).
@@ -110,7 +110,7 @@ public interface ImageRepository extends MongoRepository<Image, String> {
      * Count images associated with a project ID.
      */
     @Query(value = "{ 'project.$id': ?0 }", count = true)
-    long countByProject_ProjectId(ObjectId projectId);
+    long countByProject_Id(ObjectId projectId);
 
     /**
      * Check if an image exists by its ID.
@@ -129,8 +129,8 @@ public interface ImageRepository extends MongoRepository<Image, String> {
      * @param projectId The ID of the project.
      * @return An optional containing the image if found, empty otherwise.
      */
-    @Query("{ 'project.$projectId': ?0, 'imageName': ?1 }")
-    Optional<Image> findByNameAndProjectId(String imageName, ObjectId projectId);
+    @Query("{ 'project.$id': ?0, 'imageName': ?1 }")
+    Optional<Image> findByNameAndProject_Id(String imageName, ObjectId projectId);
 
     /**
      * Checks if an image exists by its name and project ID.
@@ -141,7 +141,7 @@ public interface ImageRepository extends MongoRepository<Image, String> {
      */
 
     @Query("{ 'project.$projectId': ?0, 'imageName': ?1 }")
-    boolean existsByNameAndProjectId(String imageName, ObjectId projectId);
+    boolean existsByNameAndProject_Id(String imageName, ObjectId projectId);
 
     /**
      * Find all images where the associated project's owner ID matches the given user ID.

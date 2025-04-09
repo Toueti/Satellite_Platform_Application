@@ -3,7 +3,6 @@
 import com.enit.satellite_platform.config.dto.ManageablePropertyDto;
 import com.enit.satellite_platform.config.dto.UpdatePropertyRequestDto;
 import com.enit.satellite_platform.exceptions.DuplicationException;
-import com.enit.satellite_platform.modules.user_management.admin_privileges.dto.ConfigUpdateRequest;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.services.AdminServices;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.services.ConfigManagementService;
 import com.enit.satellite_platform.modules.user_management.models.AdminSignupRequest; // Added import
@@ -95,35 +94,6 @@ public class AdminController {
         }
     }
 
-    @Operation(summary = "Update a configuration property (legacy)",
-            description = "Updates a configuration property in the runtime environment using AdminServices. Note: This is a legacy endpoint; prefer /config/manageable for persistent updates.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Property updated successfully in runtime environment",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = GenericResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Bad request - Invalid key",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = GenericResponse.class))),
-            @ApiResponse(responseCode = "403", description = "Forbidden - User lacks ADMIN authority",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = GenericResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = GenericResponse.class)))
-    })
-    @PutMapping("/config/runtime")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<GenericResponse<?>> updateRuntimeProperty(@Valid @RequestBody ConfigUpdateRequest updateRequest) {
-        try {
-            adminServices.updateConfigurationProperty(updateRequest);
-            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Runtime property '" + updateRequest.getKey() + "' updated successfully."));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new GenericResponse<>("BAD_REQUEST", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(new GenericResponse<>("ERROR", "An unexpected error occurred while updating runtime property: " + updateRequest.getKey()));
-        }
-    }
 
     // --- User Management Endpoints ---
 

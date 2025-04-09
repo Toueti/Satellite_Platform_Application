@@ -107,6 +107,31 @@
   {
     "name": "messaging.attachments.allowed.types",
     "type": "java.lang.String",
-    "description": "A description for 'messaging.attachments.allowed.types'"
+    "description": "the attachments allowed types"
+  },
+  {
+    "name": "messaging.user-to-admin.enabled",
+    "type": "java.lang.String",
+    "description": "Enable/disable user-to-admin support chats"
+  },
+  {
+    "name": "messaging.user-to-bot.enabled",
+    "type": "java.lang.String",
+    "description": "Enable/disable chatbot interactions"
+  },
+  {
+    "name": "messaging.user-to-user.enabled",
+    "type": "java.lang.String",
+    "description": "Enable/disable direct user-to-user messaging"
+  },
+  {
+    "name": "messaging.cleanup.enabled",
+    "type": "java.lang.String",
+    "description": "Enable/disable automatic message cleanup job"
+  },
+  {
+    "name": "messaging.rabbitmq.enabled",
+    "type": "java.lang.String",
+    "description": "Globally enable/disable the messaging module"
   }
 ]}

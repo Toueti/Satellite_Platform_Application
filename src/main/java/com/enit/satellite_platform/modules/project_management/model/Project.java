@@ -44,8 +44,7 @@ public class Project {
      * The unique identifier of the project.
      */
     @Id
-    @Field("project_id")
-    private ObjectId projectId;
+    private ObjectId id;
 
     /**
      * The user who owns the project.
@@ -134,6 +133,28 @@ public class Project {
     /**
      * Updates the last accessed time of the project to the current time.
      */
+
+    @Override
+    public String toString() {
+        return "Project{" +
+                "id=" + id +
+                ", owner=" + owner +
+                ", projectName='" + projectName + '\'' +
+                ", description='" + description + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", lastAccessedTime=" + lastAccessedTime +
+                ", archived=" + archived +
+                ", archivedDate=" + archivedDate +
+                ", tags=" + tags +
+                ", status='" + status + '\'' +
+                ", projectDirectory='" + projectDirectory + '\'' +
+                ", metadata=" + metadata +
+                '}';
+    }
+    public String getId() {
+        return id != null ? id.toHexString() : null;
+    }
     public void updateLastAccessedTime() {
         this.lastAccessedTime = new Date();
     }

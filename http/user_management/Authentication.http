@@ -18,6 +18,8 @@ Content-Type: application/json
   "roles": ["THEMATICIAN"]
 }
 
+#return type : plain text :User registered successfully.
+
 ### Authenticate user (Sign in)
 # @name signin
 POST {{baseUrl}}/auth/signin
@@ -27,6 +29,12 @@ Content-Type: application/json
   "username": "{{email}}",
   "password": "{{password}}"
 }
+
+#return type : JSON:
+# {
+#   "token": "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90N0BnbWFpbC5jb20iLCJlbWFpbCI6InlvYnRvdDdAZ21haWwuY29tIiwicm9sZXMiOlsiUk9MRV9USEVNQVRJQ0lBTiJdLCJzdWIiOiJ5b2J0b3Q3QGdtYWlsLmNvbSIsImlhdCI6MTc0Mzg0NzE0NywiZXhwIjoxNzQzOTMzNTQ3fQ.HdNAlQfyipAGL8t_-JiGClCcL-Pk6SDB5J-_00qGteg",
+#   "userId": "67f0fec15ef6b30b9b40ef4c"
+# }
 
 > {%
     client.global.set("token", response.body.accessToken);

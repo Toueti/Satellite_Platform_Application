@@ -58,6 +58,7 @@ public class GeeService {
     @Autowired
     private ObjectMapper objectMapper;
 
+
     /**
      * Process a GEE request by sending it to the Flask backend, using
      * GeeResponseCacheHandler for caching.
@@ -87,6 +88,7 @@ public class GeeService {
         // The CacheHandler manages TTL and access counts internally
         geeResponseCacheHandler.storeResourceData(response, cacheKey);
         logger.info("Cached new GeeResponse for key: {}", cacheKey);
+
 
         return response;
     }

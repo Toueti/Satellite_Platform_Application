@@ -61,6 +61,7 @@ public class ImageService {
     @Autowired
     private ImageMapper imageMapper;
 
+
     /**
      * Adds a new image to the system.
      *
@@ -76,7 +77,7 @@ public class ImageService {
         logger.info("Attempting to add image: {}", imageDTO);
         validateImageDTO(imageDTO);
         ObjectId projectId = new ObjectId(imageDTO.getProjectId());
-        if (imageRepository.existsByImageIdAndProject_ProjectId(imageDTO.getImageId(), projectId)) {
+        if (imageRepository.existsByImageIdAndProject_Id(imageDTO.getImageId(), projectId)) {
             logger.warn("Image with Id {} already exists in project {}", imageDTO.getImageId(), projectId);
             throw new DuplicationException(
                     "An image with the id '" + imageDTO.getImageId() + "' already exists in this project.");
@@ -96,6 +97,7 @@ public class ImageService {
             projectRepository.save(project);
 
             logger.info("Image added successfully with Id: {}", image.getImageId());
+
             // Return DTO based on the saved full entity
             return imageMapper.toDTO(image);
         } catch (ProjectNotFoundException e) {
@@ -122,13 +124,13 @@ public class ImageService {
                 });
 
         // Check if the image belongs to the project
-        if (!image.getProject().getProjectId().equals(projectId)) {
+        if (!image.getProject().getId().equals(projectId)) {
             logger.warn("Image {} does not belong to project {}", imageId, projectId);
             throw new IllegalArgumentException("This image does not belong to the specified project.");
         }
 
         // Check for duplicate name within the same project (excluding this image)
-        Optional<Image> existingImage = imageRepository.findByNameAndProjectId(newName, projectId);
+        Optional<Image> existingImage = imageRepository.findByNameAndProject_Id(newName, projectId);
         if (existingImage.isPresent() && !existingImage.get().getImageId().equals(imageId)) {
             logger.warn("Image name '{}' already exists in project '{}'", newName, projectId);
             throw new DuplicationException(
@@ -170,7 +172,7 @@ public class ImageService {
             if (project != null) {
                 project.getImages().removeIf(img -> img.getImageId().equals(id));
                 projectRepository.save(project);
-                logger.info("Removed image Id: {} from project Id: {}", id, project.getProjectId());
+                logger.info("Removed image Id: {} from project Id: {}", id, project.getId());
             }
 
             imageRepository.deleteById(id);
@@ -220,7 +222,7 @@ public class ImageService {
         validateObjectId(projectId, "Project Id");
 
         try {
-            return imageRepository.findByImageNameAndProject_ProjectId(name, projectId)
+            return imageRepository.findByImageNameAndProject_Id(name, projectId)
                     .map(imageMapper::toDTO);
         } catch (Exception e) {
             logger.error("Failed to retrieve image by name and project", e);
@@ -301,7 +303,7 @@ public class ImageService {
         try {
             getProjectById(projectId); // Validate project exists
             // Use projection method
-            List<ImageMetadataProjection> projections = imageRepository.findAllByProject_ProjectIdProjectedBy(projectId);
+            List<ImageMetadataProjection> projections = imageRepository.findAllByProject_IdProjectedBy(projectId);
             return imageMapper.projectionToDTOList(projections); // Map projections to DTOs
         } catch (Exception e) {
             logger.error("Failed to retrieve images by project Id: {}", projectId, e);
@@ -324,12 +326,12 @@ public class ImageService {
 
         try {
             Project project = getProjectById(projectId);
-            List<Image> images = imageRepository.findAllByProject_ProjectId(projectId);
+            List<Image> images = imageRepository.findAllByProject_Id(projectId);
             for (Image image : images) {
                 geeResultsRepository.deleteAllByImage_ImageId(image.getImageId());
                 logger.info("Deleted GeeResults for image Id: {}", image.getImageId());
             }
-            imageRepository.deleteAllByProject_ProjectId(projectId);
+            imageRepository.deleteAllByProject_Id(projectId);
             project.getImages().clear();
             projectRepository.save(project);
             logger.info("All images and GEE results deleted successfully for project Id: {}", projectId);
@@ -357,7 +359,7 @@ public class ImageService {
         validateObjectId(projectId, "Project Id");
 
         try {
-            return imageRepository.findByImageIdAndProject_ProjectId(imageId, projectId)
+            return imageRepository.findByImageIdAndProject_Id(imageId, projectId)
                     .map(imageMapper::toDTO);
         } catch (Exception e) {
             logger.error("Failed to retrieve image by image Id and project Id", e);
@@ -380,7 +382,7 @@ public class ImageService {
         validateObjectId(projectId, "Project Id");
 
         try {
-            imageRepository.findByImageIdAndProject_ProjectId(imageId, projectId)
+            imageRepository.findByImageIdAndProject_Id(imageId, projectId)
                     .orElseThrow(() -> {
                         logger.error("Image not found with Id: {} in project: {}", imageId, projectId);
                         return new IllegalArgumentException(
@@ -390,7 +392,7 @@ public class ImageService {
             Project project = getProjectById(projectId);
             project.getImages().removeIf(img -> img.getImageId().equals(imageId));
             projectRepository.save(project);
-            imageRepository.deleteByImageIdAndProject_ProjectId(imageId, projectId);
+            imageRepository.deleteByImageIdAndProject_Id(imageId, projectId);
             logger.info("Image and GEE results deleted successfully with Id: {} from project: {}", imageId, projectId);
         } catch (IllegalArgumentException e) {
             throw e;
@@ -448,7 +450,7 @@ public class ImageService {
 
         try {
             getProjectById(projectId);
-            return imageRepository.countByProject_ProjectId(projectId);
+            return imageRepository.countByProject_Id(projectId);
         } catch (ProjectNotFoundException e) {
             logger.error("Project not found for counting images: {}", projectId, e);
             throw e;
@@ -516,7 +518,7 @@ public class ImageService {
         List<Image> importedImages = new ArrayList<>();
         for (Image sourceImage : sourceImages) {
             // Verify the image actually belongs to the source project (paranoid check)
-            if (!sourceImage.getProject().getProjectId().equals(sourceProjId)) {
+            if (!sourceImage.getProject().getId().equals(sourceProjId)) {
                  logger.error("Image {} does not belong to source project {}", sourceImage.getImageId(), sourceProjId);
                  // Handle this inconsistency - skip or throw error
                  continue; // Skipping for now
@@ -561,7 +563,7 @@ public class ImageService {
         String currentName = originalName;
         int copyCount = 0;
         // Check if the original name exists
-        while (imageRepository.existsByNameAndProjectId(currentName, targetProjectId)) {
+        while (imageRepository.existsByNameAndProject_Id(currentName, targetProjectId)) {
             copyCount++;
             currentName = originalName + "_copy_" + copyCount;
             // Optional: Add a limit to prevent infinite loops in edge cases
