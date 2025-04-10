@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingResults;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingResults;
 
 import java.util.List;
 import java.util.Optional;

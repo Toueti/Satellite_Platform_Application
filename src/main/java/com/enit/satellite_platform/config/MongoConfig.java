@@ -15,7 +15,8 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories; // Added import
+// import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories; 
 
 @Configuration
 @RefreshScope //! Make all beans defined in this class refreshable
@@ -65,6 +66,11 @@ public class MongoConfig {
         // The MappingMongoConverter is typically auto-configured by Spring Boot Data MongoDB
         return new MongoTemplate(mongoDatabaseFactory, converter);
     }
+
+    // @Bean
+    // public GridFsTemplate gridFsTemplate(MongoDatabaseFactory mongoDatabaseFactory, MongoTemplate mongoTemplate) {
+    //     return new GridFsTemplate(mongoDatabaseFactory, mongoTemplate.getConverter());
+    // }
 
     // ? Optional: If you need custom type mapping or converters, define the MappingMongoConverter bean here as well.
     //! Spring Boot Data MongoDB usually provides a default one.

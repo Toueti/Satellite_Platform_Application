@@ -1,8 +1,8 @@
 @baseUrl = http://localhost:8080/api/thematician/projects
-@token = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1RIRU1BVElDSUFOIl0sImVtYWlsIjoieW9idG90OEBnbWFpbC5jb20iLCJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJzdWIiOiJ5b2J0b3Q4QGdtYWlsLmNvbSIsImlhdCI6MTc0NDEyODY3NCwiZXhwIjoxNzQ0MjE1MDc0fQ.UDtPunW6hPE8CdptgXg_nLhbMDzzs3nsefk4GnFg-FI
-@projectId = # Set this after creating a project
+@token = eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJlbWFpbCI6InlvYnRvdDhAZ21haWwuY29tIiwicm9sZXMiOlsiUk9MRV9USEVNQVRJQ0lBTiJdLCJzdWIiOiJ5b2J0b3Q4QGdtYWlsLmNvbSIsImlhdCI6MTc0NDI3MjMxNCwiZXhwIjoxNzQ0MzU4NzE0fQ.t0abF5mB5tt4aBE9ZYloASbbY8Gp4U9DQsNf9Iu2cO0
+@projectId = 67f0db2c5ef6b30b9b40ef49
 @otherUserEmail = collaborator@example.com
-@projectName = My New Project2
+@projectName = My New Project
 @projectDescription = A description for the new project.
 @projectTag = research
 @projectStatus = IN_PROGRESS
@@ -44,6 +44,10 @@ Accept: application/json
 GET {{baseUrl}}/{{projectId}}
 Authorization: Bearer {{token}}
 Accept: application/json
+
+### Get project by name
+GET {{baseUrl}}/name/{{projectName}}
+Authorization: Bearer {{token}}
 
 
 ### Get All Projects for User

@@ -1,8 +1,8 @@
 package com.enit.satellite_platform.modules.messaging.service;
 
-import com.enit.satellite_platform.modules.messaging.model.Conversation;
-import com.enit.satellite_platform.modules.messaging.model.Message;
-import com.enit.satellite_platform.modules.messaging.model.MessageType;
+import com.enit.satellite_platform.modules.messaging.entities.Conversation;
+import com.enit.satellite_platform.modules.messaging.entities.Message;
+import com.enit.satellite_platform.modules.messaging.entities.MessageType;
 import com.enit.satellite_platform.modules.messaging.repository.ConversationRepository;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 

@@ -6,6 +6,8 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 // import org.springframework.context.annotation.Import; // Remove Import annotation
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import static org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry; // Add WebSocket imports
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker; // Add WebSocket imports
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry; // Add WebSocket imports
@@ -33,6 +35,7 @@ import org.springframework.scheduling.annotation.SchedulingConfigurer;
 @EnableAsync
 @EnableScheduling
 @EnableMongoRepositories(basePackages = "com.enit.satellite_platform")
+@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
 // @Import(WebSocketConfig.class) // Remove explicit import
 @EnableWebSocketMessageBroker // Add annotation here
 public class SatellitePlatformApplication implements WebSocketMessageBrokerConfigurer, SchedulingConfigurer { // Implement SchedulingConfigurer again

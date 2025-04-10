@@ -2,7 +2,8 @@ package com.enit.satellite_platform.modules.resource_management.image_management
 
 import java.util.Map;
 
-import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingStatus;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingStatus;
+
 import lombok.Data;
 
 @Data

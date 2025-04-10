@@ -1,4 +1,4 @@
-package com.enit.satellite_platform.modules.activity.model;
+package com.enit.satellite_platform.modules.activity.entities;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

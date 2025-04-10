@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import com.enit.satellite_platform.modules.activity.model.ActivityLog;
+import com.enit.satellite_platform.modules.activity.entities.ActivityLog;
 
 import java.time.LocalDateTime;
 

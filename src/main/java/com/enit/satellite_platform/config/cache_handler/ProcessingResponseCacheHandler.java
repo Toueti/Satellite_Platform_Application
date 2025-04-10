@@ -2,8 +2,8 @@ package com.enit.satellite_platform.config.cache_handler;
 
 import com.enit.satellite_platform.config.cache_handler.general_cache_handler.CacheHandler;
 import com.enit.satellite_platform.modules.resource_management.dto.ProcessingResponse;
-import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingResults;
 import com.enit.satellite_platform.shared.mapper.ResultsMapper;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingResults;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ResultsRepository;
 
 import jakarta.annotation.PostConstruct;

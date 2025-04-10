@@ -1,8 +1,8 @@
 package com.enit.satellite_platform.modules.activity.service;
 
-import com.enit.satellite_platform.modules.activity.model.ActivityLog;
+import com.enit.satellite_platform.modules.activity.entities.ActivityLog;
 import com.enit.satellite_platform.modules.activity.repository.ActivityLogRepository;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

@@ -1,7 +1,7 @@
 package com.enit.satellite_platform.modules.messaging.service;
 
 import com.enit.satellite_platform.modules.messaging.config.RabbitMQConfig;
-import com.enit.satellite_platform.modules.messaging.model.Message;
+import com.enit.satellite_platform.modules.messaging.entities.Message;
 import com.enit.satellite_platform.modules.messaging.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

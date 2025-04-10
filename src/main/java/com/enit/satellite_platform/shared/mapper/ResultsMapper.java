@@ -7,7 +7,7 @@ import org.mapstruct.Mapping;
 
 import com.enit.satellite_platform.modules.resource_management.dto.ProcessingResponse;
 import com.enit.satellite_platform.modules.resource_management.image_management.dto.resultsSaveRequest;
-import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingResults;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingResults;
 
 
 @Mapper(componentModel = "spring")

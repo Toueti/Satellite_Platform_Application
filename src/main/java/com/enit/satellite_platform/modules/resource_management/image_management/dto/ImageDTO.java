@@ -10,7 +10,9 @@ public class ImageDTO {
     private String imageId;
     private String projectId;
     private String imageName;
-    private Map<String, Object> mettadata;
-    private MultipartFile file; // Added field to accept image file
+    private Map<String, Object> metadata;
+    private MultipartFile file;
     private long fileSize;
+    private String storageType;
+    private String storageIdentifier; // Generic identifier (could be GridFS ID, file path, S3 URI, etc.)
 }

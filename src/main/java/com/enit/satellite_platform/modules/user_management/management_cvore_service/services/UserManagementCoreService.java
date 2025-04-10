@@ -1,9 +1,9 @@
 package com.enit.satellite_platform.modules.user_management.management_cvore_service.services;
 
 import com.enit.satellite_platform.exceptions.DuplicationException;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.Authority;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.RoleNotFoundException;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.Authority;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 
 import org.bson.types.ObjectId;

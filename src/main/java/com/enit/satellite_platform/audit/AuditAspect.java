@@ -6,7 +6,6 @@ import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import com.enit.satellite_platform.modules.project_management.model.Project;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
+import com.enit.satellite_platform.modules.project_management.entities.Project;
 
 @Aspect
 @Component
@@ -199,7 +200,7 @@ public class AuditAspect {
             if (principal instanceof UserDetails userDetails) {
                  username = userDetails.getUsername();
                  // Attempt to get userId if UserDetails is our custom User class
-                 if (principal instanceof com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User customUser && customUser.getId() != null) {
+                 if (principal instanceof com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User customUser && customUser.getId() != null) {
                      userId = customUser.getId().toString(); // Convert ObjectId to String
                  }
             }
@@ -241,7 +242,7 @@ public class AuditAspect {
                 return (id != null) ? id.toString() : null;
             } catch (Exception e) {}
              // If result is our custom User class
-            if (result instanceof com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User customUser && customUser.getId() != null) {
+            if (result instanceof com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User customUser && customUser.getId() != null) {
                  return customUser.getId().toString(); // Convert ObjectId to String
             }
              // If result is directly an ObjectId (e.g., from some other method)
@@ -300,7 +301,7 @@ public class AuditAspect {
          // This depends heavily on the actual signature of updateUser method
          if (args.length > 0 && args[0] != null) {
              // Example: if first arg is User object
-             if (args[0] instanceof com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User user && user.getId() != null) {
+             if (args[0] instanceof com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User user && user.getId() != null) {
                  return user.getId().toString(); // Convert ObjectId to String
              }
              // Example: if first arg is userId as ObjectId

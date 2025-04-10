@@ -1,5 +1,6 @@
-package com.enit.satellite_platform.modules.user_management.management_cvore_service.models;
+package com.enit.satellite_platform.modules.user_management.management_cvore_service.entities;
 
+import com.enit.satellite_platform.modules.project_management.entities.Project;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.bson.types.ObjectId;
@@ -10,8 +11,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import com.enit.satellite_platform.modules.project_management.model.Project;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -126,6 +125,6 @@ public class User implements UserDetails {
     }
 
     public String getId() {
-        return id != null ? id.toHexString() : null;
+        return id != null ? id.toString() : null;
     }
 }

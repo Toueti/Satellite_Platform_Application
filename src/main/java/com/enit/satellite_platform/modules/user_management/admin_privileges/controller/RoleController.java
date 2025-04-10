@@ -1,7 +1,7 @@
 package com.enit.satellite_platform.modules.user_management.admin_privileges.controller;
 
 import com.enit.satellite_platform.modules.user_management.admin_privileges.dto.CreateRoleRequest;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.Authority;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.Authority;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.services.RoleService;
 import com.enit.satellite_platform.shared.dto.GenericResponse;
 import jakarta.validation.Valid;

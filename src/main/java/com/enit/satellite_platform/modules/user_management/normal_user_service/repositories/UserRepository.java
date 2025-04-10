@@ -4,8 +4,8 @@ import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository; // Added import
 
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.Authority;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.Authority;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 
 import java.util.List; // Added import
 import java.util.Optional;

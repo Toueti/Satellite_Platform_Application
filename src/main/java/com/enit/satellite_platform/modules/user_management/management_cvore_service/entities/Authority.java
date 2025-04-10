@@ -1,4 +1,4 @@
-package com.enit.satellite_platform.modules.user_management.management_cvore_service.models;
+package com.enit.satellite_platform.modules.user_management.management_cvore_service.entities;
 
 import lombok.Data;
 import org.bson.types.ObjectId;

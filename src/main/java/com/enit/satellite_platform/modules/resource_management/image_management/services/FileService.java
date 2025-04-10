@@ -39,7 +39,7 @@ public class FileService {
 
     public FileService(
             @Value("${thread.pool.size}") int threadPoolSize,
-            @Value("${image.storage.path}") String imageStoragePath) {
+            @Value("${storage.filesystem.directory}") String imageStoragePath) {
         this.executor = Executors.newFixedThreadPool(threadPoolSize);
         this.imageStoragePath = imageStoragePath;
     }

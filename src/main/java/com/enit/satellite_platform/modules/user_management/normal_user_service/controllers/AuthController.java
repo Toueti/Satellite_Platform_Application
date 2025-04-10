@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import com.enit.satellite_platform.exceptions.DuplicationException;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.services.AdminServices;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.InvalidCredentialsException;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.InvalidTokenException;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.dtos.JwtResponse;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.dtos.LoginRequest;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.dtos.ResetPasswordRequest;

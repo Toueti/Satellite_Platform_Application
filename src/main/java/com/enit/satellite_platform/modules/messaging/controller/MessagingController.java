@@ -1,14 +1,14 @@
 package com.enit.satellite_platform.modules.messaging.controller;
 
-import com.enit.satellite_platform.modules.messaging.model.Attachment; // Added import
-import com.enit.satellite_platform.modules.messaging.model.Conversation;
-import com.enit.satellite_platform.modules.messaging.model.Message;
 import com.enit.satellite_platform.modules.messaging.service.AttachmentService;
 import com.enit.satellite_platform.modules.messaging.service.MessagingService;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 import com.enit.satellite_platform.modules.messaging.dto.SendMessageRequest;
 //import com.enit.satellite_platform.modules.messaging.dto.AddReactionRequest;
+import com.enit.satellite_platform.modules.messaging.entities.Attachment;
+import com.enit.satellite_platform.modules.messaging.entities.Conversation;
+import com.enit.satellite_platform.modules.messaging.entities.Message;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

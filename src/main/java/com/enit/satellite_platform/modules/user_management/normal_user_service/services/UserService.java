@@ -22,16 +22,16 @@ import java.util.UUID;
 import java.time.LocalDateTime;
 
 import com.enit.satellite_platform.modules.activity.service.ActivityLogService;
-import com.enit.satellite_platform.modules.project_management.model.Project;
+import com.enit.satellite_platform.modules.project_management.entities.Project;
 import com.enit.satellite_platform.modules.project_management.repositories.ProjectRepository;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.repository.AdminSignupRequestRepository;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.AdminSignupRequest;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.Authority;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.InvalidCredentialsException;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.InvalidTokenException;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.RoleNotFoundException;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.AdminSignupRequest;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.Authority;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.security.Jwt.JwtUtil;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.services.RoleService;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.services.UserManagementCoreService;
@@ -363,11 +363,7 @@ public class UserService {
 
     @Transactional
     public void deleteUser(ObjectId userId) {
-        // Find user using Core Service
-        User user = userManagementCoreService.findUserByIdOrThrow(userId);
-
-        // Find and delete all projects owned by this user (this logic is specific to UserService)
-        List<Project> ownedProjects = projectRepository.findByOwner(user);
+        List<Project> ownedProjects = projectRepository.findAllByOwnerId(userId); 
         if (!ownedProjects.isEmpty()) {
             logger.info("Deleting {} projects owned by user with id: {}", ownedProjects.size(), userId);
             for (Project project : ownedProjects) {

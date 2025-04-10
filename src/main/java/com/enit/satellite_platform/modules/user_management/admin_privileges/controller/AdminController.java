@@ -5,9 +5,9 @@ import com.enit.satellite_platform.config.dto.UpdatePropertyRequestDto;
 import com.enit.satellite_platform.exceptions.DuplicationException;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.services.AdminServices;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.services.ConfigManagementService;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.AdminSignupRequest;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.RoleNotFoundException;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.AdminSignupRequest;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
 import com.enit.satellite_platform.shared.dto.GenericResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema; // Added import

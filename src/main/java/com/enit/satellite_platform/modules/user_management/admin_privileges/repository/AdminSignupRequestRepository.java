@@ -3,7 +3,7 @@ package com.enit.satellite_platform.modules.user_management.admin_privileges.rep
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.AdminSignupRequest;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.AdminSignupRequest;
 
 import java.util.List;
 import java.util.Optional;

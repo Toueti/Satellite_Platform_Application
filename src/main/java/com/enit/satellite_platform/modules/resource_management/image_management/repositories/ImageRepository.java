@@ -1,7 +1,7 @@
 package com.enit.satellite_platform.modules.resource_management.image_management.repositories;
 
-import com.enit.satellite_platform.modules.project_management.model.Project;
-import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
+import com.enit.satellite_platform.modules.project_management.entities.Project;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.Image;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
@@ -28,11 +28,14 @@ public interface ImageRepository extends MongoRepository<Image, String> {
         long getFileSize();
         Date getRequestTime();
         Date getUpdatedAt();
-        Map<String, Object> getMettadata();
+        Map<String, Object> getMetadata();
+        String getStorageIdentifier();
+        String getStorageType();
+        String getGridFsFileId();
         ProjectInfo getProject();
 
         interface ProjectInfo {
-            ObjectId getProjectId();
+            String getId();
             // Add other project fields if needed by ImageDTO
         }
     }
@@ -80,6 +83,7 @@ public interface ImageRepository extends MongoRepository<Image, String> {
      */
     @Query("{ 'project.$id': ?0 }")
     Page<Image> findAllByProject_Id(ObjectId projectId, Pageable pageable);
+
 
     /**
      * Delete all images associated with a project ID.
@@ -150,6 +154,6 @@ public interface ImageRepository extends MongoRepository<Image, String> {
      * @param ownerId The ObjectId of the owner user, as a String.
      * @return A list of images owned by the user.
      */
-    @Query("{ 'project.owner.$id' : ?0 }") // Query based on the referenced project's owner's ID
+    @Query("{ 'project.owner.$id' : ?0 }")
     List<Image> findAllByOwnerId(String ownerId);
 }

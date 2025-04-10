@@ -1,15 +1,17 @@
 package com.enit.satellite_platform.modules.project_management.services;
 
 import com.enit.satellite_platform.modules.project_management.exceptions.ProjectNotFoundException;
-import com.enit.satellite_platform.modules.project_management.model.PermissionLevel;
-import com.enit.satellite_platform.modules.project_management.model.Project;
 import com.enit.satellite_platform.modules.project_management.repositories.ProjectRepository;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
 import com.enit.satellite_platform.modules.resource_management.image_management.services.ImageService;
 import com.enit.satellite_platform.exceptions.DuplicationException;
+import com.enit.satellite_platform.modules.project_management.dto.ProjectDTO;
 import com.enit.satellite_platform.modules.project_management.dto.ProjectStatisticsDto;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.project_management.entities.PermissionLevel;
+import com.enit.satellite_platform.modules.project_management.entities.Project;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
+import com.enit.satellite_platform.shared.mapper.ProjectMapper;
 
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -19,13 +21,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -72,20 +74,15 @@ public class ProjectService {
   @Autowired
   private ImageService imageService;
 
+  @Autowired
+  private ProjectMapper projectMapper;
 
   /**
    * Creates a new project.
    *
    * @param project The project to create.
    * @param email   The email of the user creating the project.
-   * @return The created project.
-   * @throws IllegalArgumentException  If the project data is invalid or a project
-   *                                   with the same name already exists for the
-   *                                   user.
-   * @throws UsernameNotFoundException If the user with the given email is not
-   *                                   found.
-   * @throws RuntimeException          If an unexpected error occurs during
-   *                                   project creation.
+   * @return The created project as ProjectDTO.
    */
   @Transactional
   public Project createProject(Project project, String email) {
@@ -101,8 +98,7 @@ public class ProjectService {
       userRepository.save(thematician);
       logger.info("Project created successfully with ID: {}", savedProject.getId());
 
-
-      return savedProject;
+      return savedProject ;
     } catch (DataIntegrityViolationException e) {
       logger.error("Duplicate project name for user: {}", email, e);
       throw new DuplicationException("A project with the same name already exists for this user.");
@@ -113,7 +109,7 @@ public class ProjectService {
   }
 
   @Transactional
-  public Project renameProject(ObjectId projectId, String newName, String email) {
+  public ProjectDTO renameProject(ObjectId projectId, String newName, String email) {
     logger.info("Renaming project with ID: {} to new name: {} for user: {}", projectId, newName, email);
 
     Project project = projectRepository.findById(projectId)
@@ -130,8 +126,9 @@ public class ProjectService {
     }
 
     // Check for duplicate name for the same user (excluding this project)
-    Optional<Project> existingProject = projectRepository.findByProjectNameAndUserId(new ObjectId(owner.getId()), newName);
-    if (existingProject.isPresent() && !existingProject.get().getId().equals(projectId.toHexString())) {
+    Optional<Project> existingProject = projectRepository.findByProjectNameAndUserId(new ObjectId(owner.getId()),
+        newName);
+    if (existingProject.isPresent() && !existingProject.get().getId().equals(projectId.toString())) {
       logger.warn("Project name '{}' already exists for user '{}'", newName, email);
       throw new DuplicationException("A project with the name '" + newName + "' already exists for this user.");
     }
@@ -139,7 +136,7 @@ public class ProjectService {
     try {
       Project updatedProject = projectRepository.save(project);
       logger.info("Project renamed successfully to: {}", newName);
-      return updatedProject;
+      return projectMapper.toDTO(updatedProject);
     } catch (DataIntegrityViolationException e) {
       logger.warn("Duplicate project name '{}' for user '{}'", newName, email);
       throw new DuplicationException("A project with the name '" + newName + "' already exists for this user.");
@@ -150,10 +147,14 @@ public class ProjectService {
    * Retrieves a project by its ID.
    *
    * @param id The ID of the project to retrieve.
-   * @return The project with the given ID.
+   * @return The project with the given ID as ProjectDTO.
    * @throws ProjectNotFoundException If no project with the given ID is found.
    */
-  public Project getProject(ObjectId id) {
+  public ProjectDTO getProject(ObjectId id) {
+    return projectMapper.toDTO(getProjectById(id));
+  }
+
+  private Project getProjectById(ObjectId id) {
     logger.info("Fetching project with ID: {}", id);
     validateObjectId(id, "Project ID");
     Project project = projectRepository.findById(id)
@@ -167,6 +168,25 @@ public class ProjectService {
   }
 
   /**
+   * Retrieves a project by its name.
+   *
+   * @param projectName The name of the project to retrieve.
+   * @return The project with the given name as ProjectDTO.
+   * @throws ProjectNotFoundException If no project with the given name is found.
+   */
+  public ProjectDTO getProjectByName(String projectName) {
+    logger.info("Fetching project with name: {}", projectName);
+    Project project = projectRepository.findByProjectName(projectName)
+        .orElseThrow(() -> {
+          logger.error("Project not found with name: {}", projectName);
+          return new ProjectNotFoundException("Project not found with name: " + projectName);
+        });
+    project.setLastAccessedTime(new Date());
+    projectRepository.save(project);
+    return projectMapper.toDTO(project);
+  }
+
+  /**
    * Retrieves statistics for all projects owned by a user.
    *
    * @param email The email of the user.
@@ -176,8 +196,12 @@ public class ProjectService {
    */
   public ProjectStatisticsDto getStatistics(String email) {
     logger.info("Fetching statistics for email: {}", email);
-    List<Project> allProjects = getAllProjects(email);
+    User owner = getUserByEmail(email, "User not found for statistics: " + email);
+    List<Project> allProjects = projectRepository.findAllByOwnerId(new ObjectId(owner.getId()));
     long totalProjects = allProjects.size();
+    if (totalProjects == 0) {
+      logger.warn("No projects found for email: {}", email);
+    }
     Map<ObjectId, Long> imagesPerProject = new HashMap<>();
     Map<ObjectId, Date> projectTimeIntervals = new HashMap<>();
 
@@ -198,10 +222,15 @@ public class ProjectService {
    * @throws UsernameNotFoundException If the user with the given email is not
    *                                   found.
    */
-  public List<Project> getAllProjects(String email) {
+  public Page<ProjectDTO> getAllProjects(String email, Pageable pageable) {
     logger.info("Fetching all projects for email: {}", email);
-    User user = getUserByEmail(email, "User not found");
-    return projectRepository.findByOwner(user);
+    User owner = getUserByEmail(email, "User not found for fetching projects: " + email);
+    Page<Project> projects = projectRepository.findByOwnerId(new ObjectId(owner.getId()), pageable);
+    if (projects.isEmpty()) {
+      logger.warn("No projects found for email: {}", email);
+      throw new ProjectNotFoundException("No projects found for user: " + email);
+    }
+    return projectMapper.toDTOPage(projects);
   }
 
   /**
@@ -209,18 +238,18 @@ public class ProjectService {
    *
    * @param projectId The ID of the project to update.
    * @param project   The updated project data.
-   * @return The updated project.
+   * @return The updated project as ProjectDTO.
    * @throws ProjectNotFoundException If no project with the given ID is found.
    * @throws IllegalArgumentException If the project data is invalid.
    * @throws RuntimeException         If an unexpected error occurs during project
    *                                  update.
    */
   @Transactional
-  public Project updateProject(ObjectId projectId, Project project) {
+  public ProjectDTO updateProject(ObjectId projectId, Project project) {
     logger.info("Updating project with ID: {}", projectId);
     validateObjectId(projectId, "Project ID");
     validateProject(project);
-    Project existingProject = getProject(projectId);
+    Project existingProject = getProjectById(projectId);
     existingProject.setProjectName(project.getProjectName());
     existingProject.setDescription(project.getDescription());
     existingProject.setImages(project.getImages());
@@ -228,7 +257,7 @@ public class ProjectService {
     try {
       Project updatedProject = projectRepository.save(existingProject);
       logger.info("Project updated successfully with ID: {}", projectId);
-      return updatedProject;
+      return projectMapper.toDTO(updatedProject);
     } catch (Exception e) {
       logger.error("Failed to update project with ID: {}", projectId, e);
       throw new RuntimeException("Failed to update project: " + e.getMessage(), e);
@@ -260,14 +289,12 @@ public class ProjectService {
       projectRepository.deleteById(projectId);
       logger.info("Project and associated images deleted successfully with ID: {}", projectId);
 
-
     } catch (Exception e) {
       logger.error("Failed to delete project with ID: {}", projectId, e);
       throw new RuntimeException("Failed to delete project: " + e.getMessage(), e);
     }
   }
 
- 
   /**
    * Shares a project with another user.
    *
@@ -275,16 +302,18 @@ public class ProjectService {
    * @param otherEmail   The email of the user to share with.
    * @param currentEmail The email of the current user (project owner).
    * @param permission   The permission level to grant.
-   * @return The updated project after sharing.
-   * @throws ProjectNotFoundException    If the project with the given ID is not found.
+   * @return The updated project as ProjectDTO after sharing.
+   * @throws ProjectNotFoundException  If the project with the given ID is not
+   *                                   found.
    * @throws UsernameNotFoundException If the user to share with is not found.
-   * @throws AccessDeniedException     If the current user is not the owner of the project.
+   * @throws AccessDeniedException     If the current user is not the owner of the
+   *                                   project.
    * @throws IllegalArgumentException  If the sharing request is invalid.
    */
   @Transactional
-  public Project shareProject(String projectId, String otherEmail, String currentEmail, PermissionLevel permission) {
+  public ProjectDTO shareProject(String projectId, String otherEmail, String currentEmail, PermissionLevel permission) {
     logger.info("Sharing project with ID: {} with permission {} by email: {}", projectId, permission, currentEmail);
-    Project project = getProject(new ObjectId(projectId));
+    Project project = getProjectById(new ObjectId(projectId));
     validateOwner(project, currentEmail, "share");
 
     User userToShare = getUserByEmail(otherEmail, "User not found with email: " + otherEmail);
@@ -294,10 +323,8 @@ public class ProjectService {
     userRepository.save(userToShare);
     logger.info("Project shared successfully with user: {}", otherEmail);
 
-
-    return project;
+    return projectMapper.toDTO(project);
   }
-
 
   /**
    * Unshares a project with another user.
@@ -305,7 +332,7 @@ public class ProjectService {
    * @param projectId    The ID of the project.
    * @param otherEmail   The email of the user to unshare with.
    * @param currentEmail The email of the current user (project owner).
-   * @return The updated project after unsharing.
+   * @return The updated project as ProjectDTO after unsharing.
    * @throws ProjectNotFoundException  If the project with the given ID is not
    *                                   found.
    * @throws UsernameNotFoundException If the user to unshare with is not found.
@@ -314,9 +341,9 @@ public class ProjectService {
    * @throws IllegalArgumentException  If the sharing request is invalid.
    */
   @Transactional
-  public Project unshareProject(String projectId, String otherEmail, String currentEmail) {
+  public ProjectDTO unshareProject(String projectId, String otherEmail, String currentEmail) {
     logger.info("Unsharing project with ID: {} by email: {}", projectId, currentEmail);
-    Project project = getProject(new ObjectId(projectId));
+    Project project = getProjectById(new ObjectId(projectId));
     validateOwner(project, currentEmail, "unshare");
 
     User userToUnshare = getUserByEmail(otherEmail, "User not found with email: " + otherEmail);
@@ -325,7 +352,7 @@ public class ProjectService {
     userToUnshare.getSharedProjects().remove(project);
     userRepository.save(userToUnshare);
     logger.info("Project unshared successfully with user: {}", otherEmail);
-    return project;
+    return projectMapper.toDTO(project);
   }
 
   /**
@@ -343,16 +370,17 @@ public class ProjectService {
   public Set<User> getSharedUsers(ObjectId projectId, String currentEmail) {
     logger.info("Fetching shared users for project ID: {} by email: {}", projectId, currentEmail);
     validateObjectId(projectId, "Project ID");
-    Project project = getProject(projectId);
+    Project project = getProjectById(projectId);
     User currentUser = getUserByEmail(currentEmail, "Current user not found");
     if (!project.hasAccess(currentUser)) {
       logger.error("Access denied for email: {} to view shared users of project: {}", currentEmail, projectId);
       throw new AccessDeniedException("Access denied to view shared users");
     }
-     return project.getSharedUsers().keySet();
+    return project.getSharedUsers().keySet();
   }
-    /**
-     * Retrieves the projects shared with a specific user.
+
+  /**
+   * Retrieves the projects shared with a specific user.
    *
    * @param email The email of the user.
    * @return A list of projects shared with the user.
@@ -363,9 +391,9 @@ public class ProjectService {
     logger.info("Fetching projects shared with email: {}", email);
     User user = getUserByEmail(email, "User not found");
     return projectRepository.findBySharedUsersContainsKey(user);
-    }
+  }
 
-    /**
+  /**
    * Retrieves the last n accessed projects for a user, ordered by last accessed
    * time (most recent first).
    * This includes both projects owned by the user and projects shared with the
@@ -403,25 +431,25 @@ public class ProjectService {
    *
    * @param projectId The ID of the project to archive.
    * @param email     The email of the user performing the action.
-   * @return The archived project.
+   * @return The archived project as ProjectDTO.
    * @throws ProjectNotFoundException If the project with the given ID is not
    *                                  found.
    * @throws AccessDeniedException    If the user is not the owner of the project.
    */
   @Transactional
-  public Project archiveProject(ObjectId projectId, String email) {
+  public ProjectDTO archiveProject(ObjectId projectId, String email) {
     logger.info("Archiving project with ID: {} by email: {}", projectId, email);
-    Project project = getProject(projectId);
+    Project project = getProjectById(projectId);
     validateOwner(project, email, "archive");
     project.setArchived(true);
     project.setArchivedDate(new Date());
-    return projectRepository.save(project);
+    return projectMapper.toDTO(projectRepository.save(project));
   }
 
   @Transactional
-  public Project unarchiveProject(ObjectId projectId, String email) {
+  public ProjectDTO unarchiveProject(ObjectId projectId, String email) {
     logger.info("Unarchiving project with ID: {} by email: {}", projectId, email);
-    Project project = getProject(projectId);
+    Project project = getProjectById(projectId);
     validateOwner(project, email, "unarchive");
     if (!project.isArchived()) {
       logger.error("Project is not archived: {}", projectId);
@@ -429,7 +457,7 @@ public class ProjectService {
     }
     project.setArchived(false);
     project.setArchivedDate(null);
-    return projectRepository.save(project);
+    return projectMapper.toDTO(projectRepository.save(project));
   }
 
   public List<Project> getArchivedProjects(String email) {
@@ -447,13 +475,13 @@ public class ProjectService {
   }
 
   @Transactional
-  public Project tagProject(ObjectId projectId, String tag, String email) {
+  public ProjectDTO tagProject(ObjectId projectId, String tag, String email) {
     logger.info("Adding tag: {} to project ID: {} by email: {}", tag, projectId, email);
     validateString(tag, "Tag");
-    Project project = getProject(projectId);
+    Project project = getProjectById(projectId);
     validateOwner(project, email, "add tags");
     project.getTags().add(tag);
-    return projectRepository.save(project);
+    return projectMapper.toDTO(projectRepository.save(project));
   }
 
   public List<Project> getProjectsByTag(String email, String tag) {
@@ -464,10 +492,10 @@ public class ProjectService {
   }
 
   @Transactional
-  public Project duplicateProject(ObjectId projectId, String newName, String email) {
+  public ProjectDTO duplicateProject(ObjectId projectId, String newName, String email) {
     logger.info("Duplicating project ID: {} with new name: {} by email: {}", projectId, newName, email);
     validateString(newName, "New project name");
-    Project original = getProject(projectId);
+    Project original = getProjectById(projectId);
     User user = validateOwner(original, email, "duplicate");
     Project duplicate = new Project();
     duplicate.setProjectName(newName);
@@ -479,7 +507,7 @@ public class ProjectService {
     duplicate.setUpdatedAt(new Date());
     duplicate.setLastAccessedTime(new Date());
     try {
-      return projectRepository.save(duplicate);
+      return projectMapper.toDTO(projectRepository.save(duplicate));
     } catch (DuplicateKeyException e) {
       logger.error("Duplicate project name: {}", newName, e);
       throw new IllegalArgumentException("A project with the name '" + newName + "' already exists.");
@@ -487,13 +515,13 @@ public class ProjectService {
   }
 
   @Transactional
-  public Project updateProjectStatus(ObjectId projectId, String status, String email) {
+  public ProjectDTO updateProjectStatus(ObjectId projectId, String status, String email) {
     logger.info("Updating status of project ID: {} to: {} by email: {}", projectId, status, email);
     validateString(status, "Status");
-    Project project = getProject(projectId);
+    Project project = getProjectById(projectId);
     validateOwner(project, email, "update status");
     project.setStatus(status);
-    return projectRepository.save(project);
+    return projectMapper.toDTO(projectRepository.save(project));
   }
 
   public List<Project> getProjectsByStatus(String email, String status) {
@@ -504,9 +532,9 @@ public class ProjectService {
   }
 
   public Map<String, Object> exportProject(ObjectId projectId, String email) {
-    //TODO update this to return a TXT file or something
+    // TODO update this to return a TXT file or something
     logger.info("Exporting project ID: {} for email: {}", projectId, email);
-    Project project = getProject(projectId);
+    Project project = getProjectById(projectId);
     User user = getUserByEmail(email, "User not found: " + email);
     if (!project.hasAccess(user)) {
       logger.error("Access denied for email: {} to export project: {}", email, projectId);
@@ -542,46 +570,46 @@ public class ProjectService {
     logger.info("Bulk deletion successful for project IDs: {}", projectIds);
   }
 
-    @Transactional
-    public Project createProjectFromTemplate(String templateName, String newProjectName ,String email) throws IOException {
-        logger.info("Creating project from template: {} with name: {} for email: {}", templateName, newProjectName, email);
+  @Transactional
+  public ProjectDTO createProjectFromTemplate(String templateName, String newProjectName, String email)
+      throws IOException {
+    logger.info("Creating project from template: {} with name: {} for email: {}", templateName, newProjectName, email);
 
-        // 1. Create the project in the database
-        Project newProject = new Project();
-        newProject.setProjectName(newProjectName);
-        newProject.setDescription("Project created from template: " + templateName); // Set a default description
-        Project createdProject = createProject(newProject, email); // This will handle setting the owner and saving to the DB
+    // 1. Create the project in the database
+    Project newProject = new Project();
+    newProject.setProjectName(newProjectName);
+    newProject.setDescription("Project created from template: " + templateName); // Set a default description
+    Project createdProject = createProject(newProject, email); // This will handle setting the owner and saving to the
+                                                               // DB
 
-      
-        Path templatePath = Paths.get( "src/main/resources/project_templates", templateName);
-        Path projectPath = Paths.get(projectBasePath, createdProject.getId().toString());
+    Path templatePath = Paths.get("src/main/resources/project_templates", templateName);
+    Path projectPath = Paths.get(projectBasePath, createdProject.getId().toString());
 
-
-        // 3. Copy the template contents to the new project directory
-        if (!Files.exists(templatePath)) {
-            throw new IllegalArgumentException("Template not found: " + templateName);
-        }
-
-        try {
-            Files.walk(templatePath)
-                .forEach(source -> {
-                    Path destination = projectPath.resolve(templatePath.relativize(source));
-                    try {
-                        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException e) {
-                        logger.error("Error copying file: {}", source, e);
-                        throw new RuntimeException("Error copying template files", e);
-                    }
-                });
-        } catch (IOException e) {
-            logger.error("Error copying template directory", e);
-            throw new RuntimeException("Error copying template directory", e);
-        }
-        createdProject.setProjectDirectory(projectPath.toString());
-        projectRepository.save(createdProject);
-
-        return createdProject;
+    // 3. Copy the template contents to the new project directory
+    if (!Files.exists(templatePath)) {
+      throw new IllegalArgumentException("Template not found: " + templateName);
     }
+
+    try {
+      Files.walk(templatePath)
+          .forEach(source -> {
+            Path destination = projectPath.resolve(templatePath.relativize(source));
+            try {
+              Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+              logger.error("Error copying file: {}", source, e);
+              throw new RuntimeException("Error copying template files", e);
+            }
+          });
+    } catch (IOException e) {
+      logger.error("Error copying template directory", e);
+      throw new RuntimeException("Error copying template directory", e);
+    }
+    createdProject.setProjectDirectory(projectPath.toString());
+    projectRepository.save(createdProject);
+
+    return projectMapper.toDTO(createdProject);
+  }
 
   // Validation Helpers
   private void validateProject(Project project) {

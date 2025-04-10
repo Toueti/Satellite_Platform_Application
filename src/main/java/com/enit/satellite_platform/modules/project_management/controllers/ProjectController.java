@@ -2,21 +2,23 @@ package com.enit.satellite_platform.modules.project_management.controllers;
 
 import com.enit.satellite_platform.shared.dto.GenericResponse;
 import com.enit.satellite_platform.exceptions.DuplicationException;
+import com.enit.satellite_platform.modules.project_management.dto.ProjectDTO;
 import com.enit.satellite_platform.modules.project_management.dto.ProjectSharingRequest;
 import com.enit.satellite_platform.modules.project_management.dto.ProjectStatisticsDto;
+import com.enit.satellite_platform.modules.project_management.entities.PermissionLevel;
+import com.enit.satellite_platform.modules.project_management.entities.Project;
 import com.enit.satellite_platform.modules.project_management.exceptions.ProjectNotFoundException;
-import com.enit.satellite_platform.modules.project_management.model.PermissionLevel;
-import com.enit.satellite_platform.modules.project_management.model.Project;
 import com.enit.satellite_platform.modules.project_management.services.ProjectService;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import org.bson.types.ObjectId;
-
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -82,7 +84,7 @@ public class ProjectController {
     public ResponseEntity<?> renameProject(@PathVariable String id, @RequestParam String newName) {
         try {
             String email = getCurrentEmail();
-            Project project = projectService.renameProject(new ObjectId(id), newName, email);
+            ProjectDTO project = projectService.renameProject(new ObjectId(id), newName, email);
             return ResponseEntity.ok(project);
         } catch (DuplicationException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -121,7 +123,7 @@ public class ProjectController {
     @GetMapping("/{projectId}")
     public ResponseEntity<GenericResponse<?>> getProject(@PathVariable String projectId) {
         try {
-            Project project = projectService.getProject(new ObjectId(projectId));
+            ProjectDTO project = projectService.getProject(new ObjectId(projectId));
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project retrieved successfully", project));
         } catch (ProjectNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -132,6 +134,27 @@ public class ProjectController {
         }
     }
 
+    @Operation(summary = "Get a specific project by name")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Project retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Project not found"),
+            @ApiResponse(responseCode = "500", description = "Error retrieving project")
+    })
+    @GetMapping("/name/{projectName}")
+    public ResponseEntity<GenericResponse<?>> getProjectByName(@PathVariable String projectName) {
+        try {
+            ProjectDTO project = projectService.getProjectByName(projectName);
+            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project retrieved successfully", project));
+        } catch (ProjectNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new GenericResponse<>("FAILURE", "Error retrieving project: " + e.getMessage(), null));
+        }
+    }
+
+
     @Operation(summary = "Get all projects for the authenticated user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Projects retrieved successfully"),
@@ -139,10 +162,10 @@ public class ProjectController {
             @ApiResponse(responseCode = "500", description = "Error retrieving projects")
     })
     @GetMapping("/all")
-    public ResponseEntity<GenericResponse<?>> getAllProjects() {
+    public ResponseEntity<GenericResponse<?>> getAllProjects(Pageable pageable) {
         try {
             String email = getCurrentEmail();
-            List<Project> projects = projectService.getAllProjects(email);
+            Page<ProjectDTO> projects = projectService.getAllProjects(email,pageable);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Projects retrieved successfully", projects));
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -162,7 +185,7 @@ public class ProjectController {
     @PutMapping("/{projectId}")
     public ResponseEntity<GenericResponse<?>> updateProject(@PathVariable String projectId, @RequestBody Project project) {
         try {
-            Project updatedProject = projectService.updateProject(new ObjectId(projectId), project);
+            ProjectDTO updatedProject = projectService.updateProject(new ObjectId(projectId), project);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project updated successfully", updatedProject));
         } catch (ProjectNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -214,7 +237,7 @@ public class ProjectController {
                 permission = "VIEWER";
             }
 
-            Project project = projectService.shareProject(projectId, otherEmail, currentEmail, PermissionLevel.valueOf(permission.toUpperCase()));
+            ProjectDTO project = projectService.shareProject(projectId, otherEmail, currentEmail, PermissionLevel.valueOf(permission.toUpperCase()));
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project shared successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -241,7 +264,7 @@ public class ProjectController {
             String currentEmail = getCurrentEmail();
             String projectId = request.getProjectId();
             String otherEmail = request.getOtherEmail();
-            Project project = projectService.unshareProject(projectId, otherEmail, currentEmail);
+            ProjectDTO project = projectService.unshareProject(projectId, otherEmail, currentEmail);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project unshared successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -334,7 +357,7 @@ public class ProjectController {
     public ResponseEntity<GenericResponse<?>> archiveProject(@PathVariable String projectId) {
         try {
             String email = getCurrentEmail();
-            Project project = projectService.archiveProject(new ObjectId(projectId), email);
+            ProjectDTO project = projectService.archiveProject(new ObjectId(projectId), email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project archived successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -360,7 +383,7 @@ public class ProjectController {
     public ResponseEntity<GenericResponse<?>> unarchiveProject(@PathVariable String projectId) {
         try {
             String email = getCurrentEmail();
-            Project project = projectService.unarchiveProject(new ObjectId(projectId), email);
+            ProjectDTO project = projectService.unarchiveProject(new ObjectId(projectId), email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project unarchived successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -440,7 +463,7 @@ public class ProjectController {
             @RequestParam String tag) {
         try {
             String email = getCurrentEmail();
-            Project project = projectService.tagProject(new ObjectId(projectId), tag, email);
+            ProjectDTO project = projectService.tagProject(new ObjectId(projectId), tag, email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Tag added successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -493,7 +516,7 @@ public class ProjectController {
                         .body(new GenericResponse<>("FAILURE", "New project name cannot be empty", null));
             }
             String email = getCurrentEmail();
-            Project project = projectService.duplicateProject(new ObjectId(projectId), newName, email);
+            ProjectDTO project = projectService.duplicateProject(new ObjectId(projectId), newName, email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project duplicated successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -523,7 +546,7 @@ public class ProjectController {
             @RequestParam String status) {
         try {
             String email = getCurrentEmail();
-            Project project = projectService.updateProjectStatus(new ObjectId(projectId), status, email);
+            ProjectDTO project = projectService.updateProjectStatus(new ObjectId(projectId), status, email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project status updated successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -614,7 +637,7 @@ public class ProjectController {
                                                          @RequestParam String newProjectName,
                                                          Principal principal) {
         try {
-            Project project = projectService.createProjectFromTemplate(templateName, newProjectName, principal.getName());
+            ProjectDTO project = projectService.createProjectFromTemplate(templateName, newProjectName, principal.getName());
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project created from template successfully", project));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

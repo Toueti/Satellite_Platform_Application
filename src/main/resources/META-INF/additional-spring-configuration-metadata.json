@@ -15,7 +15,7 @@
     "description": "thread pool size"
   },
   {
-    "name": "image.storage.path",
+    "name": "storage.filesystem.directory",
     "type": "java.lang.String",
     "description": "the storage path of the images"
   },
@@ -133,5 +133,10 @@
     "name": "messaging.rabbitmq.enabled",
     "type": "java.lang.String",
     "description": "Globally enable/disable the messaging module"
+  },
+  {
+    "name": "storage.filesystem.directory",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.filesystem.directory'"
   }
 ]}

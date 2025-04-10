@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.enit.satellite_platform.config.JwtConfig;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;

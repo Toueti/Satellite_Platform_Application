@@ -1,8 +1,9 @@
 package com.enit.satellite_platform.modules.messaging.repository;
 
-import com.enit.satellite_platform.modules.messaging.model.Conversation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
+
+import com.enit.satellite_platform.modules.messaging.entities.Conversation;
 
 import java.util.List;
 import java.util.Optional;

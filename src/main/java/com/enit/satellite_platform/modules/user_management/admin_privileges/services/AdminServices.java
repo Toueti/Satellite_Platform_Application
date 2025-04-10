@@ -14,10 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.enit.satellite_platform.exceptions.DuplicationException;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.repository.AdminSignupRequestRepository;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.AdminSignupRequest;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.Authority;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.RoleNotFoundException;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.AdminSignupRequest;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.Authority;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.services.RoleService;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.services.UserManagementCoreService;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;

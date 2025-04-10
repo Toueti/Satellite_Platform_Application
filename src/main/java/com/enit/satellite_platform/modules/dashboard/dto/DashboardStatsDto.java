@@ -71,5 +71,6 @@ public class DashboardStatsDto {
         private long processingCount;
         private long completedCount;
         private long failedCount;
+        private long unknownCount; // Added for null status
     }
 }

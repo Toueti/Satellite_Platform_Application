@@ -1,6 +1,6 @@
 package com.enit.satellite_platform.modules.messaging.dto;
 
-import com.enit.satellite_platform.modules.messaging.model.MessageType;
+import com.enit.satellite_platform.modules.messaging.entities.MessageType;
 
 @lombok.Data
 public class SendMessageRequest {

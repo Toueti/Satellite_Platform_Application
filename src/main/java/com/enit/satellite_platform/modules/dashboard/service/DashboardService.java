@@ -3,13 +3,13 @@ package com.enit.satellite_platform.modules.dashboard.service;
 import com.enit.satellite_platform.audit.AuditEvent;
 import com.enit.satellite_platform.audit.AuditEventRepository;
 import com.enit.satellite_platform.modules.dashboard.dto.DashboardStatsDto;
-import com.enit.satellite_platform.modules.project_management.model.Project;
+import com.enit.satellite_platform.modules.project_management.entities.Project;
 import com.enit.satellite_platform.modules.project_management.repositories.ProjectRepository;
-import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
-import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingResults;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.Image;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingResults;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ResultsRepository;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 
 import org.bson.types.ObjectId;
@@ -73,42 +73,57 @@ public class DashboardService {
 
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userEmail));
-        String userId = user.getId();
+        logger.debug("User retrieved: {}", user);
 
+        String userId = user.getId();
         DashboardStatsDto stats = new DashboardStatsDto();
 
-        // --- Project Stats ---
-        List<Project> ownedProjects = projectRepository.findByOwner(user);
+        logger.info("Fetching project statistics...");
+        List<Project> ownedProjects = projectRepository.findByOwnerId(new ObjectId(userId));
+        logger.debug("Owned projects retrieved: {}", ownedProjects.size());
+
         stats.setTotalProjects(ownedProjects.size());
         stats.setSharedByUserCount(ownedProjects.stream().filter(p -> !p.getSharedUsers().isEmpty()).count());
         stats.setSharedWithUserCount(projectRepository.countBySharedUsersContainsKey(user));
         stats.setRecentlyAccessedProjects(calculateRecentlyAccessedProjects(ownedProjects, user));
+        logger.info("Project statistics calculated.");
 
-        // --- Image & Storage Stats ---
-        List<Image> allUserImages = imageRepository.findAllByOwnerId(userId);
+        logger.info("Fetching image and storage statistics...");
+        List<Image> allUserImages = new ArrayList<>();
+        for (Project project : ownedProjects) {
+            allUserImages.addAll(imageRepository.findAllByProject_Id(new ObjectId(project.getId())));
+        }
+        logger.debug("Images retrieved: {}", allUserImages.size());
+
         stats.setTotalImages(allUserImages.size());
         stats.setTotalStorageUsedBytes(allUserImages.stream().mapToLong(Image::getFileSize).sum());
         stats.setRecentImageUploads(calculateRecentImageUploads(allUserImages));
+        logger.info("Image and storage statistics calculated.");
 
-        // --- Processing Results (Treatments) Stats ---
+        logger.info("Fetching processing results statistics...");
         List<ProcessingResults> allUserResults = resultsRepository.findAllByOwnerId(userId);
+        logger.debug("Processing results retrieved: {}", allUserResults.size());
+
         stats.setTotalTreatments(allUserResults.size());
         stats.setProcessingStatusSummary(calculateProcessingStatusSummary(allUserResults));
         stats.setMostUsedProcessingType(calculateMostUsedProcessingType(allUserResults));
+        logger.info("Processing results statistics calculated.");
 
-        // --- Averages ---
+        logger.info("Calculating averages...");
         stats.setAverageImagesPerProject(
                 stats.getTotalProjects() == 0 ? 0 : (double) stats.getTotalImages() / stats.getTotalProjects());
         stats.setAverageTreatmentsPerImage(
                 stats.getTotalImages() == 0 ? 0 : (double) stats.getTotalTreatments() / stats.getTotalImages());
+        logger.info("Averages calculated.");
 
-        // --- Audit Event Stats ---
+        logger.info("Fetching audit event statistics...");
         stats.setLastPlatformLoginTime(findLastEventTime(userId, LOGIN_SUCCESS));
         stats.setLastProjectAccessTime(findLastEventTime(userId, PROJECT_ACCESS_SUCCESS));
         stats.setTotalProjectAccesses(auditEventRepository.countByUserIdAndActionType(userId, PROJECT_ACCESS_SUCCESS));
         stats.setRecentActivityFeed(calculateRecentActivityFeed(userId));
         stats.setMostFrequentAction(calculateMostFrequentAction(userId));
         stats.setActivityTrend(calculateActivityTrend(userId));
+        logger.info("Audit event statistics calculated.");
 
         logger.info("Dashboard stats generated successfully for user: {}", userEmail);
         return stats;
@@ -127,12 +142,11 @@ public class DashboardService {
      *         found.
      */
     private Instant findLastEventTime(String userId, String actionType) {
+        logger.debug("Finding last event time for user: {}, actionType: {}", userId, actionType);
         AuditEvent latestEvent = auditEventRepository.findTopByUserIdAndActionTypeOrderByTimestampDesc(userId,
                 actionType);
-        if (latestEvent != null && latestEvent.getTimestamp() != null) {
-            return latestEvent.getTimestamp().toInstant(ZoneOffset.UTC);
-        }
-        return null;
+        logger.debug("Last event time found: {}", latestEvent != null ? latestEvent.getTimestamp() : null);
+        return latestEvent != null ? latestEvent.getTimestamp().toInstant(ZoneOffset.UTC) : null;
     }
 
     /**
@@ -148,12 +162,13 @@ public class DashboardService {
      */
     private List<DashboardStatsDto.ProjectSummaryDto> calculateRecentlyAccessedProjects(List<Project> ownedProjects,
         User user) {
+        logger.debug("Calculating recently accessed projects...");
         // Combine owned and shared, sort by last accessed, take limit
         List<Project> sharedProjects = projectRepository.findBySharedUsersContainsKey(user);
         Set<Project> allAccessibleProjects = new HashSet<>(ownedProjects);
         allAccessibleProjects.addAll(sharedProjects);
 
-        return allAccessibleProjects.stream()
+        List<DashboardStatsDto.ProjectSummaryDto> result = allAccessibleProjects.stream()
                 .sorted(Comparator.comparing(Project::getLastAccessedTime,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .limit(RECENT_PROJECTS_LIMIT)
@@ -162,6 +177,8 @@ public class DashboardService {
                         p.getProjectName(),
                         p.getLastAccessedTime() != null ? p.getLastAccessedTime().toInstant() : null))
                 .collect(Collectors.toList());
+        logger.debug("Recently accessed projects calculated: {}", result.size());
+        return result;
     }
 
     /**
@@ -173,7 +190,8 @@ public class DashboardService {
      *         images.
      */
     private List<DashboardStatsDto.ImageSummaryDto> calculateRecentImageUploads(List<Image> allUserImages) {
-        return allUserImages.stream()
+        logger.debug("Calculating recent image uploads...");
+        List<DashboardStatsDto.ImageSummaryDto> result = allUserImages.stream()
                 .sorted(Comparator.comparing(Image::getRequestTime, Comparator.nullsLast(Comparator.reverseOrder())))
                 .limit(RECENT_IMAGES_LIMIT)
                 .map(img -> new DashboardStatsDto.ImageSummaryDto(
@@ -182,6 +200,8 @@ public class DashboardService {
                         img.getProject() != null ? img.getProject().getId().toString() : null,
                         img.getRequestTime() != null ? img.getRequestTime().toInstant() : null))
                 .collect(Collectors.toList());
+        logger.debug("Recent image uploads calculated: {}", result.size());
+        return result;
     }
 
     /**
@@ -197,7 +217,8 @@ public class DashboardService {
      */
     private DashboardStatsDto.ProcessingStatusSummaryDto calculateProcessingStatusSummary(
             List<ProcessingResults> allUserResults) {
-        long pending = 0, processing = 0, completed = 0, failed = 0;
+        logger.debug("Calculating processing status summary...");
+        long pending = 0, processing = 0, completed = 0, failed = 0, unknown = 0; // Added unknown counter
         for (ProcessingResults result : allUserResults) {
             if (result.getStatus() != null) {
                 switch (result.getStatus()) {
@@ -213,13 +234,20 @@ public class DashboardService {
                     case FAILED:
                         failed++;
                         break;
+                    default:
+                        unknown++;
+                        break;
                 }
             } else {
-                // Treat null status as completed based on service logic, or maybe 'unknown'?
-                completed++;
+                // Count null status as unknown/other as requested
+                unknown++;
             }
         }
-        return new DashboardStatsDto.ProcessingStatusSummaryDto(pending, processing, completed, failed);
+        // Pass all five counts to the constructor
+        DashboardStatsDto.ProcessingStatusSummaryDto summary = new DashboardStatsDto.ProcessingStatusSummaryDto(pending, processing, completed, failed, unknown);
+        logger.debug("Processing status summary calculated: pending={}, processing={}, completed={}, failed={}, unknown={}",
+            pending, processing, completed, failed, unknown);
+        return summary;
     }
 
     /**
@@ -232,9 +260,10 @@ public class DashboardService {
      * @return The most used processing type, or "N/A" if none or unknown.
      */
     private String calculateMostUsedProcessingType(List<ProcessingResults> allUserResults) {
+        logger.debug("Calculating most used processing type...");
         if (allUserResults.isEmpty())
             return "N/A";
-        return allUserResults.stream()
+        String result = allUserResults.stream()
                 .map(ProcessingResults::getType)
                 .filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
@@ -242,6 +271,8 @@ public class DashboardService {
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElse("N/A");
+        logger.debug("Most used processing type: {}", result);
+        return result;
     }
 
     /**
@@ -257,15 +288,18 @@ public class DashboardService {
      * @return A list of {@link DashboardStatsDto.ActivityEventDto} objects.
      */
     private List<DashboardStatsDto.ActivityEventDto> calculateRecentActivityFeed(String userId) {
+        logger.debug("Calculating recent activity feed for user: {}", userId);
         Pageable limit = PageRequest.of(0, RECENT_ACTIVITY_LIMIT, Sort.by(Sort.Direction.DESC, "timestamp"));
         List<AuditEvent> recentEvents = auditEventRepository.findByUserIdOrderByTimestampDesc(userId, limit);
 
-        return recentEvents.stream()
+        List<DashboardStatsDto.ActivityEventDto> result = recentEvents.stream()
                 .map(event -> new DashboardStatsDto.ActivityEventDto(
                         event.getActionType(),
                         resolveTargetDescription(event.getActionType(), event.getTargetId()),
                         event.getTimestamp().toInstant(ZoneOffset.UTC)))
                 .collect(Collectors.toList());
+        logger.debug("Recent activity feed calculated: {}", result.size());
+        return result;
     }
 
     /**
@@ -279,21 +313,16 @@ public class DashboardService {
      * @return The most frequent action type, or "N/A" if none or unknown.
      */
     private String calculateMostFrequentAction(String userId) {
-        // TODO: Need an aggregation query in AuditEventRepository for this
-        // Or fetch all events and calculate in memory (less efficient for many events)
-        // Example (in-memory, potentially slow):
-        List<AuditEvent> allEvents = auditEventRepository.findByUserIdOrderByTimestampDesc(userId); // Might be too
-                                                                                                    // large
-        if (allEvents.isEmpty())
-            return "N/A";
-        return allEvents.stream()
-                .map(AuditEvent::getActionType)
-                .filter(Objects::nonNull)
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-                .entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse("N/A");
+        logger.debug("Calculating most frequent action for user: {}", userId);
+        // Use the specific DTO returned by the repository method
+        AuditEventRepository.ActionFrequencyDto result = auditEventRepository.findMostFrequentActionTypeByUserId(userId);
+        // Check if a result was found and return the action type from the DTO's 'id' field
+        if (result != null) {
+            logger.debug("Most frequent action: {}", result.getId());
+            return result.getId();
+        }
+        logger.debug("Most frequent action: N/A");
+        return "N/A";
     }
 
     /**
@@ -307,18 +336,18 @@ public class DashboardService {
      *         and the previous 7 days.
      */
     private DashboardStatsDto.ActivityTrendDto calculateActivityTrend(String userId) {
+        logger.debug("Calculating activity trend for user: {}", userId);
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime sevenDaysAgo = now.minusDays(ACTIVITY_TREND_DAYS);
         LocalDateTime fourteenDaysAgo = now.minusDays(ACTIVITY_TREND_DAYS * 2);
 
-        // TODO: Need repository method findByUserIdAndTimestampBetween
-        long last7DaysCount = auditEventRepository.countByUserIdAndTimestampBetween(userId, sevenDaysAgo, now); // Assuming
-                                                                                                                // this
-                                                                                                                // exists
-        long previous7DaysCount = auditEventRepository.countByUserIdAndTimestampBetween(userId, fourteenDaysAgo,
-                sevenDaysAgo); // Assuming this exists
+        // Use the existing repository method
+        long last7DaysCount = auditEventRepository.countByUserIdAndTimestampBetween(userId, sevenDaysAgo, now);
+        long previous7DaysCount = auditEventRepository.countByUserIdAndTimestampBetween(userId, fourteenDaysAgo, sevenDaysAgo);
 
-        return new DashboardStatsDto.ActivityTrendDto(last7DaysCount, previous7DaysCount);
+        DashboardStatsDto.ActivityTrendDto trend = new DashboardStatsDto.ActivityTrendDto(last7DaysCount, previous7DaysCount);
+        logger.debug("Activity trend calculated: last7Days={}, previous7Days={}", last7DaysCount, previous7DaysCount);
+        return trend;
     }
 
     /**
@@ -333,26 +362,35 @@ public class DashboardService {
      *         is an error resolving the target.
      */
     private String resolveTargetDescription(String actionType, String targetId) {
+        logger.debug("Resolving target description for actionType: {}, targetId: {}", actionType, targetId);
         if (targetId == null)
             return null;
         try {
             ObjectId objectId = new ObjectId(targetId); // Assume targetId is usually an ObjectId string
             if (actionType.startsWith("PROJECT_")) {
-                return projectRepository.findById(objectId).map(Project::getProjectName).orElse(targetId);
+                String description = projectRepository.findById(objectId).map(Project::getProjectName).orElse(targetId);
+                logger.debug("Resolved target description: {}", description);
+                return description;
             } else if (actionType.startsWith("IMAGE_")) { // Assuming IMAGE_UPLOAD etc.
-                return imageRepository.findById(targetId).map(Image::getImageName).orElse(targetId); // Image ID is
+                String description = imageRepository.findById(targetId).map(Image::getImageName).orElse(targetId); // Image ID is
                                                                                                      // String
+                logger.debug("Resolved target description: {}", description);
+                return description;
             } else if (actionType.startsWith("USER_")) {
-                return userRepository.findById(objectId).map(User::getEmail).orElse(targetId);
+                String description = userRepository.findById(objectId).map(User::getEmail).orElse(targetId);
+                logger.debug("Resolved target description: {}", description);
+                return description;
             }
             // Add more types as needed (e.g., ProcessingResults)
         } catch (IllegalArgumentException e) {
             // targetId might not be an ObjectId (e.g., username in LOGIN_FAILURE)
+            logger.debug("Resolved target description: {}", targetId);
             return targetId;
         } catch (Exception e) {
             logger.warn("Error resolving target description for type {} and ID {}: {}", actionType, targetId,
                     e.getMessage());
         }
+        logger.debug("Resolved target description: {}", targetId);
         return targetId; // Fallback to raw ID
     }
 }

@@ -1,7 +1,7 @@
 package com.enit.satellite_platform.modules.user_management.management_cvore_service.config;
 
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.Authority;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.models.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.Authority;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.repositories.AuthorityRepository;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 
