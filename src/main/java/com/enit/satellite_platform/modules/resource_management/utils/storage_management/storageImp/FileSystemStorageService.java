@@ -1,4 +1,4 @@
-package com.enit.satellite_platform.shared.storage.storageImp;
+package com.enit.satellite_platform.modules.resource_management.utils.storage_management.storageImp;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.enit.satellite_platform.shared.storage.StorageManager;
-import com.enit.satellite_platform.shared.storage.StorageService;
+import com.enit.satellite_platform.modules.resource_management.utils.storage_management.StorageManager;
+import com.enit.satellite_platform.modules.resource_management.utils.storage_management.StorageService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +25,7 @@ public class FileSystemStorageService implements StorageService {
 
     @Value("${storage.filesystem.directory:/tmp/images}")
     private String storageDirectory;
+
 
     @Override
     public String store(MultipartFile file, Map<String, Object> metadata) throws IOException {
@@ -80,14 +81,16 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
-    public void delete(String identifier) throws IOException {
+    public boolean delete(String identifier) throws IOException {
         log.info("Deleting file with identifier: {}", identifier);
         boolean deleted = Files.deleteIfExists(Paths.get(identifier));
         if (deleted) {
             log.info("File deleted successfully: {}", identifier);
+            return deleted;
         } else {
             log.warn("File not found for deletion: {}", identifier);
         }
+        return false;
     }
 
     @Override

@@ -11,10 +11,11 @@ import com.enit.satellite_platform.modules.resource_management.image_management.
 import com.enit.satellite_platform.modules.resource_management.image_management.mapper.ImageMapper;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository.ImageMetadataProjection;
+import com.enit.satellite_platform.modules.resource_management.utils.storage_management.StorageManager;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ResultsRepository;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
-import com.enit.satellite_platform.shared.storage.StorageManager;
+
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,10 +66,10 @@ public class ImageService {
         logger.info("Attempting to add image: {} with storage type: {}", imageDTO, storageType);
         validateImageDTO(imageDTO);
         ObjectId projectId = new ObjectId(imageDTO.getProjectId());
-        if (imageRepository.existsByImageIdAndProject_Id(imageDTO.getImageId(), projectId)) {
-            logger.warn("Image with Id {} already exists in project {}", imageDTO.getImageId(), projectId);
+        if (imageRepository.existsByNameAndProject_Id(imageDTO.getImageName(), projectId)) {
+            logger.warn("Image with name {} already exists in project {}", imageDTO.getImageId(), projectId);
             throw new DuplicationException(
-                    "An image with the id '" + imageDTO.getImageId() + "' already exists in this project.");
+                    "An image with the same name as '" + imageDTO.getImageName() + "' already exists in this project. Consider changing the image name to something else");
         }
 
         try {
@@ -121,7 +122,7 @@ public class ImageService {
                     return new IllegalArgumentException("Image not found with Id: " + imageId);
                 });
 
-        if (!image.getProject().getId().equals(projectId)) {
+        if (!image.getProject().getId().equals(projectId.toString())) {
             logger.warn("Image {} does not belong to project {}", imageId, projectId);
             throw new IllegalArgumentException("This image does not belong to the specified project.");
         }
@@ -433,7 +434,7 @@ public class ImageService {
 
         List<Image> importedImages = new ArrayList<>();
         for (Image sourceImage : sourceImages) {
-            if (!sourceImage.getProject().getId().equals(sourceProjId)) {
+            if (!sourceImage.getProject().getId().equals(sourceProjId.toString())) {
                 logger.error("Image {} does not belong to source project {}", sourceImage.getImageId(), sourceProjId);
                 continue;
             }

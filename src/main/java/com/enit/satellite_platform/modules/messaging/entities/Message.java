@@ -24,13 +24,13 @@ public class Message {
 
     private String senderId; // ID of the user who sent the message
 
-    private String receiverId; // ID of the user who received the message (could be null for group messages)
+    private String recipientId; // ID of the user who received the message (could be null for group messages)
 
     private String content; // Text content of the message
 
     private LocalDateTime timestamp; // Time when the message was sent/created
 
-    private MessageType messageType; // Type of message (USER_TO_USER, USER_TO_ADMIN, etc.)
+    private MessageType type; // Type of message (USER_TO_USER, USER_TO_ADMIN, etc.)
 
     private List<Attachment> attachments = new ArrayList<>(); // List of attached file metadata
 

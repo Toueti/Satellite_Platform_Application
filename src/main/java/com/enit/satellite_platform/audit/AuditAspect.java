@@ -63,7 +63,7 @@ public class AuditAspect {
     public void projectSharing() {}
 
     // Pointcut for user updates (adjust service/method name if changed)
-    @Pointcut("execution(* com.enit.satellite_platform.modules.user_management.user_service.services.UserServiceImpl.updateUser(..))") // TODO: Verify this path
+    @Pointcut("execution(* com.enit.satellite_platform.modules.user_management.user_service.services.UserService.updateUser(..))") // TODO: Verify this path
     public void userUpdate() {}
 
     // --- Advice Methods ---

@@ -2,11 +2,11 @@ package com.enit.satellite_platform.modules.project_management.entities;
 
 import com.enit.satellite_platform.modules.resource_management.image_management.entities.Image;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
-import com.enit.satellite_platform.shared.converters.UserKeyDeserializer; // Import the custom deserializer
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize; // Import annotation
+import com.enit.satellite_platform.shared.converters.UserKeyDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Builder;
+import lombok.Data;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -36,8 +36,8 @@ import java.util.Set;
                    unique = true)
 })
 @Document(collection = "projects")
-@Getter
-@Setter
+@Builder
+@Data
 public class Project {
 
     /**
@@ -89,6 +89,7 @@ public class Project {
      * Indicates whether the project is archived.
      */
     @Field("archived")
+    @Builder.Default
     private boolean archived = false; // New field for archiving
 
     /**
@@ -101,6 +102,7 @@ public class Project {
      * A set of tags associated with the project.
      */
     @Field("tags")
+    @Builder.Default
     private Set<String> tags = new HashSet<>(); // New field for tagging
 
     /**
@@ -113,6 +115,7 @@ public class Project {
     private String projectDirectory;
 
     @Field("metadata")
+    @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();
 
     /**
@@ -120,6 +123,7 @@ public class Project {
      * Uses lazy loading to improve performance.
      */
     @DBRef(lazy = true)
+    @Builder.Default
     private Set<Image> images = new HashSet<>();
 
     /**
@@ -127,6 +131,7 @@ public class Project {
      * Uses lazy loading to improve performance.
      */
     @DBRef(lazy = true)
+    @Builder.Default
     @JsonDeserialize(keyUsing = UserKeyDeserializer.class) // Use the custom deserializer for map keys
     private Map<User, PermissionLevel> sharedUsers = new HashMap<>();
 

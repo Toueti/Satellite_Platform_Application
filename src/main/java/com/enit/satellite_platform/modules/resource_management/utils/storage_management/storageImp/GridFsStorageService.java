@@ -1,6 +1,6 @@
-package com.enit.satellite_platform.shared.storage.storageImp;
+package com.enit.satellite_platform.modules.resource_management.utils.storage_management.storageImp;
 
-import com.enit.satellite_platform.shared.storage.StorageService;
+import com.enit.satellite_platform.modules.resource_management.utils.storage_management.StorageService;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,12 +47,17 @@ public class GridFsStorageService implements StorageService {
     }
 
     @Override
-    public void delete(String identifier) throws IOException {
-        gridFsTemplate.delete(
-            new org.springframework.data.mongodb.core.query.Query(
-                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(new ObjectId(identifier))
-            )
-        );
+    public boolean delete(String identifier) throws IOException {
+        try {
+            gridFsTemplate.delete(
+                new org.springframework.data.mongodb.core.query.Query(
+                    org.springframework.data.mongodb.core.query.Criteria.where("_id").is(new ObjectId(identifier))
+                )
+            );
+            return true;
+        } catch (Exception e) {
+            throw new IOException("Failed to delete file with ID: " + identifier, e);
+        }
     }
 
     @Override

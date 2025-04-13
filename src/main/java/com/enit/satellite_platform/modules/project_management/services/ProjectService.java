@@ -497,15 +497,16 @@ public class ProjectService {
     validateString(newName, "New project name");
     Project original = getProjectById(projectId);
     User user = validateOwner(original, email, "duplicate");
-    Project duplicate = new Project();
-    duplicate.setProjectName(newName);
-    duplicate.setDescription(original.getDescription());
-    duplicate.setOwner(user);
-    duplicate.setImages(new HashSet<>(original.getImages()));
-    duplicate.setSharedUsers(new HashMap<>()); // Initialize sharedUsers
-    duplicate.setCreatedAt(new Date());
-    duplicate.setUpdatedAt(new Date());
-    duplicate.setLastAccessedTime(new Date());
+    Project duplicate = Project.builder()
+      .projectName(newName)
+      .description(original.getDescription())
+      .owner(user)
+      .images(new HashSet<>(original.getImages()))
+      .sharedUsers(new HashMap<>())
+      .createdAt(new Date())
+      .updatedAt(new Date())
+      .lastAccessedTime(new Date())
+      .build();
     try {
       return projectMapper.toDTO(projectRepository.save(duplicate));
     } catch (DuplicateKeyException e) {
@@ -576,11 +577,11 @@ public class ProjectService {
     logger.info("Creating project from template: {} with name: {} for email: {}", templateName, newProjectName, email);
 
     // 1. Create the project in the database
-    Project newProject = new Project();
-    newProject.setProjectName(newProjectName);
-    newProject.setDescription("Project created from template: " + templateName); // Set a default description
-    Project createdProject = createProject(newProject, email); // This will handle setting the owner and saving to the
-                                                               // DB
+    Project newProject = Project.builder()
+    .projectName(newProjectName)
+    .description("Project created from template: " + templateName)
+    .build();
+    Project createdProject = createProject(newProject, email);
 
     Path templatePath = Paths.get("src/main/resources/project_templates", templateName);
     Path projectPath = Paths.get(projectBasePath, createdProject.getId().toString());

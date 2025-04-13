@@ -28,6 +28,17 @@ public interface ProjectMapper {
     @Mapping(source = "id", target = "id", qualifiedByName = "objectIdToString")
     ProjectDTO toDTO(Project project);
 
+    @Mapping(target = "owner", ignore = true)
+    @Mapping(target = "archived", ignore = true)
+    @Mapping(target = "archivedDate", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "lastAccessedTime", ignore = true)
+    @Mapping(target = "metadata", ignore = true)
+    @Mapping(target = "projectDirectory", ignore = true)
+    @Mapping(target = "sharedUsers", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "tags", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     Project toEntity(ProjectDTO projectDTO);
 
     List<ProjectDTO> toDTOList(List<Project> projects);

@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8080/geospatial/images
-@token= eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJlbWFpbCI6InlvYnRvdDhAZ21haWwuY29tIiwicm9sZXMiOlsiUk9MRV9USEVNQVRJQ0lBTiJdLCJzdWIiOiJ5b2J0b3Q4QGdtYWlsLmNvbSIsImlhdCI6MTc0NDE1OTAwNywiZXhwIjoxNzQ0MjQ1NDA3fQ.YGQQkRrYxQvz2khmVKEVCf1BI9Xw2nhAyAyZ-gHwAZM
+@token= eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJyb2xlcyI6WyJST0xFX1RIRU1BVElDSUFOIl0sInN1YiI6InlvYnRvdDhAZ21haWwuY29tIiwiaWF0IjoxNzQ0NTAzNTE2LCJleHAiOjE3NDQ1ODk5MTZ9.6WouyyRbZzZbPGYFTjVo-xn7lTrH8HrvGTWHY2NeC-8
 
 ### Upload an image to a project
 POST {{baseUrl}}/add
@@ -52,7 +52,7 @@ GET {{baseUrl}}/67f6de084d0ee21a4c93f396
 Authorization: Bearer {{token}}
 
 ### Get image data
-GEt {{baseUrl}}/67f6de084d0ee21a4c93f396/data
+GEt {{baseUrl}}/67f5d67b163d9b2283443865/data
 Authorization: Bearer {{token}}
 Accept: application/octet-stream
 

@@ -1,4 +1,4 @@
-package com.enit.satellite_platform.shared.storage;
+package com.enit.satellite_platform.modules.resource_management.utils.storage_management;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,12 +27,13 @@ public interface StorageService {
     InputStream retrieve(String identifier) throws IOException;
 
     /**
-     * Deletes the file based on its identifier.
+     * Deletes the file associated with the given identifier.
      * 
-     * @param identifier The unique identifier of the file.
+     * @param identifier The unique identifier of the file to delete.
+     * @return true if deletion was successful, false otherwise.
      * @throws IOException If deletion fails.
      */
-    void delete(String identifier) throws IOException;
+    boolean delete(String identifier) throws IOException;
 
     /**
      * Returns the storage type (e.g., "gridfs", "filesystem", "s3").

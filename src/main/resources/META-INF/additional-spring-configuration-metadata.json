@@ -138,5 +138,95 @@
     "name": "storage.filesystem.directory",
     "type": "java.lang.String",
     "description": "A description for 'storage.filesystem.directory'"
+  },
+  {
+    "name": "communication.type",
+    "type": "java.lang.String",
+    "description": "A description for 'communication.type'"
+  },
+  {
+    "name": "messaging.queue.dlx.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'messaging.queue.dlx.enabled'"
+  },
+  {
+    "name": "messaging.retry.max-attempts",
+    "type": "java.lang.String",
+    "description": "A description for 'messaging.retry.max-attempts'"
+  },
+  {
+    "name": "messaging.retry.initial-interval",
+    "type": "java.lang.String",
+    "description": "A description for 'messaging.retry.initial-interval'"
+  },
+  {
+    "name": "messaging.retry.multiplier",
+    "type": "java.lang.String",
+    "description": "A description for 'messaging.retry.multiplier'"
+  },
+  {
+    "name": "external.app.endpoints.image_processor",
+    "type": "java.lang.String",
+    "description": "A description for 'external.app.endpoints.image_processor'"
+  },
+  {
+    "name": "communication.file.size.threshold",
+    "type": "java.lang.String",
+    "description": "A description for 'communication.file.size.threshold'"
+  },
+  {
+    "name": "grpc.client.address",
+    "type": "java.lang.String",
+    "description": "A description for 'grpc.client.address'"
+  },
+  {
+    "name": "grpc.client.port",
+    "type": "java.lang.String",
+    "description": "A description for 'grpc.client.port'"
+  },
+  {
+    "name": "grpc.client.max-message_size_mb",
+    "type": "java.lang.String",
+    "description": "A description for 'grpc.client.max-message_size_mb'"
+  },
+  {
+    "name": "grpc.client.use_transport_security",
+    "type": "java.lang.String",
+    "description": "A description for 'grpc.client.use_transport_security'"
+  },
+  {
+    "name": "grpc.client.shutdown_timeout_seconds",
+    "type": "java.lang.String",
+    "description": "A description for 'grpc.client.shutdown_timeout_seconds'"
+  },
+  {
+    "name": "storage.temporary.redis-prefix",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.temporary.redis-prefix'"
+  },
+  {
+    "name": "storage.temporary.filesystem-path",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.temporary.filesystem-path'"
+  },
+  {
+    "name": "storage.temporary.inactivity-duration",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.temporary.inactivity-duration'"
+  },
+  {
+    "name": "storage.temporary.post-access-duration",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.temporary.post-access-duration'"
+  },
+  {
+    "name": "storage.temporary.cleanup-cron",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.temporary.cleanup-cron'"
+  },
+  {
+    "name": "spring.webflux.max-in-memory-size",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.webflux.max-in-memory-size'"
   }
 ]}

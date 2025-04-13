@@ -1,4 +1,4 @@
-package com.enit.satellite_platform.shared.storage;
+package com.enit.satellite_platform.modules.resource_management.utils.storage_management;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -21,9 +21,9 @@ public class StorageManager {
     public StorageManager(List<StorageService> storageServices) {
         this.storageServices = storageServices;
         this.defaultStorageService = storageServices.stream()
-            .filter(s -> s.getStorageType().equals("gridfs"))
+            .filter(s -> s.getStorageType().equals("tmp-filesystem"))
             .findFirst()
-            .orElseThrow(() -> new IllegalStateException("Default GridFS storage service not found"));
+            .orElseThrow(() -> new IllegalStateException("Default tmp-filesystem storage service not found"));
     }
 
     public String store(MultipartFile file, Map<String, Object> metadata, String storageType) throws IOException {

@@ -35,7 +35,6 @@ public class JwtUtil {
     public String generateToken(UserDetails userDetails) {
         User user = (User) userDetails;
         Map<String, Object> claims = Map.of(
-            "email", user.getEmail(),
             "name", user.getUsername(),
             "roles", user.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)

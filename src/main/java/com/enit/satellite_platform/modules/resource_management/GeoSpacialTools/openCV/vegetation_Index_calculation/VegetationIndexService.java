@@ -1,0 +1,238 @@
+package com.enit.satellite_platform.modules.resource_management.GeoSpacialTools.openCV.vegetation_Index_calculation;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.enit.satellite_platform.config.cache_handler.VegetationIndexCacheHandler; // Added import
+import com.enit.satellite_platform.modules.resource_management.GeoSpacialTools.openCV.vegetation_Index_calculation.dto.VegetationIndexRequest;
+import com.enit.satellite_platform.modules.resource_management.GeoSpacialTools.openCV.vegetation_Index_calculation.dto.VegetationIndexResult;
+import com.enit.satellite_platform.modules.resource_management.utils.communication_management.CommunicationManager;
+import com.enit.satellite_platform.modules.resource_management.utils.communication_management.MultipartResponseWrapper;
+
+import java.io.File;
+// Imports related to direct file handling (Files, Path, Paths, StandardCopyOption, IOException, UUID) are no longer needed here
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional; // Added import
+
+/**
+ * Example service demonstrating how to use the generic communication system
+ * to interact with the Python vegetation index calculator.
+ */
+@Service
+public class VegetationIndexService {
+    private static final Logger logger = LoggerFactory.getLogger(VegetationIndexService.class);
+
+    private final CommunicationManager communicationManager;
+    private final VegetationIndexCacheHandler vegetationIndexCacheHandler; // Added cache handler field
+
+    // Storage directory injection removed, as StorageManager handles the location
+    // @Value("${storage.filesystem.directory}")
+    // private String storageDirectory;
+
+    // @Autowired is implicit on single constructor
+    public VegetationIndexService(
+            CommunicationManager communicationManager,
+            VegetationIndexCacheHandler vegetationIndexCacheHandler) { // Inject cache handler
+        this.communicationManager = communicationManager;
+        this.vegetationIndexCacheHandler = vegetationIndexCacheHandler; // Assign cache handler
+    }
+
+    /**
+     * Constructs an endpoint URL by appending additional path segments.
+     *
+     * @param additionalPath Optional path segments to append to the base URL.
+     * @return A string representing the constructed endpoint URL.
+     */
+    private String getEndpointUrl(String... additionalPath) {
+        // Construct the endpoint URL based on the index type and additional path
+        StringBuilder url = new StringBuilder("");
+        if (additionalPath != null && additionalPath.length > 0) {
+            for (String path : additionalPath) {
+                url.append("/").append(path);
+            }
+        }
+        return url.toString();
+
+    }
+
+    /**
+     * Calculate a vegetation index using the Python script.
+     *
+     * @param request   The vegetation index request parameters
+     * @param imageFile The satellite image file
+     * @param authToken Optional authentication token
+     * @return The calculation result
+     */
+    public VegetationIndexResult calculateIndex(VegetationIndexRequest request, File imageFile, String authToken) {
+        logger.info("Calculating {} index for image: {}", request.getIndexType(), imageFile.getName());
+
+        // Set custom headers if needed
+        Map<String, String> headers = new HashMap<>();
+        headers.put("X-Index-Type", request.getIndexType());
+        headers.put("X-Path", getEndpointUrl("calculate", request.getIndexType()));
+        headers.put("Accept", "application/json");
+
+        // Create a composite key for caching
+        Map<String, Object> cacheKeyComponents = new HashMap<>();
+        cacheKeyComponents.put("request", request);
+        cacheKeyComponents.put("imagePath", imageFile.getAbsolutePath()); // Use absolute path as part of the key
+
+        try {
+            // 1. Check cache first
+            Optional<VegetationIndexResult> cachedResult = vegetationIndexCacheHandler.getResourceData(cacheKeyComponents);
+
+            if (cachedResult.isPresent()) {
+                logger.info("Cache hit for {}. Returning cached result for image: {}", request.getIndexType(), imageFile.getName());
+                return cachedResult.get();
+            }
+
+            // 2. Cache miss: Execute the original logic
+            logger.info("Cache miss for {}. Calling external service for image: {}", request.getIndexType(), imageFile.getName());
+            MultipartResponseWrapper<VegetationIndexResult> responseWrapper = communicationManager.sendDataSync(
+                    request, // Input type T (VegetationIndexRequest)
+                        imageFile, // File to send
+                        VegetationIndexResult.class, // Expected metadata type R
+                        authToken, // Auth token
+                        headers // Custom headers - includes path info
+                );
+
+                if (responseWrapper == null) {
+                    logger.error("Received null response wrapper from communication manager for index {}", request.getIndexType());
+                    throw new RuntimeException("Communication failed: No response received");
+                }
+
+                VegetationIndexResult computedResult = responseWrapper.getMetadata();
+                // Get the storage identifier instead of the temporary file
+                String storageIdentifier = responseWrapper.getStorageIdentifier(); // This is the identifier for the *output* image
+
+                if (computedResult != null) {
+                    logger.info("Received metadata result for {} index calculation: {}", request.getIndexType(), computedResult);
+                } else {
+                    logger.warn("Received null metadata in response wrapper for index {}", request.getIndexType());
+                    // Depending on requirements, might need to throw an error here if metadata is essential
+                }
+
+                // Log the storage identifier if the file was received and stored
+                if (storageIdentifier != null) {
+                    logger.info("Received image file for {} index calculation stored with identifier: {}", request.getIndexType(), storageIdentifier);
+                    // The file is now managed by StorageManager. No need to move/delete here.
+                } else {
+                    logger.warn("No storage identifier received in response wrapper for index {}", request.getIndexType());
+                }
+
+                // IMPORTANT: The cache stores the metadata result (VegetationIndexResult).
+                // The actual processed image file is handled by StorageManager and its identifier is logged,
+                // but not directly part of the cached object here.
+
+                // 3. Store the computed result in cache before returning
+                if (computedResult != null) {
+                    vegetationIndexCacheHandler.storeResourceData(computedResult, cacheKeyComponents); // Persist=false by default
+                    logger.info("Stored computed result in cache for {}", request.getIndexType());
+                }
+
+                return computedResult; // Return the newly computed result
+            // } // This closing brace was misplaced, removed it from here
+
+        } catch (Exception e) {
+            // Log the error with context
+            logger.error("Error calculating {} index (cache check/computation) for image {}: {}",
+                         request.getIndexType(), imageFile.getName(), e.getMessage(), e);
+            // Consider specific exception handling or re-throwing based on requirements
+            throw new RuntimeException("Error calculating vegetation index for " + imageFile.getName(), e);
+        }
+        // No finally block needed as temporary file handling is managed elsewhere
+    } // Correct placement of the method's closing brace
+
+    /**
+     * Calculate NDVI index.
+     *
+     * @param imageFile The satellite image file
+     * @param redBand   The red band number (default 1)
+     * @param nirBand   The NIR band number (default 2)
+     * @param authToken Optional authentication token
+     * @return The NDVI calculation result
+     */
+    public VegetationIndexResult calculateNDVI(File imageFile, int redBand, int nirBand, String authToken) {
+        VegetationIndexRequest request = new VegetationIndexRequest("NDVI", redBand, nirBand);
+        try {
+            VegetationIndexResult result = calculateIndex(request, imageFile, authToken);
+            logger.debug("NDVI calculation result: {}", result);
+            if (result == null) {
+                throw new RuntimeException("No result returned from NDVI calculation");
+            }
+            return result;
+        } catch (Exception e) {
+            logger.error("Error in NDVI calculation: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Calculate EVI index.
+     *
+     * @param imageFile The satellite image file
+     * @param redBand   The red band number
+     * @param nirBand   The NIR band number
+     * @param blueBand  The blue band number
+     * @param authToken Optional authentication token
+     * @return The EVI calculation result
+     */
+    public VegetationIndexResult calculateEVI(
+            File imageFile,
+            int redBand,
+            int nirBand,
+            int blueBand,
+            String authToken) {
+        VegetationIndexRequest request = new VegetationIndexRequest("EVI", redBand, nirBand);
+        request.setBlueBand(blueBand);
+        request.setG(2.5f); // Default EVI parameters
+        request.setC1(6.0f);
+        request.setC2(7.5f);
+        request.setL(1.0f);
+        return calculateIndex(request, imageFile, authToken);
+    }
+
+    /**
+     * Calculate Soil Adjusted Vegetation Index (SAVI)
+     * 
+     * @param imageFile The satellite image file
+     * @param redBand   The red band number
+     * @param nirBand   The NIR band number
+     * @param L         Canopy background adjustment factor (typically 0.5)
+     * @param authToken Optional authentication token
+     * @return The SAVI calculation result
+     */
+    public VegetationIndexResult calculateSAVI(
+            File imageFile,
+            int redBand,
+            int nirBand,
+            float L,
+            String authToken) {
+        VegetationIndexRequest request = new VegetationIndexRequest("SAVI", redBand, nirBand);
+        request.setL(L); // Default SAVI parameter
+        return calculateIndex(request, imageFile, authToken);
+
+    }
+
+    /**
+     * Calculate Normalized Difference Water Index (NDWI)
+     * 
+     * @param imageFile The satellite image file
+     * @param greenBand The green band number
+     * @param nirBand   The NIR band number
+     * @param authToken Optional authentication token
+     * @return The NDWI calculation result
+     */
+    public VegetationIndexResult calculateNDWI(
+            File imageFile,
+            int greenBand,
+            int nirBand,
+            String authToken) {
+        VegetationIndexRequest request = new VegetationIndexRequest("NDWI", greenBand, nirBand);
+        return calculateIndex(request, imageFile, authToken);
+    }
+
+
+}
