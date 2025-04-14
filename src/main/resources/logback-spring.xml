@@ -39,10 +39,25 @@
          <!-- Keep existing appenders if needed -->
          <appender-ref ref="CONSOLE" />
          <!-- Removed QUEUE appender reference -->
+         <appender-ref ref="APP_FILE" /> <!-- Add appender for general logs -->
          <!-- <appender-ref ref="AUDIT_FILE" /> --> <!-- Assuming audit logs are handled separately -->
     </logger>
 
     <!-- Removed logger configuration for deleted LogQueueProcessor -->
+
+    <!-- Appender for general application logs -->
+    <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/app.log</file> <!-- Log file name -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>logs/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
     <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/audit.log</file>
@@ -55,8 +70,10 @@
         </encoder>
     </appender>
 
-    <logger name="AuditLogger" level="INFO" additivity="false">
+    <!-- Configure audit logging for the audit package -->
+    <logger name="com.enit.satellite_platform.audit" level="INFO" additivity="false">
         <appender-ref ref="AUDIT_FILE" />
+        <appender-ref ref="CONSOLE" />
     </logger>
 
 </configuration>

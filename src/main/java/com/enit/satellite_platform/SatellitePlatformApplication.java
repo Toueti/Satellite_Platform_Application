@@ -3,8 +3,7 @@ package com.enit.satellite_platform;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties; // Add import
-// import org.springframework.context.annotation.Import; // Remove Import annotation
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
@@ -23,8 +22,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 
+
 // import com.enit.satellite_platform.modules.monitoring.config.WebSocketConfig; // Remove WebSocketConfig import
-import com.enit.satellite_platform.config.cache_handler.CacheProperties; // Add import
 
 /**
  * The main entry point for the Satellite Platform application. This class configures and runs the Spring Boot
@@ -32,6 +31,7 @@ import com.enit.satellite_platform.config.cache_handler.CacheProperties; // Add 
  * since the application uses MongoDB. Auditing and asynchronous method execution are also enabled.
  */
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+@EnableConfigurationProperties(com.enit.satellite_platform.config.cache_handler.CacheProperties.class)
 @EnableMongoAuditing
 @EnableAsync
 @EnableScheduling
@@ -39,7 +39,6 @@ import com.enit.satellite_platform.config.cache_handler.CacheProperties; // Add 
 @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
 // @Import(WebSocketConfig.class) // Remove explicit import
 @EnableWebSocketMessageBroker // Add annotation here
-@EnableConfigurationProperties(CacheProperties.class) // Add annotation here
 public class SatellitePlatformApplication implements WebSocketMessageBrokerConfigurer, SchedulingConfigurer { // Implement SchedulingConfigurer again
 
     private static final Logger log = LoggerFactory.getLogger(SatellitePlatformApplication.class);

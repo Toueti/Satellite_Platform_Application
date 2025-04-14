@@ -19,9 +19,12 @@ public interface ResultsMapper {
         }
         return null;
     }
-	@Mapping(target = "image", ignore = true)
+    @Mapping(target = "image", ignore = true)
     @Mapping(target = "resultsId", ignore = true)
-    @Mapping(target = "cacheKey", ignore = true)
+    @Mapping(target = "errorMessage", ignore = true)
+    @Mapping(target = "fileSize", ignore = true)
+    @Mapping(target = "storageIdentifier", ignore = true)
+    @Mapping(target = "storageType", ignore = true)
     ProcessingResults toEntity(resultsSaveRequest geeSaveRequest);
 
     @Mapping(source = "image.imageId", target = "imageId")
@@ -30,12 +33,15 @@ public interface ResultsMapper {
     //mape ProcessingResponse to ProcessingResults
     @Mapping(target = "image", ignore = true)
     @Mapping(target = "resultsId", ignore = true)
-    @Mapping(target = "cacheKey", ignore = true)
+    @Mapping(target = "errorMessage", ignore = true)
+    @Mapping(target = "fileSize", ignore = true)
+    @Mapping(target = "storageIdentifier", ignore = true)
+    @Mapping(target = "storageType", ignore = true)
     ProcessingResults toEntity(ProcessingResponse processingResponse);
 
     // Map ProcessingResults to ProcessingResponse
-    @Mapping(source = "image.imageId", target = "imageId") // Map nested imageId
-    @Mapping(target = "status", ignore = true) // Status is likely contextual, not stored
-    @Mapping(target = "message", ignore = true) // Message is likely contextual, not stored
+    @Mapping(source = "image.imageId", target = "imageId")
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "message", ignore = true)
     ProcessingResponse toProcessingResponse(ProcessingResults processingResults);
 }

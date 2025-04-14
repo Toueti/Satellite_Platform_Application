@@ -1,5 +1,19 @@
 package com.enit.satellite_platform.config;
 
+/**
+ * MongoDB configuration class that sets up MongoDB client, database factory, and template.
+ * This class provides the core configuration for MongoDB connectivity in the application.
+ *
+ * Features:
+ * - Creates and configures MongoDB client with connection settings
+ * - Sets up MongoDB database factory for database operations
+ * - Configures MongoDB template for high-level MongoDB operations
+ * - Supports runtime configuration refresh with @RefreshScope
+ * - Provides detailed logging for debugging connection issues
+ * - Implements connection string validation and error handling
+ *
+ * Note: GridFS support is commented out but can be enabled if needed for file storage.
+ */
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;

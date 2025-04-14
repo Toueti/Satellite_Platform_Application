@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import com.enit.satellite_platform.config.cache_handler.general_cache_handler.CacheableEntity;
 
 import jakarta.persistence.PrePersist;
 
@@ -20,13 +19,10 @@ import java.util.Map;
 @Data
 @Document(collection = "processing_results")
 @CompoundIndex(name = "type_status_date", def = "{'processing_type': 1, 'status': 1, 'date': -1}")
-public class ProcessingResults implements CacheableEntity {
+public class ProcessingResults {
 
     @Id
     private ObjectId resultsId;
-
-    @Field("cache_key")
-    private String cacheKey;
 
     @Field("data")
     private Map<String, Object> data;

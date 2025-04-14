@@ -55,8 +55,6 @@ public interface ResultsRepository extends MongoRepository<ProcessingResults, Ob
     @Query(value = "{ '_id': ?1, 'image.$id': ?0 }", exists = true)
     boolean existsByImage_ImageIdAndResultsId(String imageId, ObjectId resultsId);
 
-    Optional<ProcessingResults> findByCacheKey(String cacheKey);
-
     /**
      * Find all processing results where the associated image's project's owner ID matches the given user ID.
      * Note: Assumes owner ID in Project is stored as ObjectId.

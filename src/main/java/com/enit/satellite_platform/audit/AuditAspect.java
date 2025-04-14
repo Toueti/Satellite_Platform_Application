@@ -21,8 +21,7 @@ import com.enit.satellite_platform.modules.project_management.entities.Project;
 @Component
 public class AuditAspect {
 
-    // private static final Logger LOGGER = LoggerFactory.getLogger("AuditLogger"); // No longer needed
-    private static final Logger log = LoggerFactory.getLogger(AuditAspect.class); // Use standard logger for aspect errors
+    private static final Logger log = LoggerFactory.getLogger("com.enit.satellite_platform.audit"); // Logger for audit events
 
     @Autowired
     private AuditService auditService;
@@ -88,7 +87,7 @@ public class AuditAspect {
         String username = extractUsernameFromLoginArgs(joinPoint.getArgs());
         // userId is not known on failure
         auditService.recordEvent(null, username, LOGIN_FAILURE, null);
-        log.debug("Login failure for {}: {}", username, error.getMessage()); // Keep debug log if needed
+        log.info("Login failure for {}: {}", username, error.getMessage());
     }
 
     @Before("projectCreation()")
@@ -110,7 +109,7 @@ public class AuditAspect {
         AuditPrincipal principal = getCurrentPrincipal();
         String projectName = extractProjectNameFromArgs(joinPoint.getArgs());
         auditService.recordEvent(principal.userId(), principal.username(), PROJECT_CREATE_FAILURE, projectName);
-        log.debug("Project creation failure for {} by {}: {}", projectName, principal.username(), error.getMessage());
+        log.info("Project creation failure for {} by {}: {}", projectName, principal.username(), error.getMessage());
     }
 
     @Before("projectAccess()")
@@ -132,7 +131,7 @@ public class AuditAspect {
         AuditPrincipal principal = getCurrentPrincipal();
         String projectId = extractProjectIdFromArgs(joinPoint.getArgs(), 0);
         auditService.recordEvent(principal.userId(), principal.username(), PROJECT_ACCESS_FAILURE, projectId);
-        log.debug("Project access failure for {} by {}: {}", projectId, principal.username(), error.getMessage());
+        log.info("Project access failure for {} by {}: {}", projectId, principal.username(), error.getMessage());
     }
 
     @Before("projectSharing()")
@@ -160,7 +159,7 @@ public class AuditAspect {
         String projectId = (args.length > 0 && args[0] instanceof String) ? (String) args[0] : null;
         String sharedWithEmail = (args.length > 1 && args[1] instanceof String) ? (String) args[1] : null;
         auditService.recordEvent(principal.userId(), principal.username(), PROJECT_SHARE_FAILURE, projectId + " -> " + sharedWithEmail);
-        log.debug("Project sharing failure for {} by {}: {}", projectId, principal.username(), error.getMessage());
+        log.info("Project sharing failure for {} by {}: {}", projectId, principal.username(), error.getMessage());
     }
 
     @Before("userUpdate()")
@@ -182,7 +181,7 @@ public class AuditAspect {
         AuditPrincipal principal = getCurrentPrincipal();
         String targetUserId = extractUserIdFromUserUpdateArgs(joinPoint.getArgs());
         auditService.recordEvent(principal.userId(), principal.username(), USER_UPDATE_FAILURE, targetUserId);
-        log.debug("User update failure for {} by {}: {}", targetUserId, principal.username(), error.getMessage());
+        log.info("User update failure for {} by {}: {}", targetUserId, principal.username(), error.getMessage());
     }
 
 

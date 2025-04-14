@@ -1,6 +1,7 @@
 package com.enit.satellite_platform.config.cache_handler;
 
 import com.enit.satellite_platform.config.cache_handler.general_cache_handler.CacheHandler;
+import com.enit.satellite_platform.config.cache_handler.general_cache_handler.ICacheKeyGenerator;
 import com.enit.satellite_platform.modules.resource_management.dto.ProcessingResponse;
 import com.enit.satellite_platform.shared.mapper.ResultsMapper;
 import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingResults;
@@ -55,10 +56,6 @@ public class SatelliteProcessingCacheHandler extends CacheHandler<ProcessingResp
 
     /** Spring's TaskScheduler used to schedule the cache cleanup job. */
     private final TaskScheduler taskScheduler;
-    /** Repository for accessing persistent {@link ProcessingResults} data from MongoDB. */
-    private final ResultsRepository resultsRepository;
-    /** Mapper to convert between {@link ProcessingResults} and {@link ProcessingResponse}. */
-    private final ResultsMapper resultsMapper;
 
     /**
      * Constructs a new SatelliteProcessingCacheHandler with injected dependencies.
@@ -80,8 +77,6 @@ public class SatelliteProcessingCacheHandler extends CacheHandler<ProcessingResp
             ResultsMapper resultsMapper) {
         super(redisTemplate, cacheKeyGenerator, cacheProperties);
         this.taskScheduler = taskScheduler;
-        this.resultsRepository = resultsRepository;
-        this.resultsMapper = resultsMapper;
         log.info("Satellite Processing Cache Handler initialized with persistence layer integration.");
     }
 
@@ -97,15 +92,8 @@ public class SatelliteProcessingCacheHandler extends CacheHandler<ProcessingResp
      */
     @Override
     protected Optional<ProcessingResponse> findInPersistentStorage(String cacheKey) {
-        log.debug("Searching persistent storage for cache key: {}", cacheKey);
-        Optional<ProcessingResults> result = resultsRepository.findByCacheKey(cacheKey);
-        if (result.isPresent()) {
-            log.debug("Found data in persistent storage for key: {}", cacheKey);
-        } else {
-            log.debug("Data not found in persistent storage for key: {}", cacheKey);
-        }
-
-        return result.map(resultsMapper::toProcessingResponse);
+        log.debug("Persistent storage lookup skipped for satellite processing result (key: {})", cacheKey);
+        return Optional.empty();
     }
 
     /**

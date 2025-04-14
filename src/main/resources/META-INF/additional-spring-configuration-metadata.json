@@ -228,5 +228,20 @@
     "name": "spring.webflux.max-in-memory-size",
     "type": "java.lang.String",
     "description": "A description for 'spring.webflux.max-in-memory-size'"
+  },
+  {
+    "name": "web_client.memory.buffer.size",
+    "type": "java.lang.String",
+    "description": "A description for 'web_client.memory.buffer.size'"
+  },
+  {
+    "name": "cache.redis.max_infrequent_access_count",
+    "type": "java.lang.String",
+    "description": "A description for 'cache.redis.max_infrequent_access_count'"
+  },
+  {
+    "name": "cache.redis.inactivity_threshold_days",
+    "type": "java.lang.String",
+    "description": "A description for 'cache.redis.inactivity_threshold_days'"
   }
 ]}

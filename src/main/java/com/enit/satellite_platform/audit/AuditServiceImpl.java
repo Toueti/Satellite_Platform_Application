@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuditServiceImpl implements AuditService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuditServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger("com.enit.satellite_platform.audit");
 
     @Autowired
     private AuditEventRepository auditEventRepository;
@@ -23,7 +23,7 @@ public class AuditServiceImpl implements AuditService {
         }
         try {
             auditEventRepository.save(event);
-            logger.debug("Audit event recorded: User={}, Action={}, Target={}",
+            logger.info("Audit event recorded: User={}, Action={}, Target={}",
                          event.getUsername(), event.getActionType(), event.getTargetId());
         } catch (Exception e) {
             // Log error but don't let audit failure break the main operation
