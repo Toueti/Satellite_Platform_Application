@@ -1,4 +1,4 @@
-package com.enit.satellite_platform.config.cache_handler;
+package com.enit.satellite_platform.config.cache_handler.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

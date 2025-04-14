@@ -34,8 +34,8 @@ public abstract class CacheHandler<T> {
 
     // Use the generic RedisTemplate
     private final RedisTemplate<String, Object> redisTemplate;
-    private final ICacheKeyGenerator cacheKeyGenerator; // Use interface for DI
-    private final CachePropertiesBase cacheProperties; // Use base class for properties
+    protected final ICacheKeyGenerator cacheKeyGenerator; // Use interface for DI
+    protected final CachePropertiesBase cacheProperties; // Use base class for properties
 
     /**
      * Constructs a new CacheHandler. Dependencies are typically injected by a framework like Spring.
@@ -220,7 +220,7 @@ public abstract class CacheHandler<T> {
      * @param key   The cache key
      * @param entry The CacheEntry to store
      */
-    private void storeInRedis(String key, CacheEntry<T> entry) {
+    protected void storeInRedis(String key, CacheEntry<T> entry) { // Changed from private to protected
         try {
             // Use the injected TTL value. The generic template accepts Object as value.
             redisTemplate.opsForValue().set(key, entry, cacheProperties.getRedisTtlSeconds(), TimeUnit.SECONDS);

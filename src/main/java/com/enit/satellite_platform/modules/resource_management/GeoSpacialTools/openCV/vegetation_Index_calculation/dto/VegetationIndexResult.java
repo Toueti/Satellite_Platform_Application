@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 
 /**
- * DTO that matches the Python script's ProcessingResult class
+ * DTO that matches the Python script's ProcessingResult class and includes the processed image data
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VegetationIndexResult {
@@ -23,6 +23,9 @@ public class VegetationIndexResult {
     
     @JsonProperty("statistics")
     private Map<String, Double> statistics;
+    
+    @JsonProperty("processed_image")
+    private byte[] processedImage;
 
     // Default constructor
     public VegetationIndexResult() {}
@@ -68,15 +71,22 @@ public class VegetationIndexResult {
         this.statistics = statistics;
     }
 
-    // outputFilePath field and its getter/setter were removed.
+    public byte[] getProcessedImage() {
+        return processedImage;
+    }
+
+    public void setProcessedImage(byte[] processedImage) {
+        this.processedImage = processedImage;
+    }
 
     @Override
     public String toString() {
         return String.format(
-            "VegetationIndexResult{indexType='%s', duration=%.2fs, stats=%s}",
+            "VegetationIndexResult{indexType='%s', duration=%.2fs, stats=%s, hasImage=%s}",
             indexType,
             processingDuration,
-            statistics != null ? statistics.toString() : "null"
+            statistics != null ? statistics.toString() : "null",
+            processedImage != null ? "yes" : "no"
         );
     }
 }

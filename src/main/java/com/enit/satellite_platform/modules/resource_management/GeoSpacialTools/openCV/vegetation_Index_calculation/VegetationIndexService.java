@@ -4,14 +4,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.enit.satellite_platform.config.cache_handler.VegetationIndexCacheHandler; // Added import
+import com.enit.satellite_platform.config.cache_handler.VegetationIndexResultCacheHandler;
+import com.enit.satellite_platform.config.cache_handler.util.FileHashingUtil;
+import org.apache.commons.io.IOUtils;
 import com.enit.satellite_platform.modules.resource_management.GeoSpacialTools.openCV.vegetation_Index_calculation.dto.VegetationIndexRequest;
 import com.enit.satellite_platform.modules.resource_management.GeoSpacialTools.openCV.vegetation_Index_calculation.dto.VegetationIndexResult;
 import com.enit.satellite_platform.modules.resource_management.utils.communication_management.CommunicationManager;
 import com.enit.satellite_platform.modules.resource_management.utils.communication_management.MultipartResponseWrapper;
 
 import java.io.File;
-import com.enit.satellite_platform.config.cache_handler.FileHashingUtil;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -25,12 +28,12 @@ public class VegetationIndexService {
     private static final Logger logger = LoggerFactory.getLogger(VegetationIndexService.class);
 
     private final CommunicationManager communicationManager;
-    private final VegetationIndexCacheHandler vegetationIndexCacheHandler;
+    private final VegetationIndexResultCacheHandler vegetationIndexCacheHandler;
     private final FileHashingUtil fileHashingUtil;
 
     public VegetationIndexService(
             CommunicationManager communicationManager,
-            VegetationIndexCacheHandler vegetationIndexCacheHandler,
+            VegetationIndexResultCacheHandler vegetationIndexCacheHandler,
             FileHashingUtil fileHashingUtil) {
         this.communicationManager = communicationManager;
         this.vegetationIndexCacheHandler = vegetationIndexCacheHandler;
@@ -105,32 +108,27 @@ public class VegetationIndexService {
                 }
 
                 VegetationIndexResult computedResult = responseWrapper.getMetadata();
-                // Get the storage identifier instead of the temporary file
-                String storageIdentifier = responseWrapper.getStorageIdentifier(); // This is the identifier for the *output* image
+                byte[] processedImageData;
+                try (InputStream imageStream = responseWrapper.getFileContent()) {
+                    processedImageData = IOUtils.toByteArray(imageStream);
+                } catch (IOException e) {
+                    logger.error("Error reading processed image data: {}", e.getMessage(), e);
+                    throw new RuntimeException("Failed to read processed image data", e);
+                }
 
                 if (computedResult != null) {
-                    logger.info("Received metadata result for {} index calculation: {}", request.getIndexType(), computedResult);
+                    // Include the processed image data in the result
+                    computedResult.setProcessedImage(processedImageData);
+                    logger.info("Received metadata and image result for {} index calculation: {}", request.getIndexType(), computedResult);
                 } else {
                     logger.warn("Received null metadata in response wrapper for index {}", request.getIndexType());
-                    // Depending on requirements, might need to throw an error here if metadata is essential
+                    throw new RuntimeException("No metadata received from processing service");
                 }
 
-                // Log the storage identifier if the file was received and stored
-                if (storageIdentifier != null) {
-                    logger.info("Received image file for {} index calculation stored with identifier: {}", request.getIndexType(), storageIdentifier);
-                    // The file is now managed by StorageManager. No need to move/delete here.
-                } else {
-                    logger.warn("No storage identifier received in response wrapper for index {}", request.getIndexType());
-                }
-
-                // IMPORTANT: The cache stores the metadata result (VegetationIndexResult).
-                // The actual processed image file is handled by StorageManager and its identifier is logged,
-                // but not directly part of the cached object here.
-
-                // 3. Store the computed result in cache before returning
+                // 3. Store the complete result (including image) in cache before returning
                 if (computedResult != null) {
                     vegetationIndexCacheHandler.storeResourceData(computedResult, cacheKeyComponents); // Persist=false by default
-                    logger.info("Stored computed result in cache for {}", request.getIndexType());
+                    logger.info("Stored computed result with image in cache for {}", request.getIndexType());
                 }
 
                 return computedResult; // Return the newly computed result
