@@ -1,16 +1,17 @@
 package com.enit.satellite_platform.modules.dashboard.service;
 
-import com.enit.satellite_platform.audit.AuditEvent;
-import com.enit.satellite_platform.audit.AuditEventRepository;
-import com.enit.satellite_platform.modules.dashboard.dto.DashboardStatsDto;
-import com.enit.satellite_platform.modules.project_management.entities.Project;
-import com.enit.satellite_platform.modules.project_management.repositories.ProjectRepository;
-import com.enit.satellite_platform.modules.resource_management.image_management.entities.Image;
-import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingResults;
-import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
-import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ResultsRepository;
-import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
-import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -22,12 +23,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import com.enit.satellite_platform.audit.AuditEvent;
+import com.enit.satellite_platform.audit.AuditEventRepository;
+import com.enit.satellite_platform.modules.dashboard.dto.DashboardStatsDto;
+import com.enit.satellite_platform.modules.project_management.entities.Project;
+import com.enit.satellite_platform.modules.project_management.repositories.ProjectRepository;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.Image;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingResults;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingType;
+import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
+import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ResultsRepository;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
+import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 
 @Service
 public class DashboardService {
@@ -225,7 +232,7 @@ public class DashboardService {
                     case PENDING:
                         pending++;
                         break;
-                    case PROCESSING:
+                    case RUNNING:
                         processing++;
                         break;
                     case COMPLETED:
@@ -233,6 +240,9 @@ public class DashboardService {
                         break;
                     case FAILED:
                         failed++;
+                        break;
+                    case CANCELLED:
+                        unknown++;
                         break;
                     default:
                         unknown++;
@@ -263,16 +273,22 @@ public class DashboardService {
         logger.debug("Calculating most used processing type...");
         if (allUserResults.isEmpty())
             return "N/A";
-        String result = allUserResults.stream()
+        ProcessingType result = allUserResults.stream()
                 .map(ProcessingResults::getType)
                 .filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                 .entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse("N/A");
-        logger.debug("Most used processing type: {}", result);
-        return result;
+                .orElse(null);
+                
+        if (result != null) {
+            logger.debug("Most used processing type: {}", result.name());
+            return result.getDescription(); // Return the human-readable description
+        }
+        
+        logger.debug("Most used processing type: N/A");
+        return "N/A";
     }
 
     /**
