@@ -106,4 +106,38 @@ public class VegetationIndexRequest {
     public void setL(Float l) {
         this.L = l;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        VegetationIndexRequest that = (VegetationIndexRequest) o;
+
+        if (redBand != that.redBand) return false;
+        if (nirBand != that.nirBand) return false;
+        if (!java.util.Objects.equals(indexType, that.indexType)) return false;
+        if (!java.util.Objects.equals(blueBand, that.blueBand)) return false;
+        if (!java.util.Objects.equals(G, that.G)) return false;
+        if (!java.util.Objects.equals(C1, that.C1)) return false;
+        if (!java.util.Objects.equals(C2, that.C2)) return false;
+        return java.util.Objects.equals(L, that.L);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = indexType != null ? indexType.hashCode() : 0;
+        result = 31 * result + redBand;
+        result = 31 * result + nirBand;
+        result = 31 * result + (blueBand != null ? blueBand.hashCode() : 0);
+        result = 31 * result + (G != null ? G.hashCode() : 0);
+        result = 31 * result + (C1 != null ? C1.hashCode() : 0);
+        result = 31 * result + (C2 != null ? C2.hashCode() : 0);
+        result = 31 * result + (L != null ? L.hashCode() : 0);
+        return result;
+    }
+
+    // Consider adding a toString() method for better logging/debugging if needed
+    // @Override
+    // public String toString() { ... }
 }

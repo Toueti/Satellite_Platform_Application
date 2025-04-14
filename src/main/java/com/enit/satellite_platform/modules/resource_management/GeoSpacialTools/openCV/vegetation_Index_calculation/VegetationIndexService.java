@@ -11,10 +11,10 @@ import com.enit.satellite_platform.modules.resource_management.utils.communicati
 import com.enit.satellite_platform.modules.resource_management.utils.communication_management.MultipartResponseWrapper;
 
 import java.io.File;
-// Imports related to direct file handling (Files, Path, Paths, StandardCopyOption, IOException, UUID) are no longer needed here
+import com.enit.satellite_platform.config.cache_handler.FileHashingUtil;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional; // Added import
+import java.util.Optional;
 
 /**
  * Example service demonstrating how to use the generic communication system
@@ -25,18 +25,16 @@ public class VegetationIndexService {
     private static final Logger logger = LoggerFactory.getLogger(VegetationIndexService.class);
 
     private final CommunicationManager communicationManager;
-    private final VegetationIndexCacheHandler vegetationIndexCacheHandler; // Added cache handler field
+    private final VegetationIndexCacheHandler vegetationIndexCacheHandler;
+    private final FileHashingUtil fileHashingUtil;
 
-    // Storage directory injection removed, as StorageManager handles the location
-    // @Value("${storage.filesystem.directory}")
-    // private String storageDirectory;
-
-    // @Autowired is implicit on single constructor
     public VegetationIndexService(
             CommunicationManager communicationManager,
-            VegetationIndexCacheHandler vegetationIndexCacheHandler) { // Inject cache handler
+            VegetationIndexCacheHandler vegetationIndexCacheHandler,
+            FileHashingUtil fileHashingUtil) {
         this.communicationManager = communicationManager;
-        this.vegetationIndexCacheHandler = vegetationIndexCacheHandler; // Assign cache handler
+        this.vegetationIndexCacheHandler = vegetationIndexCacheHandler;
+        this.fileHashingUtil = fileHashingUtil;
     }
 
     /**
@@ -74,12 +72,15 @@ public class VegetationIndexService {
         headers.put("X-Path", getEndpointUrl("calculate", request.getIndexType()));
         headers.put("Accept", "application/json");
 
-        // Create a composite key for caching
-        Map<String, Object> cacheKeyComponents = new HashMap<>();
-        cacheKeyComponents.put("request", request);
-        cacheKeyComponents.put("imagePath", imageFile.getAbsolutePath()); // Use absolute path as part of the key
-
         try {
+            // Calculate hash of the image file content using utility class
+            String imageHash = fileHashingUtil.calculateFileHash(imageFile);
+            
+            // Create a composite key for caching using the hash and request parameters
+            Map<String, Object> cacheKeyComponents = new HashMap<>();
+            cacheKeyComponents.put("request", request);
+            cacheKeyComponents.put("imageHash", imageHash);
+
             // 1. Check cache first
             Optional<VegetationIndexResult> cachedResult = vegetationIndexCacheHandler.getResourceData(cacheKeyComponents);
 
