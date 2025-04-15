@@ -2,7 +2,7 @@
 @token = eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJyb2xlcyI6WyJST0xFX1RIRU1BVElDSUFOIl0sInN1YiI6InlvYnRvdDhAZ21haWwuY29tIiwiaWF0IjoxNzQ0NzIxOTY5LCJleHAiOjE3NDQ4MDgzNjl9.NiKFlxvDtOp8p7vuhj3OKXkW_DEyVxGY6k70t55MglY
 @projectId = 67f0db2c5ef6b30b9b40ef49
 @otherUserEmail = collaborator@example.com
-@projectName = My New Project
+@projectName = My New Project5354
 @projectDescription = A description for the new project.
 @projectTag = research
 @projectStatus = IN_PROGRESS

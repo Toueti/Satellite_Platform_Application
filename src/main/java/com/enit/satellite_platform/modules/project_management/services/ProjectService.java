@@ -376,7 +376,9 @@ public class ProjectService {
       logger.error("Access denied for email: {} to view shared users of project: {}", currentEmail, projectId);
       throw new AccessDeniedException("Access denied to view shared users");
     }
-    return project.getSharedUsers().keySet();
+    // Fetch User objects based on the ObjectIds in the keyset
+    Set<ObjectId> sharedUserIds = project.getSharedUsers().keySet();
+    return new HashSet<>(userRepository.findAllById(sharedUserIds));
   }
 
   /**
@@ -546,7 +548,12 @@ public class ProjectService {
     exportData.put("name", project.getProjectName());
     exportData.put("description", project.getDescription());
     exportData.put("owner", project.getOwner().getEmail());
-    exportData.put("sharedUsers", project.getSharedUsers().keySet().stream().map(User::getEmail).toList());
+    // Fetch User objects first, then map to emails
+    Set<ObjectId> sharedUserIdsForExport = project.getSharedUsers().keySet();
+    List<String> sharedUserEmails = userRepository.findAllById(sharedUserIdsForExport).stream()
+                                                  .map(User::getEmail)
+                                                  .toList();
+    exportData.put("sharedUsers", sharedUserEmails);
     exportData.put("imageCount", imageRepository.countByProject(project));
     exportData.put("lastAccessed", project.getLastAccessedTime());
     return exportData;
