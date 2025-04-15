@@ -151,10 +151,8 @@ class ProjectsService {
    */
   async getAllProjects(filter?: ProjectFilter): Promise<Project[]> {
     try {
-      this.retryCount = 0; // Reset retry count
-      let url = PROJECT_ENDPOINTS.LIST;
+      let url = `${PROJECT_ENDPOINTS.LIST}`;
       
-      // Apply filters if provided
       if (filter) {
         const params = new URLSearchParams();
         
@@ -163,7 +161,7 @@ class ProjectsService {
         }
         
         if (filter.search) {
-          params.append('query', filter.search);
+          params.append('search', filter.search);
         }
         
         if (filter.tags && filter.tags.length > 0) {
@@ -189,9 +187,21 @@ class ProjectsService {
       }
       
       const response = await this.retryRequest(() => httpClient.get(url));
-      const projects = this.safelyExtractData<Project[]>(response);
+      const projectsData = this.safelyExtractData<any>(response);
       
-      return projects.map(this.mapProjectResponse);
+      // Check if we have a paginated response with content array
+      if (projectsData && projectsData.content && Array.isArray(projectsData.content)) {
+        return projectsData.content.map(this.mapProjectResponse.bind(this));
+      }
+      
+      // Fallback for non-paginated response
+      if (Array.isArray(projectsData)) {
+        return projectsData.map(this.mapProjectResponse.bind(this));
+      }
+      
+      // If we get here, something unexpected happened
+      console.warn('Unexpected response format:', projectsData);
+      return [];
     } catch (error: any) {
       console.error('Failed to load projects:', error);
       return [];

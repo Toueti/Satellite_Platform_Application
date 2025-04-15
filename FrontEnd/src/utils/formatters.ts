@@ -7,11 +7,17 @@
  * @param bytes File size in bytes
  * @returns Formatted file size string (e.g., "1.5 MB")
  */
-export const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return bytes + ' B';
-  else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-  else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
-  else return (bytes / 1073741824).toFixed(1) + ' GB';
+export const formatFileSize = (bytes: number | null | undefined): string => {
+  // Ensure bytes is a valid number, default to 0 if not
+  const numBytes = Number(bytes); 
+  if (isNaN(numBytes) || numBytes === null || numBytes < 0) {
+    return '0 B'; // Return 0 B for invalid or non-numeric input
+  }
+
+  if (numBytes < 1024) return numBytes + ' B';
+  if (numBytes < 1048576) return (numBytes / 1024).toFixed(1) + ' KB';
+  if (numBytes < 1073741824) return (numBytes / 1048576).toFixed(1) + ' MB';
+  return (numBytes / 1073741824).toFixed(1) + ' GB';
 };
 
 /**

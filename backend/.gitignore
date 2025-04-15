@@ -33,6 +33,17 @@ build/
 .vscode/
 
 
+tmp/
+
+TestImages
+
+*.log
+
+*.tif
+*.jpg
+*.jpeg
+*.png
+
 create_project.bat
 
 !**/src/main/resources/

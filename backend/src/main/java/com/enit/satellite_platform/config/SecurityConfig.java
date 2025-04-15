@@ -19,7 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.enit.satellite_platform.config.rateLimiter.RateLimitingFilter;
-import com.enit.satellite_platform.modules.user_management.security.Jwt.JwtAuthenticationFilter;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.security.Jwt.JwtAuthenticationFilter;
 
 import org.springframework.web.client.RestTemplate;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -60,11 +60,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         // Allow unauthenticated access to authentication endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Allow unauthenticated access to WebSocket handshake/info endpoints
+                        .requestMatchers("/ws-logs/**").permitAll() // Keep existing rule for audit logs if needed
+                        .requestMatchers("/monitoring-websocket/**").permitAll() // Add permission for monitoring endpoint
                         // Restrict DELETE requests to /api/account/** to ADMIN role
                         .requestMatchers(HttpMethod.DELETE, "/api/account/**").hasRole("ADMIN")
                         // Restrict admin endpoints (including audit, roles, etc.) to users with ROLE_ADMIN
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // Restrict Actuator endpoints to users with ROLE_ADMIN
+                        // Allow unauthenticated access to the Prometheus scraping endpoint
+                        .requestMatchers("/actuator/prometheus").permitAll()
+                        // Restrict other Actuator endpoints to users with ROLE_ADMIN
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
                         // Restrict user endpoints to users with ROLE_THEMATICIAN
                         .requestMatchers("/api/thematician/**").hasRole("THEMATICIAN")
@@ -73,11 +78,11 @@ public class SecurityConfig {
                 // Set session management to stateless for JWT
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // Add Rate Limiting filter before JWT filter
-        http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
-        // Add JWT filter before UsernamePasswordAuthenticationFilter
+        // Add JWT filter first to populate SecurityContext
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
+        // Add Rate Limiting filter after JWT filter
+        http.addFilterAfter(rateLimitingFilter, JwtAuthenticationFilter.class);
+
         return http.build();
     }
 
@@ -89,11 +94,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Allow all origins (consider restricting in production)
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        // Specify the frontend origin explicitly instead of wildcard when using credentials
+        configuration.setAllowedOriginPatterns(Arrays.asList("*")); // Allow frontend dev server
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "content-type"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "content-type", "x-requested-with")); // Added common headers
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setAllowCredentials(true); // Explicitly set allowCredentials
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

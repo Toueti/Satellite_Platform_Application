@@ -1,7 +1,8 @@
 package com.enit.satellite_platform.modules.messaging.service;
 
 import com.enit.satellite_platform.modules.messaging.config.RabbitMQConfig;
-import com.enit.satellite_platform.modules.messaging.model.Message;
+import com.enit.satellite_platform.modules.messaging.entities.Message;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -24,7 +25,7 @@ public class RabbitMQProducerService {
     private static final String ROUTING_KEY_BOT_TOPIC = "messaging.rabbitmq.routing.bot.topic";
 
     // Default routing keys (can fallback to RabbitMQConfig constants or define here)
-    private static final String DEFAULT_ROUTING_KEY_USER_DIRECT = RabbitMQConfig.USER_DIRECT_QUEUE_NAME; // Example fallback
+    private static final String DEFAULT_ROUTING_KEY_USER_DIRECT = RabbitMQConfig.DIRECT_EXCHANGE_NAME; // Example fallback
     private static final String DEFAULT_ROUTING_KEY_ADMIN_TOPIC = "admin.message"; // Default if not configured
     private static final String DEFAULT_ROUTING_KEY_BOT_TOPIC = "bot.message"; // Default if not configured
 
@@ -39,7 +40,7 @@ public class RabbitMQProducerService {
         String exchangeName;
         String routingKey;
 
-        switch (message.getMessageType()) {
+        switch (message.getType()) {
             case USER_TO_USER:
                 exchangeName = RabbitMQConfig.DIRECT_EXCHANGE_NAME;
                 // Use recipientId or configured static key
@@ -63,7 +64,7 @@ public class RabbitMQProducerService {
                 break;
 
             default:
-                log.error("Unknown message type {} for message {}, cannot determine exchange/routing key.", message.getMessageType(), message.getId());
+                log.error("Unknown message type {} for message {}, cannot determine exchange/routing key.", message.getType(), message.getId());
                 // Optionally throw an exception or send to an error queue
                 return;
         }

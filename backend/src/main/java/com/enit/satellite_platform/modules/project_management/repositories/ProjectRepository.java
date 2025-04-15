@@ -1,12 +1,12 @@
 package com.enit.satellite_platform.modules.project_management.repositories;
 
-import com.enit.satellite_platform.modules.project_management.model.Project;
-import com.enit.satellite_platform.modules.user_management.models.User;
+import com.enit.satellite_platform.modules.project_management.entities.Project;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
 
 import org.bson.types.ObjectId;
 
 import org.springframework.lang.NonNull;
-
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -23,12 +23,15 @@ import java.util.Optional;
 public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
 
     /**
-     * Finds all projects owned by a specific user.
+     * Finds all projects owned by a specific user email.
      *
-     * @param user The owner of the projects.
+     * @param ownerId The ObjectId of the owner.
      * @return A list of projects owned by the user.
      */
-    List<Project> findByOwner(User user);
+    // Query by the referenced owner's ObjectId
+    Page<Project> findByOwnerId(ObjectId ownerId, Pageable pageable);
+
+    List<Project> findByOwnerId(ObjectId ownerId);
 
     /**
      * Finds a project by its name.
@@ -151,4 +154,12 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
      */
     @Query(value = "{'sharedUsers.?0': {$exists: true}}", count = true)
     long countBySharedUsersContainsKey(User user);
+
+    /**
+     * Finds all projects owned by a specific user.
+     *
+     * @param ownerId The ObjectId of the owner.
+     * @return A list of projects owned by the user.
+     */
+    List<Project> findAllByOwnerId(ObjectId ownerId);
 }

@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.enit.satellite_platform.modules.resource_management.image_management.dto.resultsSaveRequest;
-import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingResults;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingResults;
 import com.enit.satellite_platform.modules.resource_management.image_management.services.ProcessingResultsService;
 
 import java.util.List;

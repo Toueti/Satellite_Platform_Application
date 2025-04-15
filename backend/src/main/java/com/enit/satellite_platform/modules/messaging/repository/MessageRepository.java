@@ -1,9 +1,10 @@
 package com.enit.satellite_platform.modules.messaging.repository;
 
-import com.enit.satellite_platform.modules.messaging.model.Message;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import com.enit.satellite_platform.modules.messaging.entities.Message;
 
 /**
  * Repository interface for Message objects.

@@ -1,11 +1,9 @@
 package com.enit.satellite_platform.shared.converters;
 
-import com.enit.satellite_platform.modules.user_management.models.User;
-import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository; // Corrected import path
+import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -16,7 +14,6 @@ public class UserKeyDeserializer extends KeyDeserializer {
     // Inject the UserRepository to fetch User objects
     private final UserRepository userRepository;
 
-    @Autowired
     public UserKeyDeserializer(UserRepository userRepository) {
         this.userRepository = userRepository;
     }

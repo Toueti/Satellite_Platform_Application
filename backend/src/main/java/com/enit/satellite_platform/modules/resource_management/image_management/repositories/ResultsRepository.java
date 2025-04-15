@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingResults;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingResults;
 
 import java.util.List;
 import java.util.Optional;
@@ -54,8 +54,6 @@ public interface ResultsRepository extends MongoRepository<ProcessingResults, Ob
      */
     @Query(value = "{ '_id': ?1, 'image.$id': ?0 }", exists = true)
     boolean existsByImage_ImageIdAndResultsId(String imageId, ObjectId resultsId);
-
-    Optional<ProcessingResults> findByCacheKey(String cacheKey);
 
     /**
      * Find all processing results where the associated image's project's owner ID matches the given user ID.

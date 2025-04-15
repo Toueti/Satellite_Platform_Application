@@ -32,7 +32,7 @@ export const PROJECT_ENDPOINTS = {
 export const RESOURCE_ENDPOINTS = {
     IMAGES: {
         LIST: `${API_BASE_URL}/api/images`,
-        UPLOAD: `${API_BASE_URL}/api/images/upload`,
+        UPLOAD: `${API_BASE_URL}/geospatial/images/add`,
         GET: (id: string) => `${API_BASE_URL}/api/images/${id}`,
         ANNOTATIONS: {
             ADD: (imageId: string) => `${API_BASE_URL}/api/images/${imageId}/annotations`,

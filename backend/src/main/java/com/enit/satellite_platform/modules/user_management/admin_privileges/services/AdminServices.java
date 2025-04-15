@@ -5,32 +5,25 @@ import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException; // Keep for specific exceptions if needed
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.MutablePropertySources;
-import com.enit.satellite_platform.modules.user_management.services.UserManagementCoreService; // Import Core Service
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-// import org.springframework.security.crypto.password.PasswordEncoder; // No longer needed directly
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.enit.satellite_platform.exceptions.DuplicationException;
-import com.enit.satellite_platform.modules.user_management.admin_privileges.dto.ConfigUpdateRequest;
 import com.enit.satellite_platform.modules.user_management.admin_privileges.repository.AdminSignupRequestRepository;
-import com.enit.satellite_platform.modules.user_management.exceptions.RoleNotFoundException;
-import com.enit.satellite_platform.modules.user_management.models.AdminSignupRequest;
-import com.enit.satellite_platform.modules.user_management.models.Authority; // Keep for Set<Authority> type
-import com.enit.satellite_platform.modules.user_management.models.User;
-import com.enit.satellite_platform.modules.user_management.services.RoleService; // Keep for ADMIN role lookup
-import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository; // Keep for findByEmail
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.AdminSignupRequest;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.Authority;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.RoleNotFoundException;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.services.RoleService;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.services.UserManagementCoreService;
+import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,18 +31,15 @@ import org.slf4j.LoggerFactory;
 public class AdminServices {
 
     @Autowired
-    private UserRepository userRepository; // Keep for specific lookups (e.g., findByEmail)
+    private UserRepository userRepository;
 
     @Autowired
-    private RoleService roleService; // Keep for ADMIN role lookup
-    // @Autowired
-    // private PasswordEncoder passwordEncoder; // Replaced by core service
+    private RoleService roleService;
+
 
     @Autowired
-    private UserManagementCoreService userManagementCoreService; // Inject Core Service
+    private UserManagementCoreService userManagementCoreService;
 
-    @Autowired
-    private ConfigurableEnvironment environment;
 
     @Autowired
     private AdminSignupRequestRepository adminSignupRequestRepository;
@@ -57,8 +47,9 @@ public class AdminServices {
     @Autowired
     private AuditLogService auditLogService;
 
+
     private static final Logger logger = LoggerFactory.getLogger(AdminServices.class);
-    private static final String RUNTIME_OVERRIDES_PROPERTY_SOURCE = "runtimeOverrides";
+
     private static final String ADMIN_ROLE_NAME = "ROLE_ADMIN";
 
     /**
@@ -130,6 +121,11 @@ public class AdminServices {
         // Find user using Core Service
         User user = userManagementCoreService.findUserByIdOrThrow(userId);
 
+        // Capture old roles before updating
+        user.getAuthorities().stream()
+                                     .map(auth -> auth.getAuthority()) // Use lambda expression instead of method reference
+                                     .collect(java.util.stream.Collectors.toSet());
+
         // Check for duplicates using Core Service (excluding current user)
         userManagementCoreService.checkUserDuplication(username, email, userId);
 
@@ -143,8 +139,10 @@ public class AdminServices {
 
         // Save user using Core Service
         User savedUser = userManagementCoreService.saveUser(user);
+
         // Audit Log
         auditLogService.logAuditEvent(getCurrentUsername(), "USER_UPDATED", "Updated user: " + savedUser.getUsername() + " (ID: " + userId + ") - Roles set to: " + roleNames);
+
         return savedUser;
     }
 
@@ -246,45 +244,6 @@ public class AdminServices {
         // Audit Log
         String action = lock ? "ACCOUNT_LOCKED" : "ACCOUNT_UNLOCKED";
         auditLogService.logAuditEvent(getCurrentUsername(), action, "User account: " + user.getUsername() + " (ID: " + userId + ")");
-    }
-
-    /**
-     * Updates a specific configuration property at runtime.
-     * @param updateRequest The request containing the key and value to update.
-     */
-    public void updateConfigurationProperty(ConfigUpdateRequest updateRequest) {
-        if (updateRequest == null || updateRequest.getKey() == null || updateRequest.getKey().isBlank()) {
-            throw new IllegalArgumentException("Configuration key cannot be null or blank.");
-        }
-
-        MutablePropertySources propertySources = environment.getPropertySources();
-        Map<String, Object> map;
-
-        if (propertySources.contains(RUNTIME_OVERRIDES_PROPERTY_SOURCE)) {
-            //* Get existing map if property source exists
-            MapPropertySource propertySource = (MapPropertySource) propertySources.get(RUNTIME_OVERRIDES_PROPERTY_SOURCE);
-            //* Need to create a new map as the underlying source map might be unmodifiable
-            map = new HashMap<>(propertySource.getSource());
-        } else {
-            // *Create new map if property source doesn't exist
-            map = new HashMap<>();
-        }
-
-        // Add or update the property
-        map.put(updateRequest.getKey(), updateRequest.getValue());
-
-        // Replace or add the property source with high precedence
-        if (propertySources.contains(RUNTIME_OVERRIDES_PROPERTY_SOURCE)) {
-            propertySources.replace(RUNTIME_OVERRIDES_PROPERTY_SOURCE, new MapPropertySource(RUNTIME_OVERRIDES_PROPERTY_SOURCE, map));
-        } else {
-            // Add it just after systemProperties to ensure it overrides most other sources
-            propertySources.addFirst(new MapPropertySource(RUNTIME_OVERRIDES_PROPERTY_SOURCE, map));
-        }
-
-        // Optionally: Log the change or trigger a refresh event if using Spring Cloud Config
-        logger.info("Updated configuration property: {} = {}", updateRequest.getKey(), updateRequest.getValue()); // Use logger
-        // Audit Log
-        auditLogService.logAuditEvent(getCurrentUsername(), "CONFIG_UPDATED", "Property updated: " + updateRequest.getKey() + "=" + updateRequest.getValue());
     }
 
     // --- Admin Signup Request Management ---
@@ -421,7 +380,7 @@ public class AdminServices {
      * Helper method to get the username of the currently authenticated user.
      * @return The username or "SYSTEM" if no authentication context is found.
      */
-    private String getCurrentUsername() {
+    public static String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
             return "SYSTEM"; // Or handle as appropriate if action must be user-initiated

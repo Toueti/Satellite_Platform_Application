@@ -10,7 +10,7 @@ export interface SatelliteImage {
     longitude: number;
     locationName?: string;
   };
-  size: number; // in KB
+  size: number; 
   resolution: string;
   bands: string[];
   metadata: {

@@ -1,11 +1,11 @@
 package com.enit.satellite_platform.modules.messaging.service;
 
-import com.enit.satellite_platform.modules.messaging.model.Conversation;
-import com.enit.satellite_platform.modules.messaging.model.Message;
-import com.enit.satellite_platform.modules.messaging.model.MessageType;
+import com.enit.satellite_platform.modules.messaging.entities.Conversation;
+import com.enit.satellite_platform.modules.messaging.entities.Message;
+import com.enit.satellite_platform.modules.messaging.entities.MessageType;
 import com.enit.satellite_platform.modules.messaging.repository.ConversationRepository;
-//import com.enit.satellite_platform.modules.user_management.models.User;
-import com.enit.satellite_platform.modules.user_management.user_service.repositories.UserRepository; // Assuming UserRepository exists
+import com.enit.satellite_platform.modules.user_management.normal_user_service.repositories.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -109,9 +109,9 @@ public class MessagingService {
         Message message = new Message();
         message.setId(UUID.randomUUID().toString()); // Generate unique ID
         message.setSenderId(senderId);
-        message.setReceiverId(recipientId);
+        message.setRecipientId(recipientId);
         message.setContent(content);
-        message.setMessageType(messageType);
+        message.setType(messageType);
         message.setTimestamp(LocalDateTime.now());
         // attachments and reactions are initially empty
 
@@ -210,16 +210,16 @@ public class MessagingService {
 
         if (recipientId != null) {
             participants.add(recipientId);
-        } else if (message.getMessageType() == MessageType.USER_TO_ADMIN || message.getMessageType() == MessageType.ADMIN_TO_USER) {
+        } else if (message.getType() == MessageType.USER_TO_ADMIN || message.getType() == MessageType.ADMIN_TO_USER) {
             // Add a generic admin identifier or find specific admin based on context
             participants.add("ADMIN_GROUP"); // Placeholder
-        } else if (message.getMessageType() == MessageType.USER_TO_BOT || message.getMessageType() == MessageType.BOT_TO_USER) {
+        } else if (message.getType() == MessageType.USER_TO_BOT || message.getType() == MessageType.BOT_TO_USER) {
             // Add a generic bot identifier
             participants.add("BOT_SERVICE"); // Placeholder
         }
 
         // Ensure at least two participants for a valid conversation (adjust if needed)
-        if (participants.size() < 2 && message.getMessageType() == MessageType.USER_TO_USER) {
+        if (participants.size() < 2 && message.getType() == MessageType.USER_TO_USER) {
              log.warn("Could not determine recipient for USER_TO_USER message ID: {}", message.getId());
              return Set.of(); // Return empty set if recipient unclear
         }
@@ -234,7 +234,7 @@ public class MessagingService {
         // or having the recipient ID explicitly in the Message model (needs adding).
         // For USER_TO_USER, it's crucial.
         // Let's assume for now it needs to be added to the Message model.
-        return message.getReceiverId(); // If added to Message model
+        return message.getRecipientId(); // If added to Message model
     }
 
 

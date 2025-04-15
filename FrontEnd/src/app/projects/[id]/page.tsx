@@ -21,6 +21,7 @@ import Modal from '@/components/Modal' // Import the Modal component
 import ImageGrid from '@/components/ImageGrid/ImageGrid'
 import ImageFilterComponent from '@/components/ImageGrid/ImageFilter'
 import ImageAnnotationDialog from '@/components/ImageGrid/ImageAnnotation'
+import DragDropUpload from '@/components/ImageUpload/DragDropUpload'
 import { 
   Box, 
   Button, 
@@ -31,7 +32,9 @@ import {
   Chip, 
   TextField, 
   Stack,
-  Divider
+  Divider,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material'
 
 export default function ProjectDetailPage() {
@@ -49,7 +52,8 @@ export default function ProjectDetailPage() {
     const [sharingError, setSharingError] = useState('')
     const [sharingSuccess, setSharingSuccess] = useState('')
     const [isAddImageModalOpen, setIsAddImageModalOpen] = useState(false)
-    const [allImages, setAllImages] = useState<Image[]>([])
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+    const [allImages, setAllImages] = useState<SatelliteImage[]>([])
     const [selectedImages, setSelectedImages] = useState<string[]>([])
     const [satelliteImages, setSatelliteImages] = useState<SatelliteImage[]>([])
     const [imageFilters, setImageFilters] = useState<ImageFilter>({})
@@ -59,6 +63,68 @@ export default function ProjectDetailPage() {
     const [isAnnotationModalOpen, setIsAnnotationModalOpen] = useState(false)
     const [activeTab, setActiveTab] = useState(0)
     const [isLoadingImages, setIsLoadingImages] = useState(false)
+    const [isUploading, setIsUploading] = useState(false)
+    const [uploadError, setUploadError] = useState<string | null>(null)
+    const [addImageMode, setAddImageMode] = useState<'select' | 'upload'>('select')
+    const [success, setSuccess] = useState<string | null>(null)
+
+    // Define fetchImages outside of useEffect so it can be called from other functions
+    const fetchImages = async () => {
+        if (!projectId) {
+            console.warn('No project ID available for fetching images');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            console.log('Fetching images for project:', projectId);
+            
+            // First try to get project-specific images
+            const projectImages = await imagesService.getImagesByProject(projectId, {
+                sortBy: 'uploadDate',
+                sortOrder: 'desc'
+            });
+            
+            console.log('Project images response:', projectImages);
+            
+            if (projectImages && projectImages.length > 0) {
+                setSatelliteImages(projectImages);
+                
+                // Extract unique tags from all images
+                const allTags = new Set<string>();
+                projectImages.forEach(image => {
+                    if (image.tags && Array.isArray(image.tags)) {
+                        image.tags.forEach(tag => allTags.add(tag));
+                    }
+                });
+                
+                setAvailableTags(Array.from(allTags));
+            } else {
+                console.log('No images found for project:', projectId);
+                setSatelliteImages([]);
+                setAvailableTags([]);
+            }
+        } catch (error: any) {
+            console.error('Error fetching images:', error);
+            
+            // Handle specific error cases
+            if (error.message && error.message.includes('No static resource')) {
+                console.warn('Images endpoint not implemented on backend or no images found');
+                setSatelliteImages([]);
+                setAvailableTags([]);
+                setError('No images found for this project. You can upload images using the "Upload Image" button.');
+            } else {
+                setError('Failed to fetch images. Please try again later.');
+                // Set empty arrays to prevent UI issues
+                setSatelliteImages([]);
+                setAvailableTags([]);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     if (typeof projectId !== 'string' || !projectId) {
         return (
@@ -120,54 +186,26 @@ export default function ProjectDetailPage() {
         if (!project?.id) return;
 
         let isMounted = true;
-        const fetchImages = async () => {
-            setIsLoadingImages(true);
-            try {
-                if (isAddImageModalOpen) {
-                    const allImagesData = await imagesService.getAllImages();
-                    if (isMounted) {
-                        setAllImages(allImagesData);
-                    }
-                }
-
-                const satelliteData = await imagesService.getImagesByProject(project.id, imageFilters);
-                if (isMounted) {
-                    setSatelliteImages(satelliteData);
-                    
-                    const tags = new Set<string>();
-                    satelliteData.forEach(img => {
-                        img.tags?.forEach(tag => tags.add(tag));
-                    });
-                    setAvailableTags(Array.from(tags));
-                    
-                    const savedFavorites = localStorage.getItem('favoriteImages');
-                    if (savedFavorites) {
-                        setFavoriteImages(JSON.parse(savedFavorites));
-                    }
-                }
-            } catch (error: any) {
-                if (isMounted) {
-                    console.error('Error fetching images:', error);
-                    if (!error.message?.includes('429')) {
-                        setError(error.message || 'Failed to fetch images');
-                    }
-                }
-            } finally {
-                if (isMounted) {
-                    setIsLoadingImages(false);
-                }
-            }
-        };
 
         const timeoutId = setTimeout(() => {
             fetchImages();
         }, 300);
 
+        // Cleanup function to revoke object URLs when component unmounts
         return () => {
             isMounted = false;
             clearTimeout(timeoutId);
+            // Cleanup object URLs
+            satelliteImages.forEach(image => {
+                if (image.url && image.url.startsWith('blob:')) {
+                    URL.revokeObjectURL(image.url);
+                }
+                if (image.thumbnailUrl && image.thumbnailUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(image.thumbnailUrl);
+                }
+            });
         };
-    }, [project?.id, imageFilters, isAddImageModalOpen]);
+    }, [project?.id, projectId]);
 
     const handleImageSelection = (imageId: string) => {
         setSelectedImages((prevSelectedImages) =>
@@ -188,8 +226,8 @@ export default function ProjectDetailPage() {
                 // await projectsService.addImageToProject(projectId, imageId);
             }
             //Refetch the images
-            const updatedImages = await imagesService.getImagesByProject(projectId)
-            setImages(updatedImages)
+            const updatedImages = await imagesService.getImagesByProject(projectId);
+            setSatelliteImages(updatedImages);
             setSelectedImages([]) // Clear selected images
             setIsAddImageModalOpen(false) // Close modal
         } catch (error: any) {
@@ -214,10 +252,11 @@ export default function ProjectDetailPage() {
     const handleShareProject = async () => {
         setSharingError('')
         setSharingSuccess('')
-        if (!projectId || typeof projectId !== 'string') {
-            setSharingError('Invalid project ID.')
+        if (!projectId) {
+            setSharingError('Project ID is missing.')
             return
         }
+
         if (!sharingEmail) {
             setSharingError('Please enter an email address.')
             return
@@ -366,8 +405,97 @@ export default function ProjectDetailPage() {
         router.push(`/projects/${projectId}`);
     };
 
-    const handleAnalysisClick = (projectId: string | number) => {
+    const handleAnalysisClick = (projectId: string | number | undefined) => {
+        if (projectId) {
         router.push(`/analysis?projectId=${String(projectId)}`);
+        }
+    };
+
+    const handleFileUpload = async (files: FileList | null) => {
+        if (!files || files.length === 0) {
+            setError('Please select at least one file to upload');
+            return;
+        }
+
+        setIsUploading(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('image', files[0]);
+            formData.append('projectId', projectId as string);
+            
+            // Add image name
+            formData.append('imageName', files[0].name);
+            
+            // Add metadata
+            const metadata = {
+                description: `Uploaded image: ${files[0].name}`,
+                originalFilename: files[0].name,
+                fileSize: files[0].size,
+                mimeType: files[0].type
+            };
+            formData.append('metadata', JSON.stringify(metadata));
+            
+            // Add storage type
+            formData.append('storageType', 'filesystem');
+
+            console.log('Uploading file:', files[0].name, 'size:', files[0].size, 'type:', files[0].type);
+            
+            // Log FormData entries for debugging
+            for (const [key, value] of formData.entries()) {
+                console.log(`FormData entry - ${key}:`, value instanceof File ? `File: ${value.name}, size: ${value.size} bytes` : value);
+            }
+
+            const response = await imagesService.uploadImage(formData);
+            console.log('Upload response:', response);
+            
+            setSuccess('Image uploaded successfully');
+            setIsUploading(false);
+            
+            // Refresh the images list
+            fetchImages();
+        } catch (error: any) {
+            console.error('Error uploading file:', error);
+            
+            // Handle specific error cases
+            if (error.message && error.message.includes('No files selected')) {
+                setError('Please select a file to upload');
+            } else if (error.message && error.message.includes('No project ID')) {
+                setError('Project ID is missing. Please try again.');
+            } else if (error.message && error.message.includes('413')) {
+                setError('File size too large. Please try a smaller file.');
+            } else if (error.message && error.message.includes('415')) {
+                setError('Unsupported file type. Please upload an image file (JPG, PNG, GIF, TIFF).');
+            } else if (error.message && error.message.includes('401')) {
+                setError('Unauthorized. Please log in again.');
+            } else if (error.message && error.message.includes('403')) {
+                setError('Access denied. You do not have permission to upload images.');
+            } else if (error.message && error.message.includes('Failed to parse multipart')) {
+                setError('Server error during image upload. The server could not process the image. Please try again later or contact support.');
+            } else {
+                setError(error.message || 'Failed to upload image. Please try again.');
+            }
+            
+            setIsUploading(false);
+        }
+    };
+
+    // Convert FileList to File[] for DragDropUpload
+    const handleFileUploadWrapper = async (files: File[]) => {
+        if (!files || files.length === 0) {
+            setError('Please select at least one file to upload');
+            return;
+        }
+        // Create a FileList-like object
+        const fileList = {
+            0: files[0],
+            length: 1,
+            item: (index: number) => files[index]
+        } as FileList;
+        
+        await handleFileUpload(fileList);
     };
 
     if (loading) {
@@ -687,7 +815,7 @@ export default function ProjectDetailPage() {
                                 Run an analysis on this project to see results here
                             </Typography>
                             <button
-                                onClick={() => handleAnalysisClick(project.id)}
+                                onClick={() => project?.id ? handleAnalysisClick(project.id) : null}
                                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
                             >
                                 Start New Analysis
@@ -700,91 +828,97 @@ export default function ProjectDetailPage() {
                 <Modal
                     open={isAddImageModalOpen}
                     onClose={() => setIsAddImageModalOpen(false)}
-                    title="Add Images to Project"
+                    title="Add Image"
                     content={
-                        <Box sx={{ p: 2 }}>
-                            {allImages.length > 0 ? (
-                                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
-                                    {allImages.map((image) => (
-                                        <Box
+                        <div className="space-y-4">
+                            {satelliteImages.length > 0 ? (
+                                <>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {satelliteImages.map((image) => (
+                                            <div
                                             key={image.id}
-                                            sx={{
-                                                position: 'relative',
-                                                border: 1,
-                                                borderRadius: 1,
-                                                overflow: 'hidden',
-                                                cursor: 'pointer',
-                                                borderColor: selectedImages.includes(image.id) ? 'primary.main' : 'grey.300',
-                                                boxShadow: selectedImages.includes(image.id) ? 2 : 0
-                                            }}
-                                            onClick={() => handleImageSelection(image.id)}
+                                                className={`border rounded-lg p-2 cursor-pointer ${
+                                                    selectedImage?.id === image.id ? 'border-blue-500 bg-blue-50' : ''
+                                                }`}
+                                                onClick={() => setSelectedImage(image)}
                                         >
                                             <img
-                                                src={image.thumbnailUrl}
-                                                alt={image.name}
-                                                style={{
-                                                    width: '100%',
-                                                    height: '160px',
-                                                    objectFit: 'cover'
-                                                }}
-                                            />
-                                            <Box sx={{ p: 1 }}>
-                                                <Typography variant="subtitle2" noWrap>
-                                                    {image.name}
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {new Date(image.createdAt).toLocaleDateString()}
-                                                </Typography>
-                                            </Box>
-                                            {selectedImages.includes(image.id) && (
-                                                <Box
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        top: 8,
-                                                        right: 8,
-                                                        bgcolor: 'primary.main',
-                                                        color: 'white',
-                                                        borderRadius: '50%',
-                                                        p: 0.5
-                                                    }}
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        className="h-4 w-4"
-                                                        viewBox="0 0 20 20"
-                                                        fill="currentColor"
-                                                    >
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                </Box>
-                                            )}
-                                        </Box>
-                                    ))}
-                                </Box>
+                                                    src={image.thumbnailUrl || image.url}
+                                                    alt={image.filename || 'Satellite image'}
+                                                    className="w-full h-32 object-cover rounded"
+                                                />
+                                                <div className="mt-2 text-sm">
+                                                    <p className="font-medium truncate">{image.filename || 'Unnamed image'}</p>
+                                                    <p className="text-gray-500 text-xs">
+                                                        {new Date(image.uploadDate).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
                             ) : (
-                                <Typography color="text.secondary" align="center">
-                                    No images available
-                                </Typography>
+                                <div className="text-center py-8">
+                                    <p className="text-gray-500 mb-4">No images available to add to this project.</p>
+                                    <p className="text-sm text-gray-400 mb-4">
+                                        {error && error.includes('not available') 
+                                            ? 'The image service is not available. The backend does not support image operations at this time.'
+                                            : 'You can upload new images using the upload button above.'}
+                                    </p>
+                                </div>
                             )}
-                        </Box>
+                        </div>
                     }
                     actions={[
                         {
-                            label: 'Cancel',
-                            onClick: () => {
-                                setIsAddImageModalOpen(false);
-                                setSelectedImages([]);
-                            }
+                            label: "Cancel",
+                            onClick: () => setIsAddImageModalOpen(false),
+                            color: "inherit"
                         },
                         {
-                            label: 'Add Selected',
+                            label: "Switch to Upload Mode",
+                            onClick: () => {
+                                setIsAddImageModalOpen(false);
+                                setIsUploadModalOpen(true);
+                            },
+                            color: "primary",
+                            disabled: false
+                        },
+                        {
+                            label: "Add Selected Image",
                             onClick: handleConfirmAddImages,
-                            color: 'primary',
-                            disabled: selectedImages.length === 0
+                            color: "primary",
+                            disabled: !selectedImage
+                        }
+                    ]}
+                />
+
+                {/* Upload Image Modal */}
+                <Modal
+                    open={isUploadModalOpen}
+                    onClose={() => setIsUploadModalOpen(false)}
+                    title="Upload Image"
+                    content={
+                        <div className="space-y-4">
+                            <DragDropUpload
+                                onUpload={handleFileUploadWrapper}
+                                isUploading={isUploading}
+                                acceptedFileTypes="image/*"
+                                maxFiles={5}
+                                maxFileSizeMB={10}
+                            />
+                            {uploadError && (
+                                <div className="text-red-500 text-sm mt-2">
+                                    {uploadError}
+                                </div>
+                            )}
+                        </div>
+                    }
+                    actions={[
+                        {
+                            label: "Cancel",
+                            onClick: () => setIsUploadModalOpen(false),
+                            color: "inherit"
                         }
                     ]}
                 />

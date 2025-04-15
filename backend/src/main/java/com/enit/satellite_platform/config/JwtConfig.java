@@ -1,5 +1,14 @@
 package com.enit.satellite_platform.config;
 
+/**
+ * Configuration class for JWT (JSON Web Token) settings.
+ * This class manages the configuration for JWT generation and validation,
+ * including the secret key and token expiration time.
+ *
+ * The class is annotated with @RefreshScope to allow dynamic updates of
+ * JWT-related properties without requiring application restart.
+ * It logs the JWT configuration details during initialization for debugging purposes.
+ */
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;

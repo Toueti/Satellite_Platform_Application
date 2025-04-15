@@ -1,8 +1,8 @@
 @baseUrl = http://localhost:8080/api/thematician/projects
-@token = eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJlbWFpbCI6InlvYnRvdDhAZ21haWwuY29tIiwicm9sZXMiOlsiUk9MRV9USEVNQVRJQ0lBTiJdLCJzdWIiOiJ5b2J0b3Q4QGdtYWlsLmNvbSIsImlhdCI6MTc0MzgzNzQ2MywiZXhwIjoxNzQzOTIzODYzfQ.44Wn0XHDOQ2NW_1NEo9xf5wKG4ytAu0LC92T1Q2YqKA
-@projectId = # Set this after creating a project
+@token = eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJyb2xlcyI6WyJST0xFX1RIRU1BVElDSUFOIl0sInN1YiI6InlvYnRvdDhAZ21haWwuY29tIiwiaWF0IjoxNzQ0NzIxOTY5LCJleHAiOjE3NDQ4MDgzNjl9.NiKFlxvDtOp8p7vuhj3OKXkW_DEyVxGY6k70t55MglY
+@projectId = 67f0db2c5ef6b30b9b40ef49
 @otherUserEmail = collaborator@example.com
-@projectName = My New Project
+@projectName = My New Project5354
 @projectDescription = A description for the new project.
 @projectTag = research
 @projectStatus = IN_PROGRESS
@@ -44,6 +44,10 @@ Accept: application/json
 GET {{baseUrl}}/{{projectId}}
 Authorization: Bearer {{token}}
 Accept: application/json
+
+### Get project by name
+GET {{baseUrl}}/name/{{projectName}}
+Authorization: Bearer {{token}}
 
 
 ### Get All Projects for User

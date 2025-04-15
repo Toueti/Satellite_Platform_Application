@@ -1,8 +1,8 @@
 package com.enit.satellite_platform.modules.messaging.service;
 
-import com.enit.satellite_platform.modules.messaging.model.Attachment;
-import com.enit.satellite_platform.modules.messaging.model.Conversation;
-import com.enit.satellite_platform.modules.messaging.model.Message;
+import com.enit.satellite_platform.modules.messaging.entities.Attachment;
+import com.enit.satellite_platform.modules.messaging.entities.Conversation;
+import com.enit.satellite_platform.modules.messaging.entities.Message;
 import com.enit.satellite_platform.modules.messaging.repository.ConversationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

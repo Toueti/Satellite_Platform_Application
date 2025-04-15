@@ -1,6 +1,8 @@
 import { httpClient } from '@/utils/http-client';
 import { RESOURCE_ENDPOINTS, PROJECT_ENDPOINTS } from '@/config/api';
 import { SatelliteImage, ImageAnnotation, AnalysisResult } from '@/types/image';
+import { authService } from '@/services/auth.service';
+import { API_BASE_URL } from '@/config/api';
 
 export interface Image {
   id: string;
@@ -26,22 +28,308 @@ export interface ImageFilter {
   cloudCoverageMax?: number;
   sortBy?: 'captureDate' | 'uploadDate' | 'size' | 'name';
   sortOrder?: 'asc' | 'desc';
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  favorites?: boolean;
 }
 
-class ImagesService {
-  private retryCount = 0;
-  private lastRequestTime = 0;
-  private readonly minRequestInterval = 100; // Minimum 100ms between requests
-  private readonly maxRetries = 3;
-  private readonly retryDelays = [1000, 2000, 3000];
+export class ImagesService {
+  private static instance: ImagesService;
+  private baseUrl = '/api/images';
 
-  async getAllImages(): Promise<Image[]> {
-    const response = await httpClient.get(RESOURCE_ENDPOINTS.IMAGES.LIST);
-    return response.data.map((image: any) => ({
-      ...image,
-      createdAt: new Date(image.createdAt),
-      updatedAt: new Date(image.updatedAt)
-    }));
+  private constructor() {}
+
+  public static getInstance(): ImagesService {
+    if (!ImagesService.instance) {
+      ImagesService.instance = new ImagesService();
+    }
+    return ImagesService.instance;
+  }
+
+  // Helper function to map raw image data (from backend) to SatelliteImage (frontend type)
+  private mapToSatelliteImage(imageData: any): SatelliteImage {
+    const imageId = imageData.imageId || imageData.id; // Use imageId primarily
+    const filename = imageData.imageName || imageData.filename || 'Unknown Filename';
+    // Construct URL assuming a backend endpoint exists to serve the image by ID
+    // Using the pattern from getImageData but relative to API base
+    const imageUrl = imageId ? `${API_BASE_URL}/geospatial/images/${imageId}/data` : '/placeholder-image.png'; 
+    // Note: Using the full data URL for thumbnail might be inefficient. 
+    // Consider a dedicated thumbnail endpoint if performance is an issue.
+    const thumbnailUrl = imageUrl; 
+
+    // Extract dates if available. The getImagesByProject response item lacks date fields.
+    // Set to null if not provided by the specific backend response for this item.
+    const captureDate = imageData.captureDate || imageData.metadata?.captureDate || null; 
+    const uploadDate = imageData.uploadDate || imageData.createdAt || null; 
+
+    return {
+      id: imageId,
+      filename: filename,
+      url: imageUrl,
+      thumbnailUrl: thumbnailUrl, // Use the same URL for now
+      captureDate: captureDate, // Will be null if not provided
+      uploadDate: uploadDate,   // Will be null if not provided
+      location: imageData.location || { latitude: 0, longitude: 0 }, // Default location
+      // Assuming fileSize is in bytes, store it as is. Formatting happens in the component.
+      size: imageData.fileSize || imageData.size || 0,
+      resolution: imageData.resolution || 'Unknown',
+      bands: imageData.bands || [],
+      metadata: imageData.metadata || {},
+      tags: imageData.tags || [],
+      annotations: imageData.annotations || [],
+    };
+  }
+
+
+  async getAllImages(): Promise<SatelliteImage[]> { // Return SatelliteImage[]
+    try {
+      const response = await httpClient.get(this.baseUrl);
+      // Map the raw data to SatelliteImage[]
+      const images = Array.isArray(response.data) ? response.data.map(this.mapToSatelliteImage) : [];
+      return images;
+    } catch (error: any) {
+      console.error('Error fetching all images:', error);
+      if (error.message && error.message.includes('No static resource api/images')) {
+        console.warn('Images endpoint not implemented on backend. Returning empty array.');
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async getImageById(id: string): Promise<Image> {
+    try {
+      const response = await httpClient.get(`${this.baseUrl}/${id}`);
+      return response.data; // Adjusted to return response.data
+    } catch (error: any) {
+      console.error(`Error fetching image with ID ${id}:`, error);
+      if (error.message && error.message.includes('No static resource api/images')) {
+        console.warn('Image endpoint not implemented on backend.');
+        throw new Error('Image service not available');
+      }
+      throw error;
+    }
+  }
+
+  async getImageData(imageId: string): Promise<Blob> {
+    try {
+      const url = `${API_BASE_URL}/geospatial/images/${imageId}/data`;
+      console.log(`Fetching image data from: ${url}`);
+      // Use the updated httpClient with responseType: 'blob'
+      const blobResponse = await httpClient.get(url, {
+        responseType: 'blob', // Specify blob response type
+      });
+
+      // httpClient now throws for non-ok responses, so if we reach here, it's a success.
+      // The response should be a Blob directly.
+      if (blobResponse instanceof Blob) {
+        console.log(`Successfully fetched image data for ID ${imageId}, size: ${blobResponse.size} bytes`);
+        return blobResponse;
+      } else {
+        // This case should ideally not happen if httpClient works as expected
+        console.error(`Error fetching image data for ID ${imageId}: Expected Blob but received`, blobResponse);
+        throw new Error('Failed to fetch image data: Invalid response format received from httpClient.');
+      }
+    } catch (error: any) {
+      // Log the error caught from httpClient
+      console.error(`Error fetching image data for ID ${imageId}:`, error);
+      // Re-throw a more specific error message for the service layer
+      throw new Error(`Failed to fetch image data for ID ${imageId}: ${error.message || 'Unknown error'}`);
+    }
+  }
+
+  async getImagesByProject(projectId: string | string[] | null | undefined, filter?: ImageFilter): Promise<SatelliteImage[]> {
+    try {
+      if (!projectId) {
+        console.warn('No project ID provided for getImagesByProject');
+        return [];
+      }
+
+      const id = Array.isArray(projectId) ? projectId[0] : projectId;
+      const queryParams = new URLSearchParams();
+      if (filter) {
+        if (filter.dateFrom) queryParams.append('dateFrom', filter.dateFrom);
+        if (filter.dateTo) queryParams.append('dateTo', filter.dateTo);
+        if (filter.tags) queryParams.append('tags', filter.tags.join(','));
+        // Add other filter properties if the backend supports them
+        if (filter.sortBy) queryParams.append('sortBy', filter.sortBy);
+        if (filter.sortOrder) queryParams.append('sortOrder', filter.sortOrder);
+        if (filter.cloudCoverageMax !== undefined) queryParams.append('cloudCoverageMax', filter.cloudCoverageMax.toString());
+        if (filter.satellite) queryParams.append('satellite', filter.satellite);
+        if (filter.favorites !== undefined) queryParams.append('favorites', filter.favorites.toString());
+        if (filter.location) {
+          queryParams.append('latitude', filter.location.latitude.toString());
+          queryParams.append('longitude', filter.location.longitude.toString());
+          queryParams.append('radiusKm', filter.location.radiusKm.toString());
+        }
+        if (filter.dateRange) {
+          queryParams.append('dateRangeStart', filter.dateRange.start.toISOString());
+          queryParams.append('dateRangeEnd', filter.dateRange.end.toISOString());
+        }
+      }
+
+      const url = `${API_BASE_URL}/geospatial/images/by-project/${id}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      console.log('Making request to:', url);
+
+      const response = await httpClient.get(url);
+      const images = Array.isArray(response.data) ? await Promise.all(response.data.map(async (image: any) => {
+        const normalizedImage = {
+          ...image,
+          id: image.imageId,
+        };
+
+        let imageUrl = '/placeholder-image.png'; // Default fallback
+        let thumbnailUrl = '/placeholder-image.png';
+
+        if (normalizedImage && normalizedImage.id) {
+          try {
+            const imageBlob = await this.getImageData(normalizedImage.id);
+            imageUrl = URL.createObjectURL(imageBlob);
+            thumbnailUrl = imageUrl; // Same URL for thumbnail
+          } catch (error) {
+            console.warn(`Failed to fetch image data for image ${normalizedImage.id}:`, error);
+          }
+        }
+        
+        // Explicitly construct the SatelliteImage object with correct property names
+        const result: SatelliteImage = {
+          id: normalizedImage.id, // Already correctly mapped from imageId
+          filename: normalizedImage.imageName || 'Unknown Filename', // Map imageName to filename
+          url: imageUrl,
+          thumbnailUrl: thumbnailUrl,
+          captureDate: normalizedImage.captureDate || normalizedImage.metadata?.captureDate || null, // Set to null if missing
+          uploadDate: normalizedImage.createdAt || null, // Set to null if missing (as createdAt is not in the response item)
+          location: normalizedImage.location || { latitude: 0, longitude: 0 },
+          size: normalizedImage.fileSize || 0, // Map fileSize to size
+          resolution: normalizedImage.resolution || 'Unknown',
+          bands: normalizedImage.bands || [],
+          metadata: normalizedImage.metadata || {},
+          tags: normalizedImage.tags || [],
+          annotations: normalizedImage.annotations || [],
+        };
+        return result;
+      })) : [];
+
+      if (images.length === 0) {
+        console.log('No images found for project:', id);
+      } else {
+        console.log('Project images response:', images);
+      }
+
+      return images;
+    } catch (error: any) {
+      console.error('Error fetching images for project:', error);
+      return [];
+    }
+  }
+
+  async uploadImage(formData: FormData): Promise<SatelliteImage> { // Return SatelliteImage
+    try {
+      console.log('Uploading image with formData:', formData);
+
+      if (!formData || formData.entries().next().done) {
+        console.warn('Empty FormData provided to uploadImage');
+        throw new Error('No files selected for upload. Please select at least one image file.');
+      }
+
+      const formDataEntries = Array.from(formData.entries());
+      formDataEntries.forEach(([key, value]) => {
+        console.log(`FormData entry - ${key}:`, value instanceof File ? `File: ${value.name}, size: ${value.size} bytes` : value);
+      });
+
+      const file = formData.get('image') as File;
+      const projectId = formData.get('projectId') as string;
+
+      if (!file) {
+        throw new Error('No image file provided');
+      }
+
+      if (!projectId) {
+        throw new Error('No project ID provided');
+      }
+
+      const updatedFormData = new FormData();
+      updatedFormData.append('file', file);
+      updatedFormData.append('projectId', projectId);
+      updatedFormData.append('imageName', file.name);
+
+      const metadata = {
+        description: `Uploaded image: ${file.name}`,
+        originalFilename: file.name,
+        fileSize: file.size,
+        mimeType: file.type
+      };
+      updatedFormData.append('metadata', JSON.stringify(metadata));
+      updatedFormData.append('storageType', 'filesystem');
+
+      const token = authService.getToken();
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(RESOURCE_ENDPOINTS.IMAGES.UPLOAD, {
+        method: 'POST',
+        headers,
+        body: updatedFormData,
+      });
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = 'Failed to upload image';
+
+        if (contentType && contentType.includes("application/json")) {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch (jsonError) {
+            const textError = await response.text();
+            errorMessage = `Request failed: ${textError}`;
+          }
+        } else {
+          errorMessage = `Request failed with status ${response.status}`;
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      console.log('Image uploaded successfully:', data);
+      // Map the response data to SatelliteImage before returning
+      return this.mapToSatelliteImage(data);
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  }
+
+  async deleteImage(id: string): Promise<void> {
+    try {
+      await httpClient.delete(`${this.baseUrl}/${id}`);
+    } catch (error: any) {
+      console.error(`Error deleting image with ID ${id}:`, error);
+      if (error.message && error.message.includes('No static resource api/images')) {
+        console.warn('Image delete endpoint not implemented on backend.');
+        throw new Error('Image delete service not available');
+      }
+      throw error;
+    }
+  }
+
+  async updateImageAnnotations(id: string, annotations: ImageAnnotation[]): Promise<Image> {
+    try {
+      const response = await httpClient.put(`${this.baseUrl}/${id}/annotations`, { annotations });
+      return response.data; // Adjusted to return response.data
+    } catch (error: any) {
+      console.error(`Error updating annotations for image with ID ${id}:`, error);
+      if (error.message && error.message.includes('No static resource api/images')) {
+        console.warn('Image annotations endpoint not implemented on backend.');
+        throw new Error('Image annotations service not available');
+      }
+      throw error;
+    }
   }
 
   async getSatelliteImage(id: string): Promise<SatelliteImage> {
@@ -63,85 +351,6 @@ class ImagesService {
     };
   }
 
-  async getImagesByProject(projectId: string | string[] | null | undefined, filter?: ImageFilter): Promise<SatelliteImage[]> {
-    // Early return if no projectId
-    if (!projectId) {
-      console.error('No project ID provided');
-      return [];
-    }
-
-    // Ensure we have a valid string ID
-    let id: string;
-    if (typeof projectId === 'string') {
-      id = projectId;
-    } else if (Array.isArray(projectId) && projectId.length > 0) {
-      id = String(projectId[0]);
-    } else if (typeof projectId === 'object') {
-      console.error('Invalid project ID type (object):', projectId);
-      return [];
-    } else {
-      console.error('Invalid project ID type:', typeof projectId);
-      return [];
-    }
-
-    // Additional validation
-    if (!id || id === 'undefined' || id === 'null' || id === '[object Object]') {
-      console.error('Invalid project ID value:', id);
-      return [];
-    }
-
-    try {
-      const queryParams = new URLSearchParams();
-      
-      if (filter) {
-        if (filter.tags?.length) queryParams.set('tags', filter.tags.join(','));
-        if (filter.dateFrom) queryParams.set('dateFrom', filter.dateFrom);
-        if (filter.dateTo) queryParams.set('dateTo', filter.dateTo);
-        if (filter.cloudCoverageMax) queryParams.set('cloudCoverage', filter.cloudCoverageMax.toString());
-        if (filter.satellite) queryParams.set('satellite', filter.satellite);
-        if (filter.sortBy) queryParams.set('sortBy', filter.sortBy);
-        if (filter.sortOrder) queryParams.set('sortOrder', filter.sortOrder);
-        
-        if (filter.location) {
-          queryParams.set('lat', filter.location.latitude.toString());
-          queryParams.set('lng', filter.location.longitude.toString());
-          queryParams.set('radius', filter.location.radiusKm.toString());
-        }
-      }
-      
-      const url = `${PROJECT_ENDPOINTS.GET_IMAGES(id)}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-      console.log('Making request to:', url);
-      
-      const response = await httpClient.get(url);
-      const images = Array.isArray(response.data) ? response.data.map((image: any) => ({
-        ...image,
-        captureDate: image.captureDate || image.metadata?.captureDate,
-        uploadDate: image.createdAt,
-        annotations: image.annotations || []
-      })) : [];
-
-      if (images.length === 0) {
-        console.log('No images found for project:', id);
-      }
-
-      return images;
-    } catch (error: any) {
-      console.error('Error fetching images for project:', error);
-      throw error; // Let the component handle the error
-    }
-  }
-
-  // Assuming an upload endpoint that takes FormData
-  async uploadImage(formData: FormData): Promise<Image> {
-    const response = await httpClient.post(RESOURCE_ENDPOINTS.IMAGES.UPLOAD, formData);
-    return {
-      ...response.data,
-      createdAt: new Date(response.data.createdAt),
-      updatedAt: new Date(response.data.updatedAt)
-    };
-  }
-  
-  // Tag management
   async addTag(imageId: string, tag: string): Promise<SatelliteImage> {
     const response = await httpClient.post(PROJECT_ENDPOINTS.ADD_TAG(imageId, tag), { tag });
     return {
@@ -151,7 +360,7 @@ class ImagesService {
       annotations: response.data.annotations || []
     };
   }
-  
+
   async removeTag(imageId: string, tag: string): Promise<SatelliteImage> {
     const response = await httpClient.delete(PROJECT_ENDPOINTS.REMOVE_TAG(imageId, tag));
     return {
@@ -161,8 +370,7 @@ class ImagesService {
       annotations: response.data.annotations || []
     };
   }
-  
-  // Annotation management
+
   async addAnnotation(imageId: string, annotation: Omit<ImageAnnotation, 'id' | 'createdAt' | 'createdBy'>): Promise<ImageAnnotation> {
     const response = await httpClient.post(RESOURCE_ENDPOINTS.IMAGES.ANNOTATIONS.ADD(imageId), annotation);
     return response.data;
@@ -181,8 +389,7 @@ class ImagesService {
     const response = await httpClient.get(RESOURCE_ENDPOINTS.IMAGES.ANNOTATIONS.LIST(imageId));
     return response.data;
   }
-  
-  // Analysis results
+
   async getAnalysisResults(imageId: string): Promise<AnalysisResult[]> {
     const response = await httpClient.get(RESOURCE_ENDPOINTS.IMAGES.ANALYSIS.GET(imageId));
     return response.data;
@@ -194,4 +401,4 @@ class ImagesService {
   }
 }
 
-export const imagesService = new ImagesService();
+export const imagesService = ImagesService.getInstance();

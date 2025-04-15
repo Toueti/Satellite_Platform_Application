@@ -109,6 +109,15 @@ class DashboardService {
                 data = JSON.parse(data);
             }
             
+            // If we're expecting an array (defaultValue is an array) and data isn't one, wrap it
+            if (Array.isArray(defaultValue) && !Array.isArray(data)) {
+                if (data === null || data === undefined) {
+                    return defaultValue;
+                }
+                // If data is an object, wrap it in an array
+                return [data] as T;
+            }
+            
             return data || defaultValue;
         } catch (error) {
             console.error('Error extracting data:', error);
@@ -158,18 +167,46 @@ class DashboardService {
             const projectsResponse = await this.retryRequest(() => 
                 httpClient.get(`${this.baseUrl}/all`)
             );
-            const allProjects = this.safelyExtractData<any[]>(projectsResponse).map(this.mapProjectResponse.bind(this));
             
-            // Fetch last accessed projects with retry logic
-            const lastAccessedResponse = await this.retryRequest(() => 
-                httpClient.get(`${this.baseUrl}/last-accessed?n=5`)
-            );
-            const lastAccessedProjects = this.safelyExtractData<any[]>(lastAccessedResponse).map(this.mapProjectResponse.bind(this));
-            
+            // Extract the content array from the paginated response
+            const projectsData = this.safelyExtractData<any>(projectsResponse);
+            const allProjects = Array.isArray(projectsData.content) 
+                ? projectsData.content.map(this.mapProjectResponse.bind(this))
+                : [];
+
+            // Fetch statistics data to get last accessed project IDs and times
+            let lastAccessedProjects: Project[] = [];
+            try {
+                // Fetch statistics data
+                const statisticsResponse = await this.retryRequest(() =>
+                    httpClient.get(`http://localhost:8080/api/thematician/projects/statistics`) // Corrected endpoint
+                );
+                const statisticsData = this.safelyExtractData<any>(statisticsResponse, {});
+
+                // Note the typo in the backend response key: lastAcccessTime
+                const lastAccessTimes: { [key: string]: string } = statisticsData?.data?.lastAcccessTime || {};
+
+                // Get project IDs sorted by last access time (most recent first)
+                const sortedProjectIds = Object.entries(lastAccessTimes)
+                    .sort(([, timeA], [, timeB]) => new Date(timeB).getTime() - new Date(timeA).getTime())
+                    .map(([id]) => id);
+
+                // Map IDs to the full project objects fetched earlier
+                const projectMap = new Map(allProjects.map((p: Project) => [p.id, p]));
+                lastAccessedProjects = sortedProjectIds
+                    .map(id => projectMap.get(id))
+                    .filter((p): p is Project => p !== undefined) // Filter out any projects not found
+                    .slice(0, 5); // Limit to 5 projects
+
+            } catch (statisticsError) {
+                console.warn("Failed to fetch statistics data for last accessed projects:", statisticsError);
+                // Continue with empty last accessed projects if statistics fail
+            }
+
             // Count projects by status
-            const activeProjects = allProjects.filter(p => p.status === ProjectStatus.ACTIVE);
-            const completedProjects = allProjects.filter(p => p.status === ProjectStatus.COMPLETED);
-            const archivedProjects = allProjects.filter(p => p.status === ProjectStatus.ARCHIVED);
+            const activeProjects = allProjects.filter((p: Project) => p.status === ProjectStatus.ACTIVE);
+            const completedProjects = allProjects.filter((p: Project) => p.status === ProjectStatus.COMPLETED);
+            const archivedProjects = allProjects.filter((p: Project) => p.status === ProjectStatus.ARCHIVED);
             
             // Sort projects by updatedAt to get the most recent ones
             const recentProjects = [...allProjects]
@@ -177,7 +214,7 @@ class DashboardService {
                 .slice(0, 5);
             
             // Calculate storage used (this is a placeholder - would need actual storage service)
-            const totalStorageBytes = allProjects.reduce((total, project) => {
+            const totalStorageBytes = allProjects.reduce((total: number, project: Project) => {
                 // Since we don't have actual size data, we'll use a placeholder value
                 return total + 1024 * 1024; // 1MB per project as a placeholder
             }, 0);
@@ -185,10 +222,10 @@ class DashboardService {
             const storageUsed = this.formatBytes(totalStorageBytes);
             
             // Count shared projects
-            const sharedProjectsCount = allProjects.filter(p => p.collaborators && p.collaborators.length > 0).length;
+            const sharedProjectsCount = allProjects.filter((p: Project) => p.collaborators && p.collaborators.length > 0).length;
             
             // Count total images across all projects
-            const totalImages = allProjects.reduce((total, project) => {
+            const totalImages = allProjects.reduce((total: number, project: Project) => {
                 return total + (project.metadata?.satelliteData ? 1 : 0);
             }, 0);
             

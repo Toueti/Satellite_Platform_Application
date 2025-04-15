@@ -10,7 +10,7 @@ package com.enit.satellite_platform.config.dto;
     public class ManageablePropertyDto {
         private String key;
         private String currentValue;
-        private String defaultValue; // Value from application.properties or system env
+        private String defaultValue;
         private String description;
-        private String lastUpdated; // ISO String format (e.g., "2023-10-27T10:15:30") or null
+        private String lastUpdated;
     }

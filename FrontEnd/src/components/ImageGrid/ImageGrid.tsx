@@ -79,7 +79,19 @@ const ImageGrid: React.FC<ImageGridProps> = ({
   };
   
   const handleDownload = () => {
-    // Add download logic here
+    if (selectedImageId) {
+      const image = images.find(img => img.id === selectedImageId);
+      if (image && image.url) {
+        // Create a temporary link element to trigger the download
+        const link = document.createElement('a');
+        link.href = image.url;
+        link.setAttribute('download', image.filename || `image-${image.id}`); // Set filename for download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link); // Clean up the link
+      }
+    }
+    handleMenuClose();
   };
 
   const handleFavoriteToggle = (imageId: string, event: React.MouseEvent) => {
@@ -195,7 +207,7 @@ const ImageGrid: React.FC<ImageGridProps> = ({
                     gap: 0.5 
                   }}
                 >
-                  <CalendarTodayIcon fontSize="inherit" /> {formatDate(image.captureDate)}
+                  <CalendarTodayIcon fontSize="inherit" /> {formatDate(image.uploadDate)} {/* Changed captureDate to uploadDate */}
                 </Typography>
                 <Typography 
                   variant="caption" 
@@ -205,7 +217,12 @@ const ImageGrid: React.FC<ImageGridProps> = ({
                     gap: 0.5 
                   }}
                 >
-                  <PhotoSizeSelectActualIcon fontSize="inherit" /> {formatFileSize(image.size)}
+                  <PhotoSizeSelectActualIcon fontSize="inherit" /> 
+                  {(() => { // IIFE for logging
+                    const sizeValue = image.size;
+                    console.log(`Rendering image ${image.id}: size = ${sizeValue}, type = ${typeof sizeValue}`); // DEBUG LOG
+                    return formatFileSize(sizeValue);
+                  })()}
                 </Typography>
               </Box>
             </CardContent>
@@ -226,19 +243,19 @@ const ImageGrid: React.FC<ImageGridProps> = ({
           horizontal: 'right',
         }}
       >
-        <MenuItem onClick={() => {
+        <MenuItem key="annotate" onClick={() => {
           handleAnnotate();
           handleMenuClose();
         }}>
           <EditIcon fontSize="small" sx={{ mr: 1 }} /> Annotate
         </MenuItem>
-        <MenuItem onClick={() => {
+        <MenuItem key="delete" onClick={() => {
           handleDelete();
           handleMenuClose();
         }}>
           <DeleteIcon fontSize="small" sx={{ mr: 1 }} /> Delete
         </MenuItem>
-        <MenuItem onClick={() => {
+        <MenuItem key="download" onClick={() => {
           handleDownload();
           handleMenuClose();
         }}>

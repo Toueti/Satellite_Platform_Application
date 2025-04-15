@@ -19,7 +19,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.enit.satellite_platform.config.cache_handler.CacheKeyGenerator;
-import com.enit.satellite_platform.config.cache_handler.ProcessingResponseCacheHandler;
+import com.enit.satellite_platform.config.cache_handler.SatelliteProcessingCacheHandler;
 import com.enit.satellite_platform.modules.resource_management.GeoSpacialTools.gee.exception.GeeProcessingException;
 import com.enit.satellite_platform.modules.resource_management.dto.ProcessingResponse;
 import com.enit.satellite_platform.modules.resource_management.dto.ServiceRequest;
@@ -31,7 +31,7 @@ import java.util.*;
 /**
  * Service class for handling operations related to Google Earth Engine (GEE)
  * tasks.
- * Uses ProcessingResponseCacheHandler for caching GEE processing responses.
+ * Uses SatelliteProcessingCacheHandler for caching GEE processing responses.
  */
 @Service
 @RefreshScope
@@ -50,13 +50,14 @@ public class GeeService {
     // Removed ResourceCacheHandler injection
 
     @Autowired
-    private ProcessingResponseCacheHandler geeResponseCacheHandler;
+    private SatelliteProcessingCacheHandler geeResponseCacheHandler;
 
     @Autowired // Added CacheKeyGenerator injection
     private CacheKeyGenerator cacheKeyGenerator;
 
     @Autowired
     private ObjectMapper objectMapper;
+
 
     /**
      * Process a GEE request by sending it to the Flask backend, using
@@ -87,6 +88,7 @@ public class GeeService {
         // The CacheHandler manages TTL and access counts internally
         geeResponseCacheHandler.storeResourceData(response, cacheKey);
         logger.info("Cached new GeeResponse for key: {}", cacheKey);
+
 
         return response;
     }

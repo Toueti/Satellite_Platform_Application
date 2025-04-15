@@ -7,7 +7,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Component;
 
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
@@ -16,13 +15,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A generic cache handler that manages resources using Redis for caching
- * and a persistent storage backend.
+ * Abstract base class for implementing a cache-aside strategy with Redis and a persistent backend.
+ * This class provides the core logic for retrieving, storing, and invalidating cached data,
+ * while delegating persistent storage operations to concrete subclasses.
+ * It uses {@link CacheEntry} to wrap cached data with metadata (access count, timestamp).
  *
- * @param <T> The type of data being cached
- * It interacts with the {@link CacheKeyGenerator} for key generation,
- * uses a generic {@link RedisTemplate} for cache operations and
- * {@link CachePropertiesBase} for configuration properties.
+ * @param <T> The type of data being cached. This type should be serializable for Redis storage.
+ *
+ * @see CacheEntry
+ * @see ICacheKeyGenerator
+ * @see CachePropertiesBase
+ * @see RedisTemplate
  */
 @Component
 public abstract class CacheHandler<T> {
@@ -31,17 +34,17 @@ public abstract class CacheHandler<T> {
 
     // Use the generic RedisTemplate
     private final RedisTemplate<String, Object> redisTemplate;
-    private final ICacheKeyGenerator cacheKeyGenerator; // Use interface for DI
-    private final CachePropertiesBase cacheProperties; // Use CacheProperties for DI
+    protected final ICacheKeyGenerator cacheKeyGenerator; // Use interface for DI
+    protected final CachePropertiesBase cacheProperties; // Use base class for properties
 
     /**
-     * Constructor for the GenericCacheHandler.
+     * Constructs a new CacheHandler. Dependencies are typically injected by a framework like Spring.
      *
-     * @param redisTemplate     The generic Redis template for cache operations
-     * @param cacheKeyGenerator The key generator implementation (using interface type)
-     * @param cacheProperties   Cache configuration properties
+     * @param redisTemplate     The configured {@link RedisTemplate} for Redis operations (typically {@code RedisTemplate<String, Object>}).
+     * @param cacheKeyGenerator The {@link ICacheKeyGenerator} implementation used to generate keys for cache entries.
+     * @param cacheProperties   The {@link CachePropertiesBase} implementation containing cache configuration (TTL, prefix, cleanup settings).
      */
-    public CacheHandler(RedisTemplate<String, Object> redisTemplate, // Accept generic template
+    public CacheHandler(RedisTemplate<String, Object> redisTemplate,
                         ICacheKeyGenerator cacheKeyGenerator,
                         CachePropertiesBase cacheProperties) {
         this.cacheProperties = cacheProperties;
@@ -50,15 +53,17 @@ public abstract class CacheHandler<T> {
     }
 
     /**
-     * Implements Cache Read Flow (Step 1).
-     * Attempts to retrieve data first from Redis cache, then from
-     * the persistent storage.
-     * If found in persistent storage but not Redis, it caches the result in Redis before
-     * returning.
+     * Retrieves resource data based on the provided object, implementing the cache-aside pattern.
+     * 1. Generates a cache key using {@link ICacheKeyGenerator}.
+     * 2. Attempts to fetch the {@link CacheEntry} from Redis.
+     * 3. If found (cache hit), updates access metadata, resets TTL in Redis, and returns the data.
+     * 4. If not found (cache miss), calls the abstract {@link #findInPersistentStorage(String)} method.
+     * 5. If found in persistent storage, wraps the data in a {@link CacheEntry}, stores it in Redis, and returns the data.
+     * 6. If not found in persistent storage, returns {@link Optional#empty()}.
      *
-     * @param object object to generate cache key.
-     *               This could be a combination of identifiers or a single object.
-     * @return Optional containing the data if found, otherwise empty.
+     * @param object The object used to generate the cache key (e.g., an ID, a request DTO).
+     * @return An {@link Optional} containing the requested data (type {@code T}) if found in cache or persistent storage,
+     *         otherwise an empty Optional.
      */
     public Optional<T> getResourceData(Object object) {
         String cacheKey = cacheKeyGenerator.generateKey(object);
@@ -93,13 +98,16 @@ public abstract class CacheHandler<T> {
     }
 
     /**
-     * Implements Cache Write Flow.
-     * Stores the given data in the persistent storage (optional) and Redis cache.
+     * Stores or updates resource data in the cache and optionally in persistent storage.
+     * 1. Generates a cache key using {@link ICacheKeyGenerator}.
+     * 2. If {@code persistToPermanentStorage} is true, calls the abstract {@link #saveToStorage(T, String)} method.
+     * 3. Wraps the data in a {@link CacheEntry}.
+     * 4. Stores the {@link CacheEntry} in Redis using the configured TTL.
      *
-     * @param data   The data to store
-     * @param object The object to generate cache key
-     * @param persistToPermanentStorage Whether to also save to persistent storage
-     * @return The generated cache key
+     * @param data                      The resource data (type {@code T}) to store. Must not be null.
+     * @param object                    The object used to generate the cache key.
+     * @param persistToPermanentStorage If true, the data will also be saved via {@link #saveToStorage(T, String)}.
+     * @return The generated cache key, or null if the input data was null.
      */
     public String storeResourceData(T data, Object object, boolean persistToPermanentStorage) {
         if (data == null) {
@@ -122,17 +130,24 @@ public abstract class CacheHandler<T> {
     }
 
     /**
-     * Overloaded method that defaults to not persisting to permanent storage.
+     * Stores or updates resource data in the cache only (does not persist to permanent storage).
+     * This is an overloaded version of {@link #storeResourceData(T, Object, boolean)} with
+     * {@code persistToPermanentStorage} set to false.
+     *
+     * @param data   The resource data (type {@code T}) to store. Must not be null.
+     * @param object The object used to generate the cache key.
+     * @return The generated cache key, or null if the input data was null.
      */
     public String storeResourceData(T data, Object object) {
         return storeResourceData(data, object, false);
     }
 
     /**
-     * Implements explicit cache invalidation.
-     * Removes the cached entry from Redis.
+     * Explicitly removes an entry from the Redis cache.
+     * Generates the cache key from the provided object and deletes it from Redis.
+     * This does not affect the data in persistent storage.
      *
-     * @param object The object used to generate the cache key
+     * @param object The object used to generate the cache key for the entry to invalidate.
      */
     public void invalidateCache(Object object) {
         String cacheKey = cacheKeyGenerator.generateKey(object);
@@ -141,30 +156,37 @@ public abstract class CacheHandler<T> {
     }
 
     /**
-     * Abstract method to find data in the persistent storage.
-     * Implementations should define how to retrieve data from their specific storage.
+     * Abstract method to be implemented by subclasses to define how to retrieve data
+     * from the specific persistent storage backend (e.g., database, file system, external API).
+     * This method is called during a cache miss.
      *
-     * @param cacheKey The cache key to look up
-     * @return Optional containing the data if found
+     * @param cacheKey The cache key associated with the data to find. Subclasses may need to parse
+     *                 or use this key to query their backend.
+     * @return An {@link Optional} containing the data (type {@code T}) if found in persistent storage,
+     *         otherwise an empty Optional.
      */
     protected abstract Optional<T> findInPersistentStorage(String cacheKey);
 
     /**
-     * Abstract method to save data to the persistent storage.
-     * Implementations should define how to save data to their specific storage.
+     * Abstract method to be implemented by subclasses to define how to save or update data
+     * in the specific persistent storage backend.
+     * This method is called by {@link #storeResourceData(T, Object, boolean)} when
+     * {@code persistToPermanentStorage} is true.
      *
-     * @param data The data to save
-     * @param cacheKey The cache key to associate with the data
+     * @param data     The data (type {@code T}) to save or update in persistent storage.
+     * @param cacheKey The cache key associated with the data. Subclasses might use this key
+     *                 to determine the storage location or identifier.
      */
     protected abstract void saveToStorage(T data, String cacheKey);
 
     // --- Helper Methods ---
 
     /**
-     * Retrieves a CacheEntry from Redis.
+     * Retrieves a CacheEntry from Redis. Handles potential ClassCastException if the stored
+     * object is not of the expected type.
      *
      * @param key The cache key
-     * @return Optional containing the CacheEntry if found
+     * @return Optional containing the CacheEntry if found and of the correct type
      */
     @SuppressWarnings("unchecked") // Suppress warning for the necessary cast
     private Optional<CacheEntry<T>> getFromRedis(String key) {
@@ -182,7 +204,7 @@ public abstract class CacheHandler<T> {
             return Optional.empty(); // Key not found or value is null
         } catch (ClassCastException e) {
             log.error("Error casting retrieved object to CacheEntry for key '{}': {}", key, e.getMessage(), e);
-            // Optionally delete the problematic key
+            // Optionally delete the problematic key if it's corrupted
             // deleteFromRedis(key);
             return Optional.empty();
         } catch (Exception e) {
@@ -193,11 +215,12 @@ public abstract class CacheHandler<T> {
 
     /**
      * Stores a CacheEntry in Redis with the configured TTL.
+     * Logs the operation details including TTL and access count.
      *
      * @param key   The cache key
      * @param entry The CacheEntry to store
      */
-    private void storeInRedis(String key, CacheEntry<T> entry) {
+    protected void storeInRedis(String key, CacheEntry<T> entry) { // Changed from private to protected
         try {
             // Use the injected TTL value. The generic template accepts Object as value.
             redisTemplate.opsForValue().set(key, entry, cacheProperties.getRedisTtlSeconds(), TimeUnit.SECONDS);
@@ -209,7 +232,7 @@ public abstract class CacheHandler<T> {
     }
 
     /**
-     * Deletes a key from Redis.
+     * Deletes a key from Redis. Logs the operation.
      * 
      * @param key The cache key to delete
      */
@@ -222,7 +245,13 @@ public abstract class CacheHandler<T> {
         }
     }
 
-
+    /**
+     * Performs cache cleanup by scanning Redis keys matching the configured prefix.
+     * It identifies entries that are considered infrequently accessed (based on access count
+     * and last accessed time thresholds from {@link CachePropertiesBase}) and deletes them.
+     * Uses Redis SCAN command for efficient iteration over keys without blocking the server.
+     * Handles potential errors during scanning and deletion gracefully.
+     */
     @SuppressWarnings("unchecked") // Suppress warning for the necessary cast
     public void cleanInfrequentlyUsedCache() {
         log.info("Starting scheduled cache cleanup for infrequently used entries...");
@@ -230,8 +259,8 @@ public abstract class CacheHandler<T> {
         // Use injected inactivity threshold
         Instant cutoffTime = Instant.now().minus(Duration.ofDays(cacheProperties.getInactivityThresholdDays()));
 
-        // Use injected prefix
-        ScanOptions options = ScanOptions.scanOptions().match(cacheProperties.getCachePrefix() + "*").count(100).build();
+        // Use injected prefix and configure SCAN options
+        ScanOptions options = ScanOptions.scanOptions().match(cacheProperties.getCachePrefix() + "*").count(100).build(); // Adjust count as needed
         List<String> keysToDelete = new ArrayList<>();
 
         try (Cursor<String> cursor = redisTemplate.scan(options)) {
@@ -241,27 +270,34 @@ public abstract class CacheHandler<T> {
                     Object rawValue = redisTemplate.opsForValue().get(key);
                     if (rawValue instanceof CacheEntry) {
                         CacheEntry<T> entry = (CacheEntry<T>) rawValue; // Cast needed
-                        // Use injected max access count
+                        // Check against configured thresholds
                         if (entry.getAccessCount() <= cacheProperties.getMaxInfrequentAccessCount() &&
                                 entry.getLastAccessed().isBefore(cutoffTime)) {
                             keysToDelete.add(key);
+                            log.trace("Marking key '{}' for cleanup (Access Count: {}, Last Accessed: {})", key, entry.getAccessCount(), entry.getLastAccessed());
                         }
                     } else if (rawValue != null) {
                         log.warn("Found non-CacheEntry object during cleanup scan for key '{}'. Type: {}", key, rawValue.getClass().getName());
+                        // Optionally delete invalid entries: keysToDelete.add(key);
                     }
                 } catch (ClassCastException e) {
                     log.error("Error casting object during cache cleanup scan for key '{}': {}", key, e.getMessage(), e);
+                    // Optionally delete invalid entries: keysToDelete.add(key);
                 } catch (Exception e) {
+                    // Log error for the specific key but continue scanning
                     log.error("Error processing key '{}' during cache cleanup scan: {}", key, e.getMessage(), e);
                 }
             }
         } catch (Exception e) {
+            // Log error for the SCAN operation itself and abort cleanup
             log.error("Error during Redis SCAN operation for cache cleanup: {}", e.getMessage(), e);
-            return;
+            return; // Abort cleanup if SCAN fails
         }
 
+        // Batch delete the identified keys
         if (!keysToDelete.isEmpty()) {
             try {
+                log.info("Attempting to delete {} infrequently used/old cache entries...", keysToDelete.size());
                 Long deletedCount = redisTemplate.delete(keysToDelete);
                 cleanedCount = deletedCount != null ? deletedCount : 0;
                 log.info("Successfully deleted {} infrequently used/old cache entries.", cleanedCount);
@@ -269,7 +305,7 @@ public abstract class CacheHandler<T> {
                 log.error("Error batch deleting keys during cache cleanup: {}", e.getMessage(), e);
             }
         } else {
-            log.info("No infrequently used/old cache entries found to clean.");
+            log.info("No infrequently used/old cache entries found matching the criteria.");
         }
 
         log.info("Finished scheduled cache cleanup.");

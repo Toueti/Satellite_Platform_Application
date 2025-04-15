@@ -15,8 +15,8 @@ import com.enit.satellite_platform.modules.resource_management.image_management.
 import com.enit.satellite_platform.modules.resource_management.image_management.exceptions.ImageValidationException;
 import com.enit.satellite_platform.modules.resource_management.image_management.exceptions.InvalidImageDataException;
 import com.enit.satellite_platform.modules.resource_management.image_management.exceptions.ThumbnailGenerationException;
-import com.enit.satellite_platform.modules.user_management.exceptions.InvalidCredentialsException;
-import com.enit.satellite_platform.modules.user_management.exceptions.RoleNotFoundException;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.InvalidCredentialsException;
+import com.enit.satellite_platform.modules.user_management.management_cvore_service.exceptions.RoleNotFoundException;
 import com.enit.satellite_platform.shared.dto.ApiErrorResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;

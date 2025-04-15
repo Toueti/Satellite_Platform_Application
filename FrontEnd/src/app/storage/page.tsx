@@ -1,28 +1,77 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { imagesService, Image } from '@/services/images.service';
+import { imagesService } from '@/services/images.service'; // Removed Image import
+import { SatelliteImage } from '@/types/image'; // Import SatelliteImage type
+import ImageGrid from '@/components/ImageGrid/ImageGrid'; // Import ImageGrid
+import Modal from '@/components/Modal'; // Import Modal
+import { Box, CircularProgress, Typography, Button } from '@mui/material'; // Import MUI components
 
 export default function StoragePage() {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [items, setItems] = useState<Image[]>([]);
+  const [items, setItems] = useState<SatelliteImage[]>([]); // Use SatelliteImage[]
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true); // Add loading state
+  const [selectedImage, setSelectedImage] = useState<SatelliteImage | null>(null); // State for enlarged image
+  const [favorites, setFavorites] = useState<string[]>([]); // State for favorites (basic implementation)
 
     useEffect(() => {
         const fetchImages = async () => {
+            setLoading(true); // Set loading true
             try {
                 const images = await imagesService.getAllImages();
-                setItems(images);
+                // TODO: Ensure imagesService.getAllImages() returns data compatible with SatelliteImage
+                // For now, we assume it does or needs casting/mapping
+                setItems(images as SatelliteImage[]); // Cast/assume type
             } catch (error: any) {
                 setError(error.message || 'Failed to fetch images.');
+            } finally {
+                setLoading(false); // Set loading false
             }
         }
         fetchImages();
     }, []);
 
+  // --- Handlers for ImageGrid ---
+  const handleSelectImage = (image: SatelliteImage) => {
+    setSelectedImage(image);
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    // Optional: Add a confirmation dialog
+    // if (!window.confirm('Are you sure you want to delete this image?')) return;
+    try {
+      setLoading(true); // Indicate loading state
+      await imagesService.deleteImage(imageId);
+      setItems((prevItems) => prevItems.filter((item) => item.id !== imageId));
+      setError(''); // Clear any previous error
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete image.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnnotateImage = (image: SatelliteImage) => {
+    // Placeholder for annotation logic (e.g., navigate to an annotation page or open an annotation modal)
+    console.log('Annotate image:', image.id);
+    // Example: router.push(`/annotate/${image.id}`);
+  };
+
+  const handleToggleFavorite = (imageId: string) => {
+    // Placeholder for favorite logic
+    setFavorites((prevFavorites) =>
+      prevFavorites.includes(imageId)
+        ? prevFavorites.filter((id) => id !== imageId)
+        : [...prevFavorites, imageId]
+    );
+    console.log('Toggle favorite for image:', imageId);
+    // TODO: Persist favorite status (e.g., call an API)
+  };
+  // --- End Handlers ---
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -39,7 +88,8 @@ export default function StoragePage() {
       const uploadedImage = await imagesService.uploadImage(formData);
 
       // Update the items list with the new image
-      setItems((prevItems) => [...prevItems, uploadedImage]);
+      // TODO: Ensure uploadedImage is compatible with SatelliteImage
+      setItems((prevItems) => [...prevItems, uploadedImage as SatelliteImage]); // Cast to SatelliteImage
 
     } catch (error: any) {
       setError(error.message || 'Failed to upload image.');
@@ -129,30 +179,17 @@ export default function StoragePage() {
             </div>
           </div>
 
+          {/* --- View Rendering --- */}
           {view === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {items.length === 0 ? (
-                <div className="col-span-full text-center py-12">
-                  <p className="text-gray-500 text-lg">No files found</p>
-                  <p className="text-gray-400 mt-2">Upload files to get started</p>
-                </div>
-              ) : (
-                items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="border-2 rounded-lg p-4 hover:border-primary-600 transition-colors"
-                  >
-                    <div className="aspect-w-16 aspect-h-9 bg-gray-100 rounded-md mb-2">
-                      {/* TODO: Add preview */}
-                    </div>
-                    <h3 className="font-medium truncate">{item.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
+             <ImageGrid
+               images={items}
+               loading={loading}
+               onSelectImage={handleSelectImage}
+               onDeleteImage={handleDeleteImage}
+               onAnnotateImage={handleAnnotateImage} // Pass annotation handler
+               onToggleFavorite={handleToggleFavorite} // Pass favorite handler
+               favorites={favorites} // Pass favorites list
+             />
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -168,17 +205,15 @@ export default function StoragePage() {
                       Size
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Created
+                      Uploaded Date {/* Changed from Created */}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Project
-                    </th>
+                    {/* Removed Project column, add back if needed */}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {items.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center">
+                      <td colSpan={4} className="px-6 py-12 text-center"> {/* Adjusted colSpan */}
                         <p className="text-gray-500 text-lg">No files found</p>
                         <p className="text-gray-400 mt-2">Upload files to get started</p>
                       </td>
@@ -186,15 +221,15 @@ export default function StoragePage() {
                   ) : (
                     items.map((item) => (
                       <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">{item.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">image</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{item.filename}</td> {/* Use filename */}
+                        <td className="px-6 py-4 whitespace-nowrap">Image</td> {/* Static type for now */}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {/* Assuming size is available */}
+                          {item.size ? `${(item.size / 1024).toFixed(2)} MB` : 'N/A'} {/* Format size */}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {new Date(item.createdAt).toLocaleDateString()}
+                          {new Date(item.uploadDate).toLocaleDateString()} {/* Use uploadDate */}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">{item.projectId}</td>
+                        {/* Removed Project cell */}
                       </tr>
                     ))
                   )}
@@ -202,8 +237,37 @@ export default function StoragePage() {
               </table>
             </div>
           )}
+          {/* --- End View Rendering --- */}
+
         </div>
       </div>
+
+      {/* --- Image Enlargement Modal --- */}
+      {selectedImage && (
+        <Modal
+          open={!!selectedImage}
+          onClose={() => setSelectedImage(null)}
+          title={selectedImage.filename} // Pass filename as title
+          content={ // Pass image element as content
+            <Box sx={{ p: 0, maxWidth: '90vw', maxHeight: '80vh', overflow: 'hidden' }}> {/* Adjusted padding/height */}
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.filename}
+                style={{ width: '100%', height: 'auto', display: 'block', maxHeight: '80vh' }} // Constrain image height
+              />
+            </Box>
+          }
+          actions={[ // Define actions array
+            {
+              label: 'Close',
+              onClick: () => setSelectedImage(null),
+              color: 'primary'
+            }
+          ]}
+        />
+      )}
+      {/* --- End Modal --- */}
+
     </div>
   );
 }

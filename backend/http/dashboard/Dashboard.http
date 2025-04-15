@@ -1,6 +1,6 @@
 ### Dashboard API Tests
 @baseUrl=http://localhost:8080
-@authToken=User_Token_Here
+@authToken=eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJlbWFpbCI6InlvYnRvdDhAZ21haWwuY29tIiwicm9sZXMiOlsiUk9MRV9USEVNQVRJQ0lBTiJdLCJzdWIiOiJ5b2J0b3Q4QGdtYWlsLmNvbSIsImlhdCI6MTc0NDI3MjMxNCwiZXhwIjoxNzQ0MzU4NzE0fQ.t0abF5mB5tt4aBE9ZYloASbbY8Gp4U9DQsNf9Iu2cO0
 
 
 

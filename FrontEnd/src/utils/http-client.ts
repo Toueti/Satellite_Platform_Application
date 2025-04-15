@@ -2,6 +2,7 @@ import { authService } from '../services/auth.service';
 
 interface RequestOptions extends RequestInit {
     requiresAuth?: boolean;
+    responseType?: 'json' | 'text' | 'blob'; // Add responseType
 }
 
 class HttpClient {
@@ -87,13 +88,27 @@ class HttpClient {
             // Reset rate limit delay on successful request
             this.rateLimitDelay = 0;
 
-            // Clone the response before reading it
+            // Handle response based on specified type or content-type
+            if (options.responseType === 'blob') {
+                // Ensure the response is treated as blob regardless of Content-Type header
+                // Note: fetch response.blob() always attempts to read the body as blob.
+                return await response.blob();
+            }
+
+            // Clone the response before reading it for JSON/text
             const responseClone = response.clone();
             const contentType = response.headers.get("content-type");
-            
+
+            // Default to JSON if content type indicates it
             if (contentType && contentType.includes("application/json")) {
                 try {
-                    return await response.json();
+                    const jsonData = await response.json();
+                    // Basic check if it looks like our standard API response structure
+                    if (typeof jsonData === 'object' && jsonData !== null && 'data' in jsonData && 'status' in jsonData) {
+                       return jsonData; // Return the structured response
+                    }
+                    // If not standard structure, return raw JSON data
+                    return jsonData;
                 } catch (jsonError) {
                     console.error("Error parsing JSON response:", jsonError);
                     // If JSON parsing fails, try to get the text from the clone
@@ -110,8 +125,13 @@ class HttpClient {
                     throw new Error("Failed to parse JSON response");
                 }
             }
+
+            // Default to text if not JSON or blob specified
             return await response.text();
         } catch (error: any) {
+            // Log the error for debugging purposes
+            console.error(`HTTP Request failed for URL: ${url}`, error);
+
             if (error.message.includes('Rate limit')) {
                 throw error; // Re-throw rate limit errors
             }

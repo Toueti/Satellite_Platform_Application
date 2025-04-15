@@ -1,56 +1,101 @@
 @baseUrl = http://localhost:8080/geospatial/images
+@token= eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJyb2xlcyI6WyJST0xFX1RIRU1BVElDSUFOIl0sInN1YiI6InlvYnRvdDhAZ21haWwuY29tIiwiaWF0IjoxNzQ0NTAzNTE2LCJleHAiOjE3NDQ1ODk5MTZ9.6WouyyRbZzZbPGYFTjVo-xn7lTrH8HrvGTWHY2NeC-8
 
-### Add a new image to a project
-# @name addImage
+### Upload an image to a project
 POST {{baseUrl}}/add
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="projectId"
+
+67f0db2c5ef6b30b9b40ef49
+--MyBoundary
+Content-Disposition: form-data; name="imageName"
+
+Test Image9.tif
+--MyBoundary
+Content-Disposition: form-data; name="metadata"
 Content-Type: application/json
 
-{
-  "projectId": "65e4494799452b2b15d33c99",
-  "name": "Test Image",
-  "description": "This is a test image",
-  "imageUrl": "http://example.com/image.tif"
-}
+{ "description": "This is a test image", "otherMetadata": "value" }
+--MyBoundary
+Content-Disposition: form-data; name="file"; filename="image.tif"
+Content-Type: image/tiff
+
+< ./TestImages/image.tif
+--MyBoundary
+Content-Disposition: form-data; name="storageType"
+
+filesystem
+--MyBoundary--
+
 
 ### Rename image
 # @name renameImage
 PUT {{baseUrl}}/65e4494799452b2b15d33c99/rename?newName=NewImageName&projectId=65e4494799452b2b15d33c99
+Authorization: Bearer {{token}}
 
 ### Get all images with pagination
 # @name getAllImages
 GET {{baseUrl}}?page=0&size=10
+Authorization: Bearer {{token}}
 
 ### Get image by name and project ID
 # @name getImageByName
 GET {{baseUrl}}/name/65e4494799452b2b15d33c99/Test Image
+Authorization: Bearer {{token}}
 
 ### Get image by ID
 # @name getImageById
-GET {{baseUrl}}/65e4494799452b2b15d33c99
+GET {{baseUrl}}/67f6de084d0ee21a4c93f396
+Authorization: Bearer {{token}}
+
+### Get image data
+GEt {{baseUrl}}/67f5d67b163d9b2283443865/data
+Authorization: Bearer {{token}}
+Accept: application/octet-stream
+
+# Save the response to a file
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    // Save the response body (binary data) to a file
+    client.global.set("image_data", response.body);
+    client.writeFile("downloaded_image.bin", response.body);
+%}
+
 
 ### Delete an image by ID
 # @name deleteImage
 DELETE {{baseUrl}}/65e4494799452b2b15d33c99
+Authorization: Bearer {{token}}
 
 ### Get all images for a project
 # @name getImagesByProject
 GET {{baseUrl}}/by-project/65e4494799452b2b15d33c99
+Authorization: Bearer {{token}}
 
 ### Delete all images for a project
 # @name deleteAllImagesByProject
 DELETE {{baseUrl}}/by-project/65e4494799452b2b15d33c99
+Authorization: Bearer {{token}}
 
 ### Get image by ID and project ID
 # @name getImageByImageIdAndProject
 GET {{baseUrl}}/65e4494799452b2b15d33c99/project/65e4494799452b2b15d33c99
+Authorization: Bearer {{token}}
 
 ### Delete image by ID and project ID
 # @name deleteImageByProject
 DELETE {{baseUrl}}/65e4494799452b2b15d33c99/project/65e4494799452b2b15d33c99
+Authorization: Bearer {{token}}
 
 ### Bulk delete images by IDs
 # @name bulkDeleteImages
 DELETE {{baseUrl}}/bulk-delete
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 [
@@ -61,3 +106,4 @@ Content-Type: application/json
 ### Count images in a project
 # @name countImagesByProject
 GET {{baseUrl}}/count/65e4494799452b2b15d33c99
+Authorization: Bearer {{token}}

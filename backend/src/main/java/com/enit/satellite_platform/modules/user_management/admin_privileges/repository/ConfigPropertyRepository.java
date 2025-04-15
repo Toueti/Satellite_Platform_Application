@@ -8,9 +8,11 @@ import java.util.Optional;
 
 @Repository
 public interface ConfigPropertyRepository extends MongoRepository<ConfigProperty, String> {
-
-    // Find by key (which is the ID)
+    /**
+     * Finds a ConfigProperty by its key.
+     *
+     * @param key the key of the ConfigProperty
+     * @return an Optional containing the ConfigProperty if found, or empty if not found
+     */
     Optional<ConfigProperty> findById(String key);
-
-    // You can add more specific finders if needed later
 }

@@ -11,10 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.enit.satellite_platform.modules.resource_management.image_management.dto.resultsSaveRequest;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.Image;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingResults;
+import com.enit.satellite_platform.modules.resource_management.image_management.entities.ProcessingStatus;
 import com.enit.satellite_platform.modules.resource_management.image_management.exceptions.ImageNotFoundException;
-import com.enit.satellite_platform.modules.resource_management.image_management.models.Image;
-import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingResults;
-import com.enit.satellite_platform.modules.resource_management.image_management.models.ProcessingStatus; 
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ResultsRepository;
 

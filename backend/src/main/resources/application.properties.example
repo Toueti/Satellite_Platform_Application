@@ -13,7 +13,7 @@ jwt.expiration=86400000
 
 #image config
 python.backend.url=http://localhost:5000
-image.storage.path=C:\\Tmp
+storage.filesystem.directory=C:\\Tmp
 thread.pool.size=4
 
 # Spring Boot Configuration

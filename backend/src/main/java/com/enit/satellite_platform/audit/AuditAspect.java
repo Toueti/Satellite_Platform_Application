@@ -6,7 +6,6 @@ import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import com.enit.satellite_platform.modules.project_management.model.Project;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,12 +15,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import com.enit.satellite_platform.modules.project_management.entities.Project;
+
 @Aspect
 @Component
 public class AuditAspect {
 
-    // private static final Logger LOGGER = LoggerFactory.getLogger("AuditLogger"); // No longer needed
-    private static final Logger log = LoggerFactory.getLogger(AuditAspect.class); // Use standard logger for aspect errors
+    private static final Logger log = LoggerFactory.getLogger("com.enit.satellite_platform.audit"); // Logger for audit events
 
     @Autowired
     private AuditService auditService;
@@ -62,7 +62,7 @@ public class AuditAspect {
     public void projectSharing() {}
 
     // Pointcut for user updates (adjust service/method name if changed)
-    @Pointcut("execution(* com.enit.satellite_platform.modules.user_management.user_service.services.UserServiceImpl.updateUser(..))") // TODO: Verify this path
+    @Pointcut("execution(* com.enit.satellite_platform.modules.user_management.user_service.services.UserService.updateUser(..))") // TODO: Verify this path
     public void userUpdate() {}
 
     // --- Advice Methods ---
@@ -87,7 +87,7 @@ public class AuditAspect {
         String username = extractUsernameFromLoginArgs(joinPoint.getArgs());
         // userId is not known on failure
         auditService.recordEvent(null, username, LOGIN_FAILURE, null);
-        log.debug("Login failure for {}: {}", username, error.getMessage()); // Keep debug log if needed
+        log.info("Login failure for {}: {}", username, error.getMessage());
     }
 
     @Before("projectCreation()")
@@ -109,7 +109,7 @@ public class AuditAspect {
         AuditPrincipal principal = getCurrentPrincipal();
         String projectName = extractProjectNameFromArgs(joinPoint.getArgs());
         auditService.recordEvent(principal.userId(), principal.username(), PROJECT_CREATE_FAILURE, projectName);
-        log.debug("Project creation failure for {} by {}: {}", projectName, principal.username(), error.getMessage());
+        log.info("Project creation failure for {} by {}: {}", projectName, principal.username(), error.getMessage());
     }
 
     @Before("projectAccess()")
@@ -131,7 +131,7 @@ public class AuditAspect {
         AuditPrincipal principal = getCurrentPrincipal();
         String projectId = extractProjectIdFromArgs(joinPoint.getArgs(), 0);
         auditService.recordEvent(principal.userId(), principal.username(), PROJECT_ACCESS_FAILURE, projectId);
-        log.debug("Project access failure for {} by {}: {}", projectId, principal.username(), error.getMessage());
+        log.info("Project access failure for {} by {}: {}", projectId, principal.username(), error.getMessage());
     }
 
     @Before("projectSharing()")
@@ -159,7 +159,7 @@ public class AuditAspect {
         String projectId = (args.length > 0 && args[0] instanceof String) ? (String) args[0] : null;
         String sharedWithEmail = (args.length > 1 && args[1] instanceof String) ? (String) args[1] : null;
         auditService.recordEvent(principal.userId(), principal.username(), PROJECT_SHARE_FAILURE, projectId + " -> " + sharedWithEmail);
-        log.debug("Project sharing failure for {} by {}: {}", projectId, principal.username(), error.getMessage());
+        log.info("Project sharing failure for {} by {}: {}", projectId, principal.username(), error.getMessage());
     }
 
     @Before("userUpdate()")
@@ -181,7 +181,7 @@ public class AuditAspect {
         AuditPrincipal principal = getCurrentPrincipal();
         String targetUserId = extractUserIdFromUserUpdateArgs(joinPoint.getArgs());
         auditService.recordEvent(principal.userId(), principal.username(), USER_UPDATE_FAILURE, targetUserId);
-        log.debug("User update failure for {} by {}: {}", targetUserId, principal.username(), error.getMessage());
+        log.info("User update failure for {} by {}: {}", targetUserId, principal.username(), error.getMessage());
     }
 
 
@@ -199,7 +199,7 @@ public class AuditAspect {
             if (principal instanceof UserDetails userDetails) {
                  username = userDetails.getUsername();
                  // Attempt to get userId if UserDetails is our custom User class
-                 if (principal instanceof com.enit.satellite_platform.modules.user_management.models.User customUser && customUser.getId() != null) {
+                 if (principal instanceof com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User customUser && customUser.getId() != null) {
                      userId = customUser.getId().toString(); // Convert ObjectId to String
                  }
             }
@@ -241,7 +241,7 @@ public class AuditAspect {
                 return (id != null) ? id.toString() : null;
             } catch (Exception e) {}
              // If result is our custom User class
-            if (result instanceof com.enit.satellite_platform.modules.user_management.models.User customUser && customUser.getId() != null) {
+            if (result instanceof com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User customUser && customUser.getId() != null) {
                  return customUser.getId().toString(); // Convert ObjectId to String
             }
              // If result is directly an ObjectId (e.g., from some other method)
@@ -261,8 +261,8 @@ public class AuditAspect {
     }
 
     private String extractProjectIdFromResult(Object result) {
-        if (result instanceof Project project && project.getProjectId() != null) {
-            return project.getProjectId().toString();
+        if (result instanceof Project project && project.getId() != null) {
+            return project.getId().toString();
         }
         // Add reflection fallback if needed, e.g., for methods returning just the ID
         if (result instanceof ObjectId objectId) {
@@ -300,7 +300,7 @@ public class AuditAspect {
          // This depends heavily on the actual signature of updateUser method
          if (args.length > 0 && args[0] != null) {
              // Example: if first arg is User object
-             if (args[0] instanceof com.enit.satellite_platform.modules.user_management.models.User user && user.getId() != null) {
+             if (args[0] instanceof com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User user && user.getId() != null) {
                  return user.getId().toString(); // Convert ObjectId to String
              }
              // Example: if first arg is userId as ObjectId

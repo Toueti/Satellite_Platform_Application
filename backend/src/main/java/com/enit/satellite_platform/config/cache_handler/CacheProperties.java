@@ -1,27 +1,37 @@
 package com.enit.satellite_platform.config.cache_handler;
 
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.stereotype.Component;
 
 import com.enit.satellite_platform.config.cache_handler.general_cache_handler.CachePropertiesBase;
 
-import org.springframework.beans.factory.annotation.Value;
-
-
-@Component
+/**
+ * Concrete implementation holding cache configuration properties, loaded via Spring Boot's
+ * {@code @ConfigurationProperties} mechanism.
+ *
+ * This class binds properties defined under the "cache.redis" prefix in application configuration files
+ * (e.g., application.properties, application.yml) to the fields inherited from {@link CachePropertiesBase}.
+ *
+ * The {@code @RefreshScope} annotation allows these properties to be refreshed dynamically
+ * (e.g., via Spring Cloud Config) without restarting the application.
+ *
+ * @see CachePropertiesBase
+ * @see org.springframework.boot.context.properties.ConfigurationProperties
+ * @see org.springframework.cloud.context.config.annotation.RefreshScope
+ */
 @RefreshScope
-@ConfigurationProperties(prefix = "cache")
+@ConfigurationProperties(prefix = "cache.redis")
 public class CacheProperties extends CachePropertiesBase {
 
-        // Constructor for CacheProperties
-        public CacheProperties(
-                @Value("${cache.redis.ttl_seconds:604800}") long redisTtlSeconds,
-                @Value("${cache.redis.prefix:cache:data:}") String cachePrefix,
-                @Value("${cache.cleanup.max_infrequent_access_count:3}") int maxInfrequentAccessCount,
-                @Value("${cache.cleanup.inactivity_threshold_days:2}") long inactivityThresholdDays) {
-                super(redisTtlSeconds, cachePrefix, maxInfrequentAccessCount, inactivityThresholdDays);
-        }
-    
+    /**
+     * Default constructor with values from application.properties
+     */
+    public CacheProperties() {
+        super(
+            604800, // Default TTL from application.properties (cache.redis.ttl_seconds)
+            "cache:data:", // Default prefix from application.properties (cache.redis.prefix)
+            3, // Default max infrequent access count
+            2 // Default inactivity threshold days
+        );
+    }
 }
