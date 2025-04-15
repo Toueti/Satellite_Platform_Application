@@ -59,9 +59,9 @@ GET {{baseUrl}}/{{imageId}}
 Accept: application/json
 
 
-### Get Images by Project ID
+### Get Images by Project ID (Paginated)
 # Requires valid projectId
-GET {{baseUrl}}/by-project/{{projectId}}
+GET {{baseUrl}}/by-project/{{projectId}}?page=0&size=10
 # Authorization: Bearer {{token}} # Uncomment if auth is required
 Accept: application/json
 
@@ -80,36 +80,55 @@ GET {{baseUrl}}/count/{{projectId}}
 Accept: application/json
 
 
-### Delete Image by ID
+### Soft Delete Image by ID
 # Requires valid imageId
-# Be careful using this!
+# This performs a SOFT delete
 DELETE {{baseUrl}}/{{imageId}}
 # Authorization: Bearer {{token}} # Uncomment if auth is required
 
 
-### Delete Image by Image ID and Project ID
+### Soft Delete Image by Image ID and Project ID
 # Requires valid imageId and projectId
-# Be careful using this!
+# This performs a SOFT delete
 DELETE {{baseUrl}}/{{imageId}}/project/{{projectId}}
 # Authorization: Bearer {{token}} # Uncomment if auth is required
 
 
-### Delete All Images by Project ID
+### Soft Delete All Images by Project ID
 # Requires valid projectId
-# Be careful using this!
+# This performs a SOFT delete
 DELETE {{baseUrl}}/by-project/{{projectId}}
 # Authorization: Bearer {{token}} # Uncomment if auth is required
 
 
-### Bulk Delete Images
+### Bulk Soft Delete Images
 # Requires a list of image IDs in the body
-# Be careful using this!
+# This performs SOFT deletes
 DELETE {{baseUrl}}/bulk-delete
 # Authorization: Bearer {{token}} # Uncomment if auth is required
 Content-Type: application/json
 
 [
-  "image_id_1", 
+  "image_id_1",
   "image_id_2"
   // Add actual image IDs to delete
 ]
+
+
+### Restore Soft-Deleted Image
+# Requires valid imageId of a soft-deleted image
+POST {{baseUrl}}/{{imageId}}/restore
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+
+
+### Force Permanent Delete Image
+# Requires valid imageId
+# Use with extreme caution! This bypasses the retention period.
+DELETE {{baseUrl}}/{{imageId}}/force
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+
+
+### Get Soft-Deleted Images (Paginated)
+GET {{baseUrl}}/deleted?page=0&size=10
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+Accept: application/json

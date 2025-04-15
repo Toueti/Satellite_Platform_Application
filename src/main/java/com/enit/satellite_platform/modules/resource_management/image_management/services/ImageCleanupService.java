@@ -41,7 +41,7 @@ public class ImageCleanupService {
      * Scheduled task that runs daily to clean up soft-deleted images
      * that have exceeded their retention period.
      */
-    @Scheduled(cron = "${image.cleanup.cron:0 0 1 * * ?}") // Default: Run at 1 AM every day
+    @Scheduled(cron = "${image.cleanup.cron:0 0 1 * * ?}")
     @Transactional
     public void cleanupExpiredImages() {
         logger.info("Starting scheduled cleanup of expired soft-deleted images");

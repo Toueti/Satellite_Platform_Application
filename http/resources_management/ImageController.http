@@ -2,6 +2,13 @@
 @token= eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJyb2xlcyI6WyJST0xFX1RIRU1BVElDSUFOIl0sInN1YiI6InlvYnRvdDhAZ21haWwuY29tIiwiaWF0IjoxNzQ0NzM3MTE0LCJleHAiOjE3NDQ4MjM1MTR9.WCSrKhk9knG-KS7IeXB1M0SqYIqod-B8zrZ1qfzeku0
 
 @projectId=67fe938929322a67a5a7d7fb
+
+@imageId = # Set this after adding an image
+
+@imageName = Landsat_Image_1
+
+@newImageName = Sentinel_Image_2
+
 ### Upload an image to a project
 POST {{baseUrl}}/add
 Authorization: Bearer {{token}}
@@ -108,3 +115,21 @@ Content-Type: application/json
 # @name countImagesByProject
 GET {{baseUrl}}/count/65e4494799452b2b15d33c99
 Authorization: Bearer {{token}}
+
+### Restore Soft-Deleted Image
+# Requires valid imageId of a soft-deleted image
+POST {{baseUrl}}/{{imageId}}/restore
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+
+
+### Force Permanent Delete Image
+# Requires valid imageId
+# Use with extreme caution! This bypasses the retention period.
+DELETE {{baseUrl}}/{{imageId}}/force
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+
+
+### Get Soft-Deleted Images (Paginated)
+GET {{baseUrl}}/deleted?page=0&size=10
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+Accept: application/json
