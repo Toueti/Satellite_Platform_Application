@@ -2,9 +2,6 @@ package com.enit.satellite_platform.modules.project_management.entities;
 
 import com.enit.satellite_platform.modules.resource_management.image_management.entities.Image;
 import com.enit.satellite_platform.modules.user_management.management_cvore_service.entities.User;
-import com.enit.satellite_platform.shared.converters.UserKeyDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import lombok.Builder;
 import lombok.Data;
 import org.bson.types.ObjectId;
@@ -129,11 +126,11 @@ public class Project {
     /**
      * A set of users with whom the project is shared.
      * Uses lazy loading to improve performance.
+     * The key is the ObjectId of the User.
      */
     @DBRef(lazy = true)
     @Builder.Default
-    @JsonDeserialize(keyUsing = UserKeyDeserializer.class) // Use the custom deserializer for map keys
-    private Map<User, PermissionLevel> sharedUsers = new HashMap<>();
+    private Map<ObjectId, PermissionLevel> sharedUsers = new HashMap<>();
 
     /**
      * Updates the last accessed time of the project to the current time.
@@ -180,8 +177,8 @@ public class Project {
      * @param permission The permission level to grant (e.g., "VIEWER", "EDITOR").
      */
     public void shareWith(User user, PermissionLevel permission) {
-        if (!user.equals(this.owner)) {
-            this.sharedUsers.put(user, permission);
+        if (!user.equals(this.owner) && user.getId() != null) { // Ensure user ID is not null
+            this.sharedUsers.put(new ObjectId(user.getId()), permission);
         }
     }
 
@@ -191,7 +188,9 @@ public class Project {
      * @param user The user to unshare the project with.
      */
     public void unshareWith(User user) {
-        this.sharedUsers.remove(user);
+        if (user != null && user.getId() != null) { // Ensure user and ID are not null
+             this.sharedUsers.remove(new ObjectId(user.getId()));
+        }
     }
 
     /**
@@ -202,7 +201,8 @@ public class Project {
      * @return True if the user has access, false otherwise.
      */
     public boolean hasAccess(User user) {
-        return this.owner.equals(user) || this.sharedUsers.containsKey(user);
+        // Ensure user and ID are not null before checking
+        return user != null && (this.owner.equals(user) || (user.getId() != null && this.sharedUsers.containsKey(new ObjectId(user.getId()))));
     }
 
     /**
@@ -210,13 +210,19 @@ public class Project {
      * Owners always have access. Shared users need READ or WRITE permission.
      *
      * @param user The user to check.
-     * @return True if the user has read access, false otherwise.
+     * @return True if the user has the required access level, false otherwise.
      */
     public boolean hasAccess(User user, PermissionLevel requiredLevel) {
+        if (user == null) {
+            return false; // Cannot grant access to null user
+        }
         if (this.owner.equals(user)) {
             return true; // Owner has all permissions
         }
-        PermissionLevel grantedLevel = this.sharedUsers.get(user);
+        if (user.getId() == null) {
+             return false; // User without ID cannot be in the shared map
+        }
+        PermissionLevel grantedLevel = this.sharedUsers.get(new ObjectId(user.getId()));
         if (grantedLevel == null) {
             return false; // Not shared with this user
         }
