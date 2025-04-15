@@ -7,7 +7,7 @@ import com.enit.satellite_platform.modules.resource_management.image_management.
 import lombok.Data;
 
 @Data
-public class ProjectDTO {
+public class ProjectDto {
     private String id;
     private String projectName;
     private String description;

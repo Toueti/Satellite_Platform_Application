@@ -1,8 +1,8 @@
 @baseUrl = http://localhost:8080/api/thematician/projects
 @token = eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJyb2xlcyI6WyJST0xFX1RIRU1BVElDSUFOIl0sInN1YiI6InlvYnRvdDhAZ21haWwuY29tIiwiaWF0IjoxNzQ0NzIxOTY5LCJleHAiOjE3NDQ4MDgzNjl9.NiKFlxvDtOp8p7vuhj3OKXkW_DEyVxGY6k70t55MglY
-@projectId = 67fe5cb17c904c51b7784f36
+@projectId = 67fe938929322a67a5a7d7fb
 @otherUserEmail = collaborator@example.com
-@projectName = My New Project5354
+@projectName = Renamed Project Name
 @projectDescription = A description for the new project.
 @projectTag = research
 @projectStatus = IN_PROGRESS
@@ -26,6 +26,12 @@ Content-Type: application/json
     // Example: client.global.set("projectId", response.body.data.id); 
 %}
 
+### Get Project by ID
+# Requires a valid projectId
+GET {{baseUrl}}/{{projectId}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
 
 ### Rename Project
 # Requires a valid projectId
@@ -39,19 +45,15 @@ Authorization: Bearer {{token}}
 Accept: application/json
 
 
-### Get Project by ID
-# Requires a valid projectId
-GET {{baseUrl}}/{{projectId}}
-Authorization: Bearer {{token}}
-Accept: application/json
+
 
 ### Get project by name
 GET {{baseUrl}}/name/{{projectName}}
 Authorization: Bearer {{token}}
 
 
-### Get All Projects for User
-GET {{baseUrl}}/all
+### Get All Projects for User (Paginated)
+GET {{baseUrl}}/all?page=0&size=10
 Authorization: Bearer {{token}}
 Accept: application/json
 
@@ -63,7 +65,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "{{projectName}} Updated",
+  "projectName": "{{projectName}} Updated",
   "description": "{{projectDescription}} - Updated",
   "tags": ["initial", "data", "updated"],
   "status": "ACTIVE"
@@ -103,8 +105,8 @@ Authorization: Bearer {{token}}
 Accept: application/json
 
 
-### Get Projects Shared With Me
-GET {{baseUrl}}/shared-with-me
+### Get Projects Shared With Me (Paginated)
+GET {{baseUrl}}/shared-with-me?page=0&size=10
 Authorization: Bearer {{token}}
 Accept: application/json
 
@@ -127,13 +129,13 @@ POST {{baseUrl}}/{{projectId}}/unarchive
 Authorization: Bearer {{token}}
 
 
-### Get Archived Projects
-GET {{baseUrl}}/archived
+### Get Archived Projects (Paginated)
+GET {{baseUrl}}/archived?page=0&size=10
 Authorization: Bearer {{token}}
 Accept: application/json
 
 
-### Search Projects
+### Search Projects (Paginated)
 GET {{baseUrl}}/search?query=Updated&page=0&size=5
 Authorization: Bearer {{token}}
 Accept: application/json
@@ -145,8 +147,8 @@ POST {{baseUrl}}/{{projectId}}/tags?tag={{projectTag}}
 Authorization: Bearer {{token}}
 
 
-### Get Projects by Tag
-GET {{baseUrl}}/by-tag?tag={{projectTag}}
+### Get Projects by Tag (Paginated)
+GET {{baseUrl}}/by-tag?tag={{projectTag}}&page=0&size=10
 Authorization: Bearer {{token}}
 Accept: application/json
 
@@ -163,8 +165,8 @@ PUT {{baseUrl}}/{{projectId}}/status?status={{projectStatus}}
 Authorization: Bearer {{token}}
 
 
-### Get Projects by Status
-GET {{baseUrl}}/by-status?status={{projectStatus}}
+### Get Projects by Status (Paginated)
+GET {{baseUrl}}/by-status?status={{projectStatus}}&page=0&size=10
 Authorization: Bearer {{token}}
 Accept: application/json
 
@@ -181,16 +183,42 @@ POST {{baseUrl}}/createFromTemplate?templateName={{templateName}}&newProjectName
 Authorization: Bearer {{token}}
 
 
-### Delete Project
+### Soft Delete Project
 # Requires a valid projectId
-# Be careful using this!
+# This performs a SOFT delete
 DELETE {{baseUrl}}/{{projectId}}
 Authorization: Bearer {{token}}
 
 
-### Bulk Delete Projects
+### Restore Soft-Deleted Project
+# Requires a valid projectId of a soft-deleted project
+POST {{baseUrl}}/{{projectId}}/restore
+Authorization: Bearer {{token}}
+
+
+### Update Retention Period for Soft-Deleted Project
+# Requires a valid projectId of a soft-deleted project
+# Sets retention to 15 days
+PUT {{baseUrl}}/{{projectId}}/retention?days=15
+Authorization: Bearer {{token}}
+
+
+### Get Soft-Deleted Projects (Paginated)
+GET {{baseUrl}}/deleted?page=0&size=10
+Authorization: Bearer {{token}}
+Accept: application/json
+
+
+### Force Permanent Delete Project
+# Requires a valid projectId of a soft-deleted project
+# Use with extreme caution! This bypasses the retention period.
+DELETE {{baseUrl}}/{{projectId}}/force
+Authorization: Bearer {{token}}
+
+
+### Bulk Soft Delete Projects
 # Requires a list of project IDs in the body
-# Be careful using this!
+# This performs SOFT deletes
 DELETE {{baseUrl}}/bulk-delete
 Authorization: Bearer {{token}}
 Content-Type: application/json

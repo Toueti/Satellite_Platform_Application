@@ -284,11 +284,12 @@ public class ImageController {
     })
     @GetMapping("/by-project/{projectId}")
     public ResponseEntity<GenericResponse<?>> getImagesByProject(
-        @Parameter(description = "Project ID") @PathVariable String projectId) {
-        logger.info("Received request to fetch images for project ID: {}", projectId);
+        @Parameter(description = "Project ID") @PathVariable String projectId,
+        Pageable pageable) {
+        logger.info("Received request to fetch images for project ID: {} with pageable: {}", projectId, pageable);
         try {
             ObjectId projectObjectId = new ObjectId(projectId);
-            List<ImageDTO> images = imageService.getImagesByProject(projectObjectId);
+            Page<ImageDTO> images = imageService.getImagesByProject(projectObjectId, pageable);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Images retrieved successfully", images));
         } catch (IllegalArgumentException e) {
             logger.error("Project not found or invalid ID: {}", e.getMessage());
@@ -311,11 +312,11 @@ public class ImageController {
     @DeleteMapping("/by-project/{projectId}")
     public ResponseEntity<GenericResponse<?>> deleteAllImagesByProject(
         @Parameter(description = "Project ID") @PathVariable String projectId) {
-        logger.info("Received request to delete all images for project ID: {}", projectId);
+        logger.info("Received request to soft delete all images for project ID: {}", projectId); // Updated log message
         try {
             ObjectId projectObjectId = new ObjectId(projectId);
-            imageService.deleteAllImagesByProject(projectObjectId);
-            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "All images deleted successfully"));
+            imageService.softDeleteAllImagesByProject(projectObjectId); // Correct method called
+            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "All images soft deleted successfully"));
         } catch (IllegalArgumentException e) {
             logger.error("Invalid project ID: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -476,9 +477,94 @@ public class ImageController {
         } catch (RuntimeException e) {
             logger.error("Error importing images: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new GenericResponse<>("FAILURE", "Error importing images: " + e.getMessage(), null));
+                 .body(new GenericResponse<>("FAILURE", "Error importing images: " + e.getMessage(), null));
         }
     }
+
+    @Operation(summary = "Restore a soft-deleted image")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Image restored successfully"),
+        @ApiResponse(responseCode = "404", description = "Image not found or not deleted"),
+        @ApiResponse(responseCode = "400", description = "Image is not deleted"),
+        @ApiResponse(responseCode = "500", description = "Error restoring image")
+    })
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<GenericResponse<?>> restoreImage(
+        @Parameter(description = "Image ID") @PathVariable String id) {
+        logger.info("Received request to restore image with ID: {}", id);
+        try {
+            // TODO: Add permission check if needed (e.g., only project owner/editor?)
+            ImageDTO restoredImage = imageService.restoreImage(id);
+            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Image restored successfully", restoredImage));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (Exception e) {
+            logger.error("Error restoring image: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new GenericResponse<>("FAILURE", "Error restoring image: " + e.getMessage(), null));
+        }
+    }
+
+    @Operation(summary = "Force permanent deletion of a soft-deleted image")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Image permanently deleted successfully"),
+        @ApiResponse(responseCode = "403", description = "User not authorized (not project owner)"),
+        @ApiResponse(responseCode = "404", description = "Image not found"),
+        @ApiResponse(responseCode = "500", description = "Error force deleting image")
+    })
+    @DeleteMapping("/{id}/force")
+    public ResponseEntity<GenericResponse<?>> forceDeleteImage(
+        @Parameter(description = "Image ID") @PathVariable String id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+         if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new GenericResponse<>("FAILURE", "User not authenticated", null));
+        }
+        String userEmail = authentication.getName();
+        logger.info("Received request to force delete image with ID: {} by user {}", id, userEmail);
+
+        try {
+            imageService.forceDeleteImage(id, userEmail);
+            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Image permanently deleted successfully"));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (AccessDeniedException e) {
+             return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (IllegalStateException e) { // Catch if trying to force delete non-deleted image
+             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (Exception e) {
+            logger.error("Error force deleting image: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new GenericResponse<>("FAILURE", "Error force deleting image: " + e.getMessage(), null));
+        }
+    }
+
+    @Operation(summary = "Get soft-deleted images (paginated)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Deleted images retrieved successfully"),
+        @ApiResponse(responseCode = "500", description = "Error retrieving deleted images")
+    })
+    @GetMapping("/deleted")
+    public ResponseEntity<GenericResponse<?>> getDeletedImages(Pageable pageable) {
+        logger.info("Received request to fetch soft-deleted images with pagination: {}", pageable);
+        try {
+            // Need to add getDeletedImages method to ImageService and ImageRepository
+            Page<ImageDTO> images = imageService.getDeletedImages(pageable);
+            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Deleted images retrieved successfully", images));
+        } catch (Exception e) {
+            logger.error("Error retrieving deleted images: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new GenericResponse<>("FAILURE", "Error retrieving deleted images: " + e.getMessage(), null));
+        }
+    }
+
 }
 
 /* package com.enit.satellite_platform.modules.resource_management.image_management.controllers;

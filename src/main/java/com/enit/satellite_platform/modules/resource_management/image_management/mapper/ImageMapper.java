@@ -11,6 +11,7 @@ import com.enit.satellite_platform.modules.resource_management.image_management.
 import com.enit.satellite_platform.shared.mapper.ObjectIdMapper;
 
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Page; // Added import
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -56,4 +57,17 @@ public interface ImageMapper {
 
     List<ImageDTO> projectionToDTOList(List<ImageMetadataProjection> projections);
 
+    /**
+     * Converts a Page of Image entities to a Page of ImageDTOs.
+     *
+     * @param page The Page of Image entities.
+     * @return A Page of ImageDTOs.
+     */
+    default Page<ImageDTO> toDTOPage(Page<Image> page) {
+        if (page == null) {
+            return null;
+        }
+        List<ImageDTO> dtoList = toDTOList(page.getContent());
+        return new org.springframework.data.domain.PageImpl<>(dtoList, page.getPageable(), page.getTotalElements());
+    }
 }

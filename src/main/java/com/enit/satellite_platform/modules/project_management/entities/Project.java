@@ -116,6 +116,26 @@ public class Project {
     private Map<String, Object> metadata = new HashMap<>();
 
     /**
+     * Indicates whether the project is soft deleted.
+     */
+    @Field("deleted")
+    @Builder.Default
+    private boolean deleted = false;
+
+    /**
+     * The date when the project was soft deleted.
+     */
+    @Field("deletedAt")
+    private Date deletedAt;
+
+    /**
+     * Number of days to retain the soft deleted project before permanent deletion.
+     * If null, uses the system default.
+     */
+    @Field("retentionDays")
+    private Integer retentionDays;
+
+    /**
      * A set of images associated with the project.
      * Uses lazy loading to improve performance.
      */

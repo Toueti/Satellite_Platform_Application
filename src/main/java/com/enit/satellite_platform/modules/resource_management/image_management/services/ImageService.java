@@ -146,42 +146,125 @@ public class ImageService {
     }
 
     @Transactional
-    public void deleteImage(String id) {
-        logger.info("Attempting to delete image with Id: {}", id);
+    public void deleteImage(String id) { // Now performs SOFT delete
+        logger.info("Attempting to soft delete image with Id: {}", id);
         validateImageId(id);
 
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> {
-                    logger.error("Image not found with Id: {}", id);
-                    return new IllegalArgumentException("Image not found with Id: " + id);
+                    logger.error("Image not found for soft delete with Id: {}", id);
+                    return new ResourceNotFoundException("Image not found with Id: " + id);
                 });
 
         try {
-            // Delete file using StorageManager
+            image.setDeleted(true);
+            image.setDeletedAt(new Date());
+            imageRepository.save(image);
+            logger.info("Image soft deleted successfully with Id: {}", id);
+            // Note: Associated file in StorageManager and ProcessingResults are NOT deleted here.
+        } catch (Exception e) {
+            logger.error("Failed to soft delete image with Id: {}", id, e);
+            throw new RuntimeException("Failed to soft delete image: " + e.getMessage(), e);
+        }
+    }
+
+    @Transactional
+    public void permanentlyDeleteImage(String id) {
+        logger.info("Attempting to permanently delete image with Id: {}", id);
+        validateImageId(id);
+
+        Image image = imageRepository.findById(id)
+                .orElseThrow(() -> {
+                    logger.warn("Image already permanently deleted or never existed: {}", id);
+                    return new ResourceNotFoundException("Image not found with Id: " + id);
+                });
+
+        try {
+            // 1. Delete file using StorageManager
             if (image.getStorageIdentifier() != null) {
                 storageManager.delete(image.getStorageIdentifier(), image.getStorageType());
-                logger.info("Deleted file with identifier: {} and type: {}", image.getStorageIdentifier(), image.getStorageType());
+                logger.info("Permanently deleted file with identifier: {} and type: {}", image.getStorageIdentifier(), image.getStorageType());
             }
 
+            // 2. Delete associated ProcessingResults
             geeResultsRepository.deleteAllByImage_ImageId(id);
-            logger.info("Deleted GeeResults associated with image Id: {}", id);
+            logger.info("Permanently deleted ProcessingResults associated with image Id: {}", id);
 
+            // 3. Remove image reference from Project
             Project project = image.getProject();
             if (project != null) {
-                project.getImages().removeIf(img -> img.getImageId().equals(id));
-                projectRepository.save(project);
-                logger.info("Removed image Id: {} from project Id: {}", id, project.getId());
+                // Need to fetch the project again to ensure the collection is loaded if lazy
+                Project managedProject = projectRepository.findById(new ObjectId(project.getId())).orElse(null);
+                if (managedProject != null) {
+                    boolean removed = managedProject.getImages().removeIf(img -> img.getImageId().equals(id));
+                    if (removed) {
+                        projectRepository.save(managedProject);
+                        logger.info("Removed image reference Id: {} from project Id: {}", id, managedProject.getId());
+                    }
+                }
             }
 
+            // 4. Delete the Image document itself
             imageRepository.deleteById(id);
-            logger.info("Image deleted successfully with Id: {}", id);
+            logger.info("Image document permanently deleted successfully with Id: {}", id);
         } catch (IOException e) {
-            logger.error("Failed to delete image file with Id: {}", id, e);
-            throw new RuntimeException("Failed to delete image file: " + e.getMessage(), e);
+            logger.error("Failed to delete image file during permanent deletion for Id: {}", id, e);
+            // Continue deletion process even if file deletion fails? Or throw? For now, throw.
+            throw new RuntimeException("Failed to delete image file during permanent deletion: " + e.getMessage(), e);
         } catch (Exception e) {
-            logger.error("Failed to delete image with Id: {}", id, e);
-            throw new RuntimeException("Failed to delete image: " + e.getMessage(), e);
+            logger.error("Failed to permanently delete image with Id: {}", id, e);
+            throw new RuntimeException("Failed to permanently delete image: " + e.getMessage(), e);
         }
+    }
+
+    @Transactional
+    public ImageDTO restoreImage(String id) {
+        logger.info("Attempting to restore image with Id: {}", id);
+        validateImageId(id);
+
+        Image image = imageRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Image not found with Id: " + id));
+
+        if (!image.isDeleted()) {
+            throw new IllegalStateException("Image is not deleted.");
+        }
+
+        // Optional: Check if the parent project is also deleted?
+        // If project is deleted, maybe image shouldn't be restorable independently?
+        // For now, allow independent restore.
+
+        image.setDeleted(false);
+        image.setDeletedAt(null);
+        Image restoredImage = imageRepository.save(image);
+        logger.info("Image restored successfully: {}", id);
+        return imageMapper.toDTO(restoredImage);
+    }
+
+     @Transactional
+    public void forceDeleteImage(String id, String userEmail) {
+        logger.info("Force deleting image ID: {} by user: {}", id, userEmail);
+        validateImageId(id);
+        validateString(userEmail, "User Email");
+
+        Image image = imageRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Image not found with ID: " + id));
+
+        Project project = image.getProject();
+        if (project == null) {
+             logger.warn("Image {} has no associated project, proceeding with force delete.", id);
+             // Allow deletion if no project link? Or throw error? For now, allow.
+        } else {
+            User user = getUserByEmail(userEmail, "User not found");
+             if (!project.getOwner().equals(user)) { // Only project owner can force delete
+                 logger.error("Access denied for user {} to force delete image {}", userEmail, id);
+                 throw new AccessDeniedException("Only the project owner can force delete images within their project.");
+             }
+        }
+
+        // No check for isDeleted needed for force delete
+
+        permanentlyDeleteImage(id); // Call the permanent delete logic
+        logger.info("Image force deleted successfully: {}", id);
     }
 
     /**
@@ -266,50 +349,79 @@ public class ImageService {
         }
     }
 
-    public List<ImageDTO> getImagesByProject(ObjectId projectId) {
-        logger.info("Retrieving images by project Id: {}", projectId);
+    public Page<ImageDTO> getImagesByProject(ObjectId projectId, Pageable pageable) {
+        logger.info("Retrieving images by project Id: {} with pageable: {}", projectId, pageable);
         validateObjectId(projectId, "Project Id");
+        validatePageable(pageable);
 
         try {
-            getProjectById(projectId);
-            List<ImageMetadataProjection> projections = imageRepository.findAllByProject_IdProjectedBy(projectId);
-            return imageMapper.projectionToDTOList(projections);
+            getProjectById(projectId); // Ensure project exists
+            Page<ImageMetadataProjection> page = imageRepository.findAllByProject_IdProjectedBy(projectId, pageable);
+            List<ImageDTO> dtoList = imageMapper.projectionToDTOList(page.getContent());
+            return new PageImpl<>(dtoList, pageable, page.getTotalElements());
         } catch (Exception e) {
             logger.error("Failed to retrieve images by project Id: {}", projectId, e);
             throw new RuntimeException("Failed to retrieve images: " + e.getMessage(), e);
         }
     }
 
+    // Renamed to reflect soft delete behavior
     @Transactional
-    public void deleteAllImagesByProject(ObjectId projectId) {
-        logger.info("Deleting all images for project Id: {}", projectId);
+    public void softDeleteAllImagesByProject(ObjectId projectId) {
+        logger.info("Soft deleting all images for project Id: {}", projectId);
         validateObjectId(projectId, "Project Id");
 
         try {
-            Project project = getProjectById(projectId);
             List<Image> images = imageRepository.findAllByProject_Id(projectId);
+            Date deletedAt = new Date();
             for (Image image : images) {
-                if (image.getStorageIdentifier() != null) {
-                    storageManager.delete(image.getStorageIdentifier(), image.getStorageType());
-                    logger.info("Deleted file with identifier: {} and type: {}", image.getStorageIdentifier(), image.getStorageType());
+                if (!image.isDeleted()) { // Avoid re-deleting
+                    image.setDeleted(true);
+                    image.setDeletedAt(deletedAt);
+                    imageRepository.save(image); // Save each image individually
                 }
-                geeResultsRepository.deleteAllByImage_ImageId(image.getImageId());
-                logger.info("Deleted GeeResults for image Id: {}", image.getImageId());
             }
-            imageRepository.deleteAllByProject_Id(projectId);
-            project.getImages().clear();
-            projectRepository.save(project);
-            logger.info("All images and GEE results deleted successfully for project Id: {}", projectId);
-        } catch (IOException e) {
-            logger.error("Failed to delete image files for project Id: {}", projectId, e);
-            throw new RuntimeException("Failed to delete image files: " + e.getMessage(), e);
-        } catch (ProjectNotFoundException e) {
-            logger.error("Project not found for deleting images: {}", projectId, e);
-            throw e;
+            logger.info("All images soft deleted successfully for project Id: {}", projectId);
         } catch (Exception e) {
-            logger.error("Failed to delete images for project Id: {}", projectId, e);
-            throw new RuntimeException("Failed to delete images: " + e.getMessage(), e);
+            logger.error("Failed to soft delete images for project Id: {}", projectId, e);
+            throw new RuntimeException("Failed to soft delete images: " + e.getMessage(), e);
         }
+    }
+
+    // New method for permanent deletion cascade from project
+    @Transactional
+    public void permanentlyDeleteAllImagesByProject(ObjectId projectId) {
+        logger.info("Permanently deleting all images for project Id: {}", projectId);
+        validateObjectId(projectId, "Project Id");
+        List<Image> images = imageRepository.findAllByProject_Id(projectId);
+        for (Image image : images) {
+            try {
+                permanentlyDeleteImage(image.getImageId()); // Reuse existing permanent delete logic
+            } catch (Exception e) {
+                logger.error("Failed to permanently delete image {} during cascade delete for project {}", image.getImageId(), projectId, e);
+                // Decide whether to continue or re-throw
+            }
+        }
+         logger.info("Finished permanent deletion cascade for images in project {}", projectId);
+    }
+
+     // New method for restore cascade from project
+    @Transactional
+    public void restoreAllImagesByProject(ObjectId projectId) {
+        logger.info("Restoring all images for project Id: {}", projectId);
+        validateObjectId(projectId, "Project Id");
+        List<Image> images = imageRepository.findAllByProject_Id(projectId);
+        for (Image image : images) {
+             if (image.isDeleted()) { // Only restore if deleted
+                 try {
+                     restoreImage(image.getImageId()); // Reuse existing restore logic
+                 } catch (Exception e) {
+                     logger.error("Failed to restore image {} during cascade restore for project {}", image.getImageId(), projectId, e);
+                     // Decide whether to continue or re-throw
+                 }
+             }
+        }
+         logger.info("Finished restore cascade for images in project {}", projectId);
     }
 
     public Optional<ImageDTO> getImageByImageIdAndProject(String imageId, ObjectId projectId) {
@@ -327,8 +439,8 @@ public class ImageService {
     }
 
     @Transactional
-    public void deleteImageByProject(String imageId, ObjectId projectId) {
-        logger.info("Deleting image by image Id: {} and project Id: {}", imageId, projectId);
+    public void deleteImageByProject(String imageId, ObjectId projectId) { // Now performs SOFT delete
+        logger.info("Soft deleting image by image Id: {} and project Id: {}", imageId, projectId);
         validateImageId(imageId);
         validateObjectId(projectId, "Project Id");
 
@@ -336,27 +448,23 @@ public class ImageService {
             Image image = imageRepository.findByImageIdAndProject_Id(imageId, projectId)
                     .orElseThrow(() -> {
                         logger.error("Image not found with Id: {} in project: {}", imageId, projectId);
-                        return new IllegalArgumentException(
+                        return new ResourceNotFoundException(
                                 "Image not found with Id: " + imageId + " in project: " + projectId);
                     });
-            if (image.getStorageIdentifier() != null) {
-                storageManager.delete(image.getStorageIdentifier(), image.getStorageType());
-                logger.info("Deleted file with identifier: {} and type: {}", image.getStorageIdentifier(), image.getStorageType());
+
+            if (!image.isDeleted()) {
+                image.setDeleted(true);
+                image.setDeletedAt(new Date());
+                imageRepository.save(image);
+                logger.info("Image soft deleted successfully with Id: {} from project: {}", imageId, projectId);
+            } else {
+                 logger.info("Image {} in project {} was already soft deleted.", imageId, projectId);
             }
-            geeResultsRepository.deleteAllByImage_ImageId(imageId);
-            Project project = getProjectById(projectId);
-            project.getImages().removeIf(img -> img.getImageId().equals(imageId));
-            projectRepository.save(project);
-            imageRepository.deleteByImageIdAndProject_Id(imageId, projectId);
-            logger.info("Image and GEE results deleted successfully with Id: {} from project: {}", imageId, projectId);
-        } catch (IOException e) {
-            logger.error("Failed to delete image file by image Id: {} and project Id: {}", imageId, projectId, e);
-            throw new RuntimeException("Failed to delete image file: " + e.getMessage(), e);
-        } catch (IllegalArgumentException e) {
-            throw e;
+        } catch (ResourceNotFoundException e) {
+             throw e;
         } catch (Exception e) {
-            logger.error("Failed to delete image by image Id: {} and project Id: {}", imageId, projectId, e);
-            throw new RuntimeException("Failed to delete image: " + e.getMessage(), e);
+            logger.error("Failed to soft delete image by image Id: {} and project Id: {}", imageId, projectId, e);
+            throw new RuntimeException("Failed to soft delete image: " + e.getMessage(), e);
         }
     }
 
@@ -374,9 +482,9 @@ public class ImageService {
                 throw new IllegalArgumentException("Images not found with Ids: " + invalidIds);
             }
             for (String id : imageIds) {
-                deleteImage(id);
+                deleteImage(id); // Calls the soft delete method now
             }
-            logger.info("Bulk deletion successful for image Ids: {}", imageIds);
+            logger.info("Bulk soft deletion successful for image Ids: {}", imageIds);
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -560,7 +668,20 @@ public class ImageService {
                 .orElseThrow(() -> {
                     logger.error("Project not found with Id: {}", projectId);
                     return new ProjectNotFoundException("Project not found with Id: " + projectId);
-                });
+                 });
+    }
+
+    /**
+     * Retrieves soft-deleted images with pagination.
+     *
+     * @param pageable Pagination information.
+     * @return A page of soft-deleted images as ImageDTO.
+     */
+    public Page<ImageDTO> getDeletedImages(Pageable pageable) {
+        logger.info("Fetching soft-deleted images with pageable: {}", pageable);
+        validatePageable(pageable);
+        Page<Image> deletedImagesPage = imageRepository.findByDeletedTrue(pageable); // Need to add this method to repo
+        return imageMapper.toDTOPage(deletedImagesPage); // Assuming ProjectMapper has toDTOPage for Image
     }
 }
 /* package com.enit.satellite_platform.modules.resource_management.image_management.services;

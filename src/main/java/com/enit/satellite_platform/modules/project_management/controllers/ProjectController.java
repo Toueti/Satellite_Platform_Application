@@ -2,7 +2,7 @@ package com.enit.satellite_platform.modules.project_management.controllers;
 
 import com.enit.satellite_platform.shared.dto.GenericResponse;
 import com.enit.satellite_platform.exceptions.DuplicationException;
-import com.enit.satellite_platform.modules.project_management.dto.ProjectDTO;
+import com.enit.satellite_platform.modules.project_management.dto.ProjectDto;
 import com.enit.satellite_platform.modules.project_management.dto.ProjectSharingRequest;
 import com.enit.satellite_platform.modules.project_management.dto.ProjectStatisticsDto;
 import com.enit.satellite_platform.modules.project_management.entities.PermissionLevel;
@@ -84,7 +84,7 @@ public class ProjectController {
     public ResponseEntity<?> renameProject(@PathVariable String id, @RequestParam String newName) {
         try {
             String email = getCurrentEmail();
-            ProjectDTO project = projectService.renameProject(new ObjectId(id), newName, email);
+            ProjectDto project = projectService.renameProject(new ObjectId(id), newName, email);
             return ResponseEntity.ok(project);
         } catch (DuplicationException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -123,7 +123,7 @@ public class ProjectController {
     @GetMapping("/{projectId}")
     public ResponseEntity<GenericResponse<?>> getProject(@PathVariable String projectId) {
         try {
-            ProjectDTO project = projectService.getProject(new ObjectId(projectId));
+            ProjectDto project = projectService.getProject(new ObjectId(projectId));
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project retrieved successfully", project));
         } catch (ProjectNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -143,7 +143,7 @@ public class ProjectController {
     @GetMapping("/name/{projectName}")
     public ResponseEntity<GenericResponse<?>> getProjectByName(@PathVariable String projectName) {
         try {
-            ProjectDTO project = projectService.getProjectByName(projectName);
+            ProjectDto project = projectService.getProjectByName(projectName);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project retrieved successfully", project));
         } catch (ProjectNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -165,7 +165,7 @@ public class ProjectController {
     public ResponseEntity<GenericResponse<?>> getAllProjects(Pageable pageable) {
         try {
             String email = getCurrentEmail();
-            Page<ProjectDTO> projects = projectService.getAllProjects(email,pageable);
+            Page<ProjectDto> projects = projectService.getAllProjects(email,pageable);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Projects retrieved successfully", projects));
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -185,7 +185,7 @@ public class ProjectController {
     @PutMapping("/{projectId}")
     public ResponseEntity<GenericResponse<?>> updateProject(@PathVariable String projectId, @RequestBody Project project) {
         try {
-            ProjectDTO updatedProject = projectService.updateProject(new ObjectId(projectId), project);
+            ProjectDto updatedProject = projectService.updateProject(new ObjectId(projectId), project);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project updated successfully", updatedProject));
         } catch (ProjectNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -200,13 +200,14 @@ public class ProjectController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Project deleted successfully"),
             @ApiResponse(responseCode = "404", description = "Project not found"),
-            @ApiResponse(responseCode = "500", description = "Error deleting project")
+            @ApiResponse(responseCode = "500", description = "Error soft deleting project")
     })
     @DeleteMapping("/{projectId}")
-    public ResponseEntity<GenericResponse<?>> deleteProject(@PathVariable String projectId) {
+    public ResponseEntity<GenericResponse<?>> deleteProject(@PathVariable String projectId) { // This now performs soft delete
         try {
-            projectService.deleteProject(new ObjectId(projectId));
-            String message = String.format("Project with id: %s deleted successfully", projectId);
+            getCurrentEmail(); // Need email for ownership check if required by service layer (though current service impl doesn't use it for soft delete)
+            projectService.deleteProject(new ObjectId(projectId)); // Calls the soft delete method
+            String message = String.format("Project with id: %s soft deleted successfully", projectId);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", message));
         } catch (ProjectNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -237,7 +238,7 @@ public class ProjectController {
                 permission = "VIEWER";
             }
 
-            ProjectDTO project = projectService.shareProject(projectId, otherEmail, currentEmail, PermissionLevel.valueOf(permission.toUpperCase()));
+            ProjectDto project = projectService.shareProject(projectId, otherEmail, currentEmail, PermissionLevel.valueOf(permission.toUpperCase()));
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project shared successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -264,7 +265,7 @@ public class ProjectController {
             String currentEmail = getCurrentEmail();
             String projectId = request.getProjectId();
             String otherEmail = request.getOtherEmail();
-            ProjectDTO project = projectService.unshareProject(projectId, otherEmail, currentEmail);
+            ProjectDto project = projectService.unshareProject(projectId, otherEmail, currentEmail);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project unshared successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -310,10 +311,10 @@ public class ProjectController {
             @ApiResponse(responseCode = "500", description = "Error retrieving shared projects")
     })
     @GetMapping("/shared-with-me")
-    public ResponseEntity<GenericResponse<?>> getSharedWithMe() {
+    public ResponseEntity<GenericResponse<?>> getSharedWithMe(Pageable pageable) {
         try {
             String email = getCurrentEmail();
-            List<Project> sharedProjects = projectService.getSharedWithMe(email);
+            Page<ProjectDto> sharedProjects = projectService.getSharedWithMe(email, pageable);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Shared projects retrieved successfully", sharedProjects));
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -357,7 +358,7 @@ public class ProjectController {
     public ResponseEntity<GenericResponse<?>> archiveProject(@PathVariable String projectId) {
         try {
             String email = getCurrentEmail();
-            ProjectDTO project = projectService.archiveProject(new ObjectId(projectId), email);
+            ProjectDto project = projectService.archiveProject(new ObjectId(projectId), email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project archived successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -383,7 +384,7 @@ public class ProjectController {
     public ResponseEntity<GenericResponse<?>> unarchiveProject(@PathVariable String projectId) {
         try {
             String email = getCurrentEmail();
-            ProjectDTO project = projectService.unarchiveProject(new ObjectId(projectId), email);
+            ProjectDto project = projectService.unarchiveProject(new ObjectId(projectId), email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project unarchived successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -407,10 +408,10 @@ public class ProjectController {
             @ApiResponse(responseCode = "500", description = "Error retrieving archived projects")
     })
     @GetMapping("/archived")
-    public ResponseEntity<GenericResponse<?>> getArchivedProjects() {
+    public ResponseEntity<GenericResponse<?>> getArchivedProjects(Pageable pageable) {
         try {
             String email = getCurrentEmail();
-            List<Project> projects = projectService.getArchivedProjects(email);
+            Page<ProjectDto> projects = projectService.getArchivedProjects(email, pageable);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Archived projects retrieved successfully", projects));
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -431,15 +432,10 @@ public class ProjectController {
     @GetMapping("/search")
     public ResponseEntity<GenericResponse<?>> searchProjects(
             @RequestParam String query,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            Pageable pageable) {
         try {
-            if (page < 0 || size <= 0) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new GenericResponse<>("FAILURE", "Page must be non-negative and size must be positive", null));
-            }
             String email = getCurrentEmail();
-            List<Project> projects = projectService.searchProjects(email, query, page, size);
+            Page<ProjectDto> projects = projectService.searchProjects(email, query, pageable);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Projects retrieved successfully", projects));
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -463,7 +459,7 @@ public class ProjectController {
             @RequestParam String tag) {
         try {
             String email = getCurrentEmail();
-            ProjectDTO project = projectService.tagProject(new ObjectId(projectId), tag, email);
+            ProjectDto project = projectService.tagProject(new ObjectId(projectId), tag, email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Tag added successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -484,10 +480,10 @@ public class ProjectController {
             @ApiResponse(responseCode = "500", description = "Error retrieving projects by tag")
     })
     @GetMapping("/by-tag")
-    public ResponseEntity<GenericResponse<?>> getProjectsByTag(@RequestParam String tag) {
+    public ResponseEntity<GenericResponse<?>> getProjectsByTag(@RequestParam String tag, Pageable pageable) {
         try {
             String email = getCurrentEmail();
-            List<Project> projects = projectService.getProjectsByTag(email, tag);
+            Page<ProjectDto> projects = projectService.getProjectsByTag(email, tag, pageable);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Projects retrieved successfully", projects));
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -516,7 +512,7 @@ public class ProjectController {
                         .body(new GenericResponse<>("FAILURE", "New project name cannot be empty", null));
             }
             String email = getCurrentEmail();
-            ProjectDTO project = projectService.duplicateProject(new ObjectId(projectId), newName, email);
+            ProjectDto project = projectService.duplicateProject(new ObjectId(projectId), newName, email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project duplicated successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -546,7 +542,7 @@ public class ProjectController {
             @RequestParam String status) {
         try {
             String email = getCurrentEmail();
-            ProjectDTO project = projectService.updateProjectStatus(new ObjectId(projectId), status, email);
+            ProjectDto project = projectService.updateProjectStatus(new ObjectId(projectId), status, email);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project status updated successfully", project));
         } catch (ProjectNotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -567,10 +563,10 @@ public class ProjectController {
             @ApiResponse(responseCode = "500", description = "Error retrieving projects by status")
     })
     @GetMapping("/by-status")
-    public ResponseEntity<GenericResponse<?>> getProjectsByStatus(@RequestParam String status) {
+    public ResponseEntity<GenericResponse<?>> getProjectsByStatus(@RequestParam String status, Pageable pageable) {
         try {
             String email = getCurrentEmail();
-            List<Project> projects = projectService.getProjectsByStatus(email, status);
+            Page<ProjectDto> projects = projectService.getProjectsByStatus(email, status, pageable);
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Projects retrieved successfully", projects));
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -632,12 +628,126 @@ public class ProjectController {
         }
     }
 
+    @Operation(summary = "Force permanent deletion of a soft-deleted project")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Project permanently deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Project is not soft-deleted"),
+            @ApiResponse(responseCode = "403", description = "User not authorized"),
+            @ApiResponse(responseCode = "404", description = "Project not found"),
+            @ApiResponse(responseCode = "500", description = "Error force deleting project")
+    })
+    @DeleteMapping("/{projectId}/force")
+    public ResponseEntity<GenericResponse<?>> forceDeleteProject(@PathVariable String projectId) {
+        try {
+            String email = getCurrentEmail();
+            projectService.forceDeleteProject(new ObjectId(projectId), email);
+            String message = String.format("Project with id: %s permanently deleted successfully", projectId);
+            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", message));
+        } catch (ProjectNotFoundException | UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new GenericResponse<>("FAILURE", "Error force deleting project: " + e.getMessage(), null));
+        }
+    }
+
+
+    @Operation(summary = "Restore a soft-deleted project")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Project restored successfully"),
+            @ApiResponse(responseCode = "403", description = "User not authorized"),
+            @ApiResponse(responseCode = "404", description = "Project not found or not deleted"),
+            @ApiResponse(responseCode = "400", description = "Project is not deleted"),
+            @ApiResponse(responseCode = "500", description = "Error restoring project")
+    })
+    @PostMapping("/{projectId}/restore")
+    public ResponseEntity<GenericResponse<?>> restoreProject(@PathVariable String projectId) {
+        try {
+            String email = getCurrentEmail();
+            ProjectDto project = projectService.restoreProject(new ObjectId(projectId), email);
+            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project restored successfully", project));
+        } catch (ProjectNotFoundException | UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new GenericResponse<>("FAILURE", "Error restoring project: " + e.getMessage(), null));
+        }
+    }
+
+    @Operation(summary = "Update retention period for a soft-deleted project")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Retention period updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid retention period or project not deleted"),
+            @ApiResponse(responseCode = "403", description = "User not authorized"),
+            @ApiResponse(responseCode = "404", description = "Project not found"),
+            @ApiResponse(responseCode = "500", description = "Error updating retention period")
+    })
+    @PutMapping("/{projectId}/retention")
+    public ResponseEntity<GenericResponse<?>> updateRetentionPeriod(
+            @PathVariable String projectId,
+            @RequestParam int days) {
+        try {
+            String email = getCurrentEmail();
+            ProjectDto project = projectService.updateRetentionPeriod(new ObjectId(projectId), days, email);
+            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Retention period updated successfully", project));
+        } catch (ProjectNotFoundException | UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new GenericResponse<>("FAILURE", "Error updating retention period: " + e.getMessage(), null));
+        }
+    }
+
+     @Operation(summary = "Get soft-deleted projects for the user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Deleted projects retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "500", description = "Error retrieving deleted projects")
+    })
+    @GetMapping("/deleted")
+    public ResponseEntity<GenericResponse<?>> getDeletedProjects(Pageable pageable) {
+        try {
+            String email = getCurrentEmail();
+            // Need to add getDeletedProjects method to ProjectService and ProjectRepository
+            Page<ProjectDto> projects = projectService.getDeletedProjects(email, pageable);
+            return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Deleted projects retrieved successfully", projects));
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new GenericResponse<>("FAILURE", e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new GenericResponse<>("FAILURE", "Error retrieving deleted projects: " + e.getMessage(), null));
+        }
+    }
+
+
     @PostMapping("/createFromTemplate")
     public ResponseEntity<?> createProjectFromTemplate(@RequestParam String templateName,
                                                          @RequestParam String newProjectName,
                                                          Principal principal) {
         try {
-            ProjectDTO project = projectService.createProjectFromTemplate(templateName, newProjectName, principal.getName());
+            ProjectDto project = projectService.createProjectFromTemplate(templateName, newProjectName, principal.getName());
             return ResponseEntity.ok(new GenericResponse<>("SUCCESS", "Project created from template successfully", project));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

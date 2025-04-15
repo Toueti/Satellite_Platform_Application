@@ -53,6 +53,12 @@ public interface ImageRepository extends MongoRepository<Image, String> {
     @Query(value = "{ 'project.$id': ?0 }", fields = "{ 'imageData': 0 }") // Exclude imageData
     List<ImageMetadataProjection> findAllByProject_IdProjectedBy(ObjectId projectId);
 
+    /**
+     * Find all images associated with a project ID, projected as metadata, with pagination.
+     */
+    @Query(value = "{ 'project.$id': ?0 }", fields = "{ 'imageData': 0 }") // Exclude imageData
+    Page<ImageMetadataProjection> findAllByProject_IdProjectedBy(ObjectId projectId, Pageable pageable);
+
      /**
      * Find an image by its ID, projected as metadata.
      */
@@ -156,4 +162,14 @@ public interface ImageRepository extends MongoRepository<Image, String> {
      */
     @Query("{ 'project.owner.$id' : ?0 }")
     List<Image> findAllByOwnerId(String ownerId);
+
+    /**
+     * Find all images that have been soft deleted.
+     */
+    List<Image> findByDeletedTrue();
+
+    /**
+     * Find all images that have been soft deleted, with pagination.
+     */
+    Page<Image> findByDeletedTrue(Pageable pageable);
 }

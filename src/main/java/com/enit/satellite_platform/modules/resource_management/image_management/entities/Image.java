@@ -49,6 +49,12 @@ public class Image {
     @Field("project")
     private Project project;
 
+    @Field("deleted")
+    private boolean deleted = false; // Soft delete flag
+
+    @Field("deletedAt")
+    private Date deletedAt; // Timestamp for soft deletion
+
     protected void onCreate() {
         requestTime = new Date();
     }

@@ -2,40 +2,32 @@ package com.enit.satellite_platform.shared.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class NotificationService {
-
-    // Use a specific logger or marker for alerts
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
-    private static final Marker ALERT_MARKER = MarkerFactory.getMarker("ALERT");
 
     /**
-     * Sends an alert notification, currently by logging with a specific marker.
-     * This could be extended to send emails, push notifications, etc.
+     * Sends a notification to a user via email.
      *
-     * @param subject A short title or subject for the alert.
-     * @param details Detailed information about the alert event.
+     * @param email   The recipient's email address
+     * @param subject The subject of the notification
+     * @param message The message content
      */
-    public void sendAlert(String subject, String details) {
-        // Log using the ALERT marker for easy filtering in log aggregation tools
-        logger.error(ALERT_MARKER, "ALERT Subject: {} - Details: {}", subject, details);
-
-        // Future enhancements could go here:
-        // - Send email notification if email service is configured
-        // - Push to a message queue (Kafka, RabbitMQ)
-        // - Call an external alerting service API
+    public void sendNotification(String email, String subject, String message) {
+        logger.info("Sending notification to {}: {} - {}", email, subject, message);
+        // TODO: Implement actual email sending logic
+        // This could be implemented using JavaMailSender or any other email service
     }
 
     /**
-     * Overloaded method for convenience when only details are needed.
+     * Sends an alert notification to a user.
      *
-     * @param details Detailed information about the alert event.
+     * @param email   The recipient's email address
+     * @param message The alert message
      */
-     public void sendAlert(String details) {
-        sendAlert("System Alert", details);
-     }
+    public void sendAlert(String email, String message) {
+        sendNotification(email, "Alert", message);
+    }
 }

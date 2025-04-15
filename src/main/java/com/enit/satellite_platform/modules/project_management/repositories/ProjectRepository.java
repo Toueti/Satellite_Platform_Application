@@ -71,10 +71,10 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
      * Finds archived projects owned by a user.
      *
      * @param user The owner of the projects.
-     * @return A list of archived projects owned by the user.
+     * @return A page of archived projects owned by the user.
      */
     @Query("{ 'owner.$id': ?0, 'archived': true }")
-    List<Project> findByOwnerAndArchivedTrue(User user);
+    Page<Project> findByOwnerAndArchivedTrue(User user, Pageable pageable);
 
     /**
      * Searches for projects owned by a user by name or description.
@@ -82,30 +82,45 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
      * @param owner    The owner of the projects.
      * @param query    The search query.
      * @param pageable Pagination information.
-     * @return A list of projects matching the search criteria.
+     * @return A page of projects matching the search criteria.
      */
     @Query("{ 'owner.$id': ?0, $or: [ { 'projectName': { $regex: ?1, $options: 'i' } }, { 'description': { $regex: ?1, $options: 'i' } } ] }")
-    List<Project> findByOwnerAndSearchCriteria(User owner, String query, Pageable pageable);
+    Page<Project> findByOwnerAndSearchCriteria(User owner, String query, Pageable pageable);
 
     /**
      * Finds projects owned by a user with a specific tag.
      *
      * @param owner The owner of the projects.
      * @param tag   The tag to search for.
-     * @return A list of projects with the specified tag.
+     * @return A page of projects with the specified tag.
      */
     @Query("{ 'owner.$id': ?0, 'tags': ?1 }")
-    List<Project> findByOwnerAndTagsContaining(User owner, String tag);
+    Page<Project> findByOwnerAndTagsContaining(User owner, String tag, Pageable pageable);
 
     /**
      * Finds projects owned by a user with a specific status.
      *
      * @param owner  The owner of the projects.
      * @param status The status to search for.
-     * @return A list of projects with the specified status.
+     * @return A page of projects with the specified status.
      */
     @Query("{ 'owner.$id': ?0, 'status': ?1 }")
-    List<Project> findByOwnerAndStatus(User owner, String status);
+    Page<Project> findByOwnerAndStatus(User owner, String status, Pageable pageable);
+    
+    /**
+     * Find all projects that have been soft deleted
+     */
+    List<Project> findByDeletedTrue();
+
+    /**
+     * Finds soft-deleted projects owned by a user with pagination.
+     *
+     * @param user     The owner of the projects.
+     * @param pageable Pagination information.
+     * @return A page of soft-deleted projects owned by the user.
+     */
+    @Query("{ 'owner.$id': ?0, 'deleted': true }")
+    Page<Project> findByOwnerAndDeletedTrue(User user, Pageable pageable);
 
     /**
      * Checks if a project exists by its ID.
@@ -145,6 +160,16 @@ public interface ProjectRepository extends MongoRepository<Project, ObjectId> {
      */
     @Query("{'sharedUsers.?0': {$exists: true}}")
     List<Project> findBySharedUsersContainsKey(User user);
+
+    /**
+     * Finds projects where the sharedUsers map contains the given user as a key, with pagination.
+     *
+     * @param user The user to search for in the sharedUsers map.
+     * @param pageable Pagination information.
+     * @return A page of projects shared with the user.
+     */
+    @Query("{'sharedUsers.?0': {$exists: true}}")
+    Page<Project> findBySharedUsersContainsKeyPage(User user, Pageable pageable);
 
     /**
      * Counts projects where the sharedUsers map contains the given user as a key.

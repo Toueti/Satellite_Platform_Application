@@ -5,7 +5,7 @@ import com.enit.satellite_platform.modules.project_management.repositories.Proje
 import com.enit.satellite_platform.modules.resource_management.image_management.repositories.ImageRepository;
 import com.enit.satellite_platform.modules.resource_management.image_management.services.ImageService;
 import com.enit.satellite_platform.exceptions.DuplicationException;
-import com.enit.satellite_platform.modules.project_management.dto.ProjectDTO;
+import com.enit.satellite_platform.modules.project_management.dto.ProjectDto;
 import com.enit.satellite_platform.modules.project_management.dto.ProjectStatisticsDto;
 import com.enit.satellite_platform.modules.project_management.entities.PermissionLevel;
 import com.enit.satellite_platform.modules.project_management.entities.Project;
@@ -94,11 +94,10 @@ public class ProjectService {
 
     try {
       Project savedProject = projectRepository.save(project);
-      thematician.getProjects().add(savedProject);
-      userRepository.save(thematician);
+
       logger.info("Project created successfully with ID: {}", savedProject.getId());
 
-      return savedProject ;
+      return savedProject;
     } catch (DataIntegrityViolationException e) {
       logger.error("Duplicate project name for user: {}", email, e);
       throw new DuplicationException("A project with the same name already exists for this user.");
@@ -109,7 +108,7 @@ public class ProjectService {
   }
 
   @Transactional
-  public ProjectDTO renameProject(ObjectId projectId, String newName, String email) {
+  public ProjectDto renameProject(ObjectId projectId, String newName, String email) {
     logger.info("Renaming project with ID: {} to new name: {} for user: {}", projectId, newName, email);
 
     Project project = projectRepository.findById(projectId)
@@ -134,6 +133,7 @@ public class ProjectService {
     }
 
     try {
+      project.setProjectName(newName);
       Project updatedProject = projectRepository.save(project);
       logger.info("Project renamed successfully to: {}", newName);
       return projectMapper.toDTO(updatedProject);
@@ -150,7 +150,7 @@ public class ProjectService {
    * @return The project with the given ID as ProjectDTO.
    * @throws ProjectNotFoundException If no project with the given ID is found.
    */
-  public ProjectDTO getProject(ObjectId id) {
+  public ProjectDto getProject(ObjectId id) {
     return projectMapper.toDTO(getProjectById(id));
   }
 
@@ -174,7 +174,7 @@ public class ProjectService {
    * @return The project with the given name as ProjectDTO.
    * @throws ProjectNotFoundException If no project with the given name is found.
    */
-  public ProjectDTO getProjectByName(String projectName) {
+  public ProjectDto getProjectByName(String projectName) {
     logger.info("Fetching project with name: {}", projectName);
     Project project = projectRepository.findByProjectName(projectName)
         .orElseThrow(() -> {
@@ -222,8 +222,9 @@ public class ProjectService {
    * @throws UsernameNotFoundException If the user with the given email is not
    *                                   found.
    */
-  public Page<ProjectDTO> getAllProjects(String email, Pageable pageable) {
+  public Page<ProjectDto> getAllProjects(String email, Pageable pageable) {
     logger.info("Fetching all projects for email: {}", email);
+    validatePageable(pageable);
     User owner = getUserByEmail(email, "User not found for fetching projects: " + email);
     Page<Project> projects = projectRepository.findByOwnerId(new ObjectId(owner.getId()), pageable);
     if (projects.isEmpty()) {
@@ -245,7 +246,7 @@ public class ProjectService {
    *                                  update.
    */
   @Transactional
-  public ProjectDTO updateProject(ObjectId projectId, Project project) {
+  public ProjectDto updateProject(ObjectId projectId, Project project) {
     logger.info("Updating project with ID: {}", projectId);
     validateObjectId(projectId, "Project ID");
     validateProject(project);
@@ -275,24 +276,165 @@ public class ProjectService {
    */
   @Transactional
   public void deleteProject(ObjectId projectId) {
-    logger.info("Attempting to delete project with ID: {}", projectId);
+    logger.info("Attempting to soft delete project with ID: {}", projectId);
     validateObjectId(projectId, "Project ID");
-    projectRepository.findById(projectId)
+    Project project = getProjectById(projectId); // Fetch project first
+
+    try {
+      project.setDeleted(true);
+      project.setDeletedAt(new Date());
+      projectRepository.save(project);
+      logger.info("Project soft deleted successfully with ID: {}", projectId);
+
+      // Cascade soft delete to associated images
+      imageService.softDeleteAllImagesByProject(projectId);
+
+    } catch (Exception e) {
+      logger.error("Failed to soft delete project with ID: {}", projectId, e);
+      throw new RuntimeException("Failed to soft delete project: " + e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Permanently deletes a project by its ID.
+   * This method also deletes all images associated with the project.
+   * Intended to be called by the cleanup service.
+   *
+   * @param projectId The ID of the project to permanently delete.
+   * @throws ProjectNotFoundException If no project with the given ID is found.
+   * @throws RuntimeException         If an unexpected error occurs during project
+   *                                  deletion.
+   */
+  @Transactional
+  public void permanentlyDeleteProject(ObjectId projectId) {
+    logger.info("Attempting to permanently delete project with ID: {}", projectId);
+    validateObjectId(projectId, "Project ID");
+    Project project = projectRepository.findById(projectId)
         .orElseThrow(() -> {
-          logger.error("Project not found with ID: {}", projectId);
+          logger.error("Project not found for permanent deletion with ID: {}", projectId);
+          // If not found, it might have been deleted already, log and return
           return new ProjectNotFoundException("Project not found with ID: " + projectId);
         });
 
     try {
-      // Delete all images and their GEE data via ImageService
-      imageService.deleteAllImagesByProject(projectId);
+      // Permanently delete all images and their GEE data via ImageService
+      imageService.permanentlyDeleteAllImagesByProject(projectId);
+
+      // Remove project reference from owner's list
+      User owner = project.getOwner();
+      if (owner != null) {
+        owner.getProjects().removeIf(p -> p.getId().equals(projectId.toString()));
+        userRepository.save(owner);
+      }
+
+      // Remove project reference from shared users' lists
+      project.getSharedUsers().keySet().forEach(userId -> {
+        userRepository.findById(userId).ifPresent(sharedUser -> {
+          sharedUser.getSharedProjects().removeIf(p -> p.getId().equals(projectId.toString()));
+          userRepository.save(sharedUser);
+        });
+      });
+
       projectRepository.deleteById(projectId);
-      logger.info("Project and associated images deleted successfully with ID: {}", projectId);
+      logger.info("Project and associated data permanently deleted successfully with ID: {}", projectId);
 
     } catch (Exception e) {
-      logger.error("Failed to delete project with ID: {}", projectId, e);
-      throw new RuntimeException("Failed to delete project: " + e.getMessage(), e);
+      logger.error("Failed to permanently delete project with ID: {}", projectId, e);
+      throw new RuntimeException("Failed to permanently delete project: " + e.getMessage(), e);
     }
+  }
+
+  /**
+   * Restores a soft-deleted project.
+   *
+   * @param projectId The ID of the project to restore.
+   * @param email     The email of the user performing the action.
+   * @return The restored project as ProjectDTO.
+   * @throws ProjectNotFoundException If the project is not found or not deleted.
+   * @throws AccessDeniedException    If the user is not the owner.
+   */
+  @Transactional
+  public ProjectDto restoreProject(ObjectId projectId, String email) {
+    logger.info("Restoring project with ID: {} by email: {}", projectId, email);
+    Project project = projectRepository.findById(projectId)
+        .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: " + projectId));
+
+    validateOwner(project, email, "restore");
+
+    if (!project.isDeleted()) {
+      throw new IllegalStateException("Project is not deleted.");
+    }
+
+    project.setDeleted(false);
+    project.setDeletedAt(null);
+    project.setRetentionDays(null); // Reset retention days on restore
+    Project restoredProject = projectRepository.save(project);
+    logger.info("Project restored successfully: {}", projectId);
+
+    // Cascade restore to associated images
+    imageService.restoreAllImagesByProject(projectId);
+
+    return projectMapper.toDTO(restoredProject);
+  }
+
+  /**
+   * Updates the retention period for a soft-deleted project.
+   *
+   * @param projectId     The ID of the project.
+   * @param retentionDays The new retention period in days.
+   * @param email         The email of the user performing the action.
+   * @return The updated project as ProjectDTO.
+   * @throws ProjectNotFoundException If the project is not found or not deleted.
+   * @throws AccessDeniedException    If the user is not the owner.
+   * @throws IllegalArgumentException If retentionDays is negative.
+   */
+  @Transactional
+  public ProjectDto updateRetentionPeriod(ObjectId projectId, int retentionDays, String email) {
+    logger.info("Updating retention period for project ID: {} to {} days by email: {}", projectId, retentionDays,
+        email);
+    if (retentionDays < 0) {
+      throw new IllegalArgumentException("Retention period cannot be negative.");
+    }
+
+    Project project = projectRepository.findById(projectId)
+        .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: " + projectId));
+
+    validateOwner(project, email, "update retention period");
+
+    if (!project.isDeleted()) {
+      throw new IllegalStateException("Cannot update retention period for a project that is not deleted.");
+    }
+
+    project.setRetentionDays(retentionDays);
+    Project updatedProject = projectRepository.save(project);
+    logger.info("Retention period updated successfully for project: {}", projectId);
+    return projectMapper.toDTO(updatedProject);
+  }
+
+  /**
+   * Forces the permanent deletion of a soft-deleted project, bypassing retention.
+   *
+   * @param projectId The ID of the project to force delete.
+   * @param email     The email of the user performing the action (must be owner).
+   * @throws ProjectNotFoundException If the project is not found.
+   * @throws AccessDeniedException    If the user is not the owner.
+   * @throws IllegalStateException    If the project is not soft-deleted.
+   */
+  @Transactional
+  public void forceDeleteProject(ObjectId projectId, String email) {
+    logger.info("Force deleting project ID: {} by email: {}", projectId, email);
+    Project project = projectRepository.findById(projectId)
+            .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: " + projectId));
+
+    validateOwner(project, email, "force delete");
+
+    if (!project.isDeleted()) {
+      throw new IllegalStateException("Project is not soft-deleted. Cannot force delete.");
+    }
+
+    // Call the existing permanent delete logic
+    permanentlyDeleteProject(projectId);
+    logger.info("Project force deleted successfully: {}", projectId);
   }
 
   /**
@@ -311,7 +453,7 @@ public class ProjectService {
    * @throws IllegalArgumentException  If the sharing request is invalid.
    */
   @Transactional
-  public ProjectDTO shareProject(String projectId, String otherEmail, String currentEmail, PermissionLevel permission) {
+  public ProjectDto shareProject(String projectId, String otherEmail, String currentEmail, PermissionLevel permission) {
     logger.info("Sharing project with ID: {} with permission {} by email: {}", projectId, permission, currentEmail);
     Project project = getProjectById(new ObjectId(projectId));
     validateOwner(project, currentEmail, "share");
@@ -341,7 +483,7 @@ public class ProjectService {
    * @throws IllegalArgumentException  If the sharing request is invalid.
    */
   @Transactional
-  public ProjectDTO unshareProject(String projectId, String otherEmail, String currentEmail) {
+  public ProjectDto unshareProject(String projectId, String otherEmail, String currentEmail) {
     logger.info("Unsharing project with ID: {} by email: {}", projectId, currentEmail);
     Project project = getProjectById(new ObjectId(projectId));
     validateOwner(project, currentEmail, "unshare");
@@ -389,10 +531,12 @@ public class ProjectService {
    * @throws UsernameNotFoundException If the user with the given email is not
    *                                   found.
    */
-  public List<Project> getSharedWithMe(String email) {
+  public Page<ProjectDto> getSharedWithMe(String email, Pageable pageable) {
     logger.info("Fetching projects shared with email: {}", email);
+    validatePageable(pageable);
     User user = getUserByEmail(email, "User not found");
-    return projectRepository.findBySharedUsersContainsKey(user);
+    Page<Project> sharedProjects = projectRepository.findBySharedUsersContainsKeyPage(user, pageable);
+    return projectMapper.toDTOPage(sharedProjects);
   }
 
   /**
@@ -439,7 +583,7 @@ public class ProjectService {
    * @throws AccessDeniedException    If the user is not the owner of the project.
    */
   @Transactional
-  public ProjectDTO archiveProject(ObjectId projectId, String email) {
+  public ProjectDto archiveProject(ObjectId projectId, String email) {
     logger.info("Archiving project with ID: {} by email: {}", projectId, email);
     Project project = getProjectById(projectId);
     validateOwner(project, email, "archive");
@@ -449,7 +593,7 @@ public class ProjectService {
   }
 
   @Transactional
-  public ProjectDTO unarchiveProject(ObjectId projectId, String email) {
+  public ProjectDto unarchiveProject(ObjectId projectId, String email) {
     logger.info("Unarchiving project with ID: {} by email: {}", projectId, email);
     Project project = getProjectById(projectId);
     validateOwner(project, email, "unarchive");
@@ -462,22 +606,30 @@ public class ProjectService {
     return projectMapper.toDTO(projectRepository.save(project));
   }
 
-  public List<Project> getArchivedProjects(String email) {
+  public Page<ProjectDto> getArchivedProjects(String email, Pageable pageable) {
     logger.info("Fetching archived projects for email: {}", email);
+    validatePageable(pageable);
     User user = getUserByEmail(email, "User not found: " + email);
-    return projectRepository.findByOwnerAndArchivedTrue(user);
+    Page<Project> projects = projectRepository.findByOwnerAndArchivedTrue(user, pageable);
+    return projectMapper.toDTOPage(projects);
   }
 
-  public List<Project> searchProjects(String email, String query, int page, int size) {
-    logger.info("Searching projects for email: {} with query: {}, page: {}, size: {}", email, query, page, size);
+  public Page<ProjectDto> searchProjects(String email, String query, Pageable pageable) {
+    logger.info("Searching projects for email: {} with query: {}, page: {}, size: {}", email, query,
+        pageable.getPageNumber(), pageable.getPageSize());
+    validatePageable(pageable);
     User user = getUserByEmail(email, "User not found: " + email);
-    validatePageable(page, size);
-    Pageable pageable = PageRequest.of(page, size);
-    return projectRepository.findByOwnerAndSearchCriteria(user, query, pageable);
+    // validatePageable is implicitly handled by Pageable
+    // The repository method already returns List, need to convert to Page manually
+    // or change repo
+    // For now, let's assume the repository method needs changing.
+    // This line will cause an error until the repository is updated.
+    Page<Project> projects = projectRepository.findByOwnerAndSearchCriteria(user, query, pageable);
+    return projectMapper.toDTOPage(projects);
   }
 
   @Transactional
-  public ProjectDTO tagProject(ObjectId projectId, String tag, String email) {
+  public ProjectDto tagProject(ObjectId projectId, String tag, String email) {
     logger.info("Adding tag: {} to project ID: {} by email: {}", tag, projectId, email);
     validateString(tag, "Tag");
     Project project = getProjectById(projectId);
@@ -486,29 +638,31 @@ public class ProjectService {
     return projectMapper.toDTO(projectRepository.save(project));
   }
 
-  public List<Project> getProjectsByTag(String email, String tag) {
+  public Page<ProjectDto> getProjectsByTag(String email, String tag, Pageable pageable) {
     logger.info("Fetching projects by tag: {} for email: {}", tag, email);
+    validatePageable(pageable);
     validateString(tag, "Tag");
     User user = getUserByEmail(email, "User not found: " + email);
-    return projectRepository.findByOwnerAndTagsContaining(user, tag);
+    Page<Project> projects = projectRepository.findByOwnerAndTagsContaining(user, tag, pageable);
+    return projectMapper.toDTOPage(projects);
   }
 
   @Transactional
-  public ProjectDTO duplicateProject(ObjectId projectId, String newName, String email) {
+  public ProjectDto duplicateProject(ObjectId projectId, String newName, String email) {
     logger.info("Duplicating project ID: {} with new name: {} by email: {}", projectId, newName, email);
     validateString(newName, "New project name");
     Project original = getProjectById(projectId);
     User user = validateOwner(original, email, "duplicate");
     Project duplicate = Project.builder()
-      .projectName(newName)
-      .description(original.getDescription())
-      .owner(user)
-      .images(new HashSet<>(original.getImages()))
-      .sharedUsers(new HashMap<>())
-      .createdAt(new Date())
-      .updatedAt(new Date())
-      .lastAccessedTime(new Date())
-      .build();
+        .projectName(newName)
+        .description(original.getDescription())
+        .owner(user)
+        .images(new HashSet<>(original.getImages()))
+        .sharedUsers(new HashMap<>())
+        .createdAt(new Date())
+        .updatedAt(new Date())
+        .lastAccessedTime(new Date())
+        .build();
     try {
       return projectMapper.toDTO(projectRepository.save(duplicate));
     } catch (DuplicateKeyException e) {
@@ -518,7 +672,7 @@ public class ProjectService {
   }
 
   @Transactional
-  public ProjectDTO updateProjectStatus(ObjectId projectId, String status, String email) {
+  public ProjectDto updateProjectStatus(ObjectId projectId, String status, String email) {
     logger.info("Updating status of project ID: {} to: {} by email: {}", projectId, status, email);
     validateString(status, "Status");
     Project project = getProjectById(projectId);
@@ -527,11 +681,13 @@ public class ProjectService {
     return projectMapper.toDTO(projectRepository.save(project));
   }
 
-  public List<Project> getProjectsByStatus(String email, String status) {
+  public Page<ProjectDto> getProjectsByStatus(String email, String status, Pageable pageable) {
     logger.info("Fetching projects by status: {} for email: {}", status, email);
+    validatePageable(pageable);
     validateString(status, "Status");
     User user = getUserByEmail(email, "User not found: " + email);
-    return projectRepository.findByOwnerAndStatus(user, status);
+    Page<Project> projects = projectRepository.findByOwnerAndStatus(user, status, pageable);
+    return projectMapper.toDTOPage(projects);
   }
 
   public Map<String, Object> exportProject(ObjectId projectId, String email) {
@@ -551,8 +707,8 @@ public class ProjectService {
     // Fetch User objects first, then map to emails
     Set<ObjectId> sharedUserIdsForExport = project.getSharedUsers().keySet();
     List<String> sharedUserEmails = userRepository.findAllById(sharedUserIdsForExport).stream()
-                                                  .map(User::getEmail)
-                                                  .toList();
+        .map(User::getEmail)
+        .toList();
     exportData.put("sharedUsers", sharedUserEmails);
     exportData.put("imageCount", imageRepository.countByProject(project));
     exportData.put("lastAccessed", project.getLastAccessedTime());
@@ -573,21 +729,22 @@ public class ProjectService {
         logger.error("User {} does not own project: {}", email, project.getId());
         throw new AccessDeniedException("User does not own project: " + project.getId());
       }
-      deleteProject(new ObjectId(project.getId()));
+      // Use soft delete instead of permanent delete here
+      deleteProject(new ObjectId(project.getId())); // This now performs soft delete
     }
     logger.info("Bulk deletion successful for project IDs: {}", projectIds);
   }
 
   @Transactional
-  public ProjectDTO createProjectFromTemplate(String templateName, String newProjectName, String email)
+  public ProjectDto createProjectFromTemplate(String templateName, String newProjectName, String email)
       throws IOException {
     logger.info("Creating project from template: {} with name: {} for email: {}", templateName, newProjectName, email);
 
     // 1. Create the project in the database
     Project newProject = Project.builder()
-    .projectName(newProjectName)
-    .description("Project created from template: " + templateName)
-    .build();
+        .projectName(newProjectName)
+        .description("Project created from template: " + templateName)
+        .build();
     Project createdProject = createProject(newProject, email);
 
     Path templatePath = Paths.get("src/main/resources/project_templates", templateName);
@@ -641,9 +798,28 @@ public class ProjectService {
     }
   }
 
-  private void validatePageable(int page, int size) {
-    if (page < 0 || size <= 0) {
-      logger.error("Invalid pageable parameters: page={}, size={}", page, size);
+  /**
+   * Gets user email by their ObjectId
+   *
+   * @param userId The ObjectId of the user
+   * @return The user's email address
+   */
+  public String getUserEmailById(ObjectId userId) {
+    return userRepository.findById(userId)
+        .map(User::getEmail)
+        .orElseThrow(() -> {
+          logger.error("User not found with ID: {}", userId);
+          return new UsernameNotFoundException("User not found with ID: " + userId);
+        });
+  }
+
+  private void validatePageable(Pageable pageable) {
+    if (pageable == null) {
+      logger.error("Pageable cannot be null");
+      throw new IllegalArgumentException("Pageable cannot be null");
+    }
+    if (pageable.getPageNumber() < 0 || pageable.getPageSize() <= 0) {
+      logger.error("Invalid pageable parameters: page={}, size={}", pageable.getPageNumber(), pageable.getPageSize());
       throw new IllegalArgumentException("Page must be non-negative and size must be positive");
     }
   }
@@ -664,5 +840,21 @@ public class ProjectService {
       throw new AccessDeniedException("Only the project owner can " + action + " the project");
     }
     return user;
+  }
+
+  /**
+   * Retrieves soft-deleted projects for a user with pagination.
+   *
+   * @param email    The email of the user.
+   * @param pageable Pagination information.
+   * @return A page of soft-deleted projects as ProjectDTO.
+   * @throws UsernameNotFoundException If the user is not found.
+   */
+  public Page<ProjectDto> getDeletedProjects(String email, Pageable pageable) {
+    logger.info("Fetching soft-deleted projects for email: {}", email);
+    validatePageable(pageable);
+    User user = getUserByEmail(email, "User not found: " + email);
+    Page<Project> projects = projectRepository.findByOwnerAndDeletedTrue(user, pageable);
+    return projectMapper.toDTOPage(projects);
   }
 }
