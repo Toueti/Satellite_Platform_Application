@@ -91,6 +91,10 @@ public class ImageService {
             image.setUpdatedAt(new Date());
 
             image = imageRepository.save(image);
+            // Ensure the images set is initialized before adding to it
+            if (project.getImages() == null) {
+                project.setImages(new java.util.HashSet<>());
+            }
             project.getImages().add(image);
             projectRepository.save(project);
 

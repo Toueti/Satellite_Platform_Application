@@ -141,10 +141,10 @@ public interface ImageRepository extends MongoRepository<Image, String> {
      *
      * @param imageName The name of the image.
      * @param projectId The ID of the project.
-     * @return True if the image exists, false otherwise.
+      * @return True if the image exists, false otherwise.
      */
-
-    @Query("{ 'project.$projectId': ?0, 'imageName': ?1 }")
+    // Corrected query to use project.$id, correct parameter indices, and exists=true
+    @Query(value = "{ 'project.$id': ?1, 'imageName': ?0 }", exists = true)
     boolean existsByNameAndProject_Id(String imageName, ObjectId projectId);
 
     /**
