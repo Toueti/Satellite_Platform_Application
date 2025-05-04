@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package com.enit.satellite_platform.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.enit.satellite_platform.grpc";
+option java_outer_classname = "GeoSpatialProto";
+
+
+service GeoSpatialService {
+
+  rpc ProcessData (PayloadRequest) returns (PayloadResponse) {}
+}
+
+
+message PayloadRequest {
+  map<string, bytes> data = 1;
+  map<string, string> metadata = 2;
+}
+
+
+message PayloadResponse {
+  map<string, bytes> data = 1;        
+  map<string, string> metadata = 2;  
+}

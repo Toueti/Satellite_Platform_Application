@@ -1,0 +1,11 @@
+{
+    "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+    "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+    "analysis_type": "evi",
+    "start_date": "2023-01-01",
+    "end_date": "2023-12-31",
+    "place_name": "Zurich",
+    "scale": 30,
+    "bands": ["B8", "B4"],
+    "custom_params":""
+}

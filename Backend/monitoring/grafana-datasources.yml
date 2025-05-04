@@ -1,0 +1,10 @@
+# grafana-datasources.yml
+apiVersion: 1
+
+datasources:
+  - name: Prometheus # Name displayed in Grafana
+    type: prometheus
+    access: proxy # Access mode (proxy or direct)
+    url: http://prometheus:9090 # URL of the Prometheus instance (using Docker service name)
+    isDefault: true # Make this the default datasource
+    editable: true # Allow editing in Grafana UI

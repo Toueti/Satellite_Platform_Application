@@ -1,0 +1,86 @@
+@baseUrl = http://localhost:8080/api
+@email = hyperar69@gmail.com
+@password = 1234
+@username = testuser
+@userId = # Will be set after signup or retrieved manually
+@token = # Will be captured from signin response
+@resetToken = # Will be obtained from forgot-password process (e.g., email)
+
+### Register a new user
+# @name signup
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "roles": ["THEMATICIAN"]
+}
+
+#return type : plain text :User registered successfully.
+
+### Authenticate user (Sign in)
+# @name signin
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "username": "{{email}}",
+  "password": "{{password}}"
+}
+
+#return type : JSON:
+# {
+#   "token": "eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90N0BnbWFpbC5jb20iLCJlbWFpbCI6InlvYnRvdDdAZ21haWwuY29tIiwicm9sZXMiOlsiUk9MRV9USEVNQVRJQ0lBTiJdLCJzdWIiOiJ5b2J0b3Q3QGdtYWlsLmNvbSIsImlhdCI6MTc0Mzg0NzE0NywiZXhwIjoxNzQzOTMzNTQ3fQ.HdNAlQfyipAGL8t_-JiGClCcL-Pk6SDB5J-_00qGteg",
+#   "userId": "67f0fec15ef6b30b9b40ef4c"
+# }
+
+> {%
+    client.global.set("token", response.body.accessToken);
+    client.global.set("userId", response.body.id); // Assuming the response includes the user ID
+%}
+
+### Get user by ID
+# Requires a valid userId
+GET {{baseUrl}}/thematician/account/{{userId}}
+Authorization: Bearer {{token}}
+
+Accept: application/json
+
+### Update user account
+# Requires authentication (token) and a valid userId
+PUT {{baseUrl}}/account/update/{{userId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "{{username}}_updated",
+  "email": "{{email}}",
+  "currentPassword": "{{password}}",
+  "newPassword": "newPassword456" 
+}
+
+### Initiate password reset
+POST {{baseUrl}}/forgot-password
+Content-Type: application/json
+
+"{{email}}"
+
+
+### Reset password with token
+# Requires a valid resetToken obtained via email/other means
+POST {{baseUrl}}/reset-password
+Content-Type: application/json
+
+{
+  "token": "{{resetToken}}",
+  "newPassword": "newPassword789"
+}
+
+
+### Delete user account
+# Requires authentication (token) and a valid userId
+# Be careful using this, it permanently deletes the user!
+DELETE {{baseUrl}}/thematician/signout/{{userId}}
+Authorization: Bearer {{token}}

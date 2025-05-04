@@ -1,0 +1,1098 @@
+### Image Metadata Fetch
+POST http://localhost:5000/gee/get_images
+Content-Type: application/json
+
+{
+        "collection_id": "COPERNICUS/S2_HARMONIZED",
+        "region": {"type": "Polygon", "coordinates": [[[8.4, 47.2], [8.7, 47.2], [8.7, 47.5], [8.4, 47.5], [8.4, 47.2]]]},
+        "start_date": "2021-05-15",
+        "end_date": "2021-07-15",
+        "max_cloud_cover": 40,
+        "images_number": 1,
+        "bands": ["B4", "B3", "B2"],
+        "visualization_params": {
+            "bands": ["B4", "B3", "B2"],
+            "min": 0,
+            "max": 3000
+        },
+        "dimensions": {"width": 2048, "height": 2048},
+        "scale": 10,
+        "crs": "EPSG:4326",
+        "export_format": "GeoTIFF",
+        "export_destination": "Google Drive",
+        "metadata": true
+        }
+
+###
+
+### /gee/extract
+POST http://localhost:5000/gee/extract
+Content-Type: application/json
+
+{
+    "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+    "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+    "analysis_type": "evi",
+    "start_date": "2023-01-01",
+    "end_date": "2023-12-31",
+    "place_name": "Zurich",
+    "scale": 30,
+    "bands": ["B8", "B4"],
+    "custom_params":""
+}
+
+###
+GET http://127.0.0.1:5000/gee/status/1
+
+
+### NDVI Calculation
+POST http://127.0.0.1:5000/gee/ndvi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "Zurich"
+}
+
+### EVI Calculation
+POST http://localhost:5000/gee/evi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Water Bodies Detection
+POST http://localhost:5000/gee/land_cover
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "threshold": 0.1,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Change Detection
+POST http://localhost:5000/gee/change_detection
+Content-Type: application/json
+
+{
+  "imageIdBefore": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "imageIdAfter": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "threshold": 0.2,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Land Cover Analysis
+POST http://localhost:5000/gee/land_cover
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "classification_band":"Map",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 250,
+  "detailed_metrics":"True",
+    "temporal_analysis":"True",
+  "place_name": "TestRegion"
+}
+
+### Image Metadata
+POST http://localhost:5000//gee/metadata
+Content-Type: application/json
+
+{
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "startDate": "2021-01-01",
+  "endDate": "2021-12-31",
+  "maxCloudCover": 20
+}
+
+### Slope Calculation
+POST http://localhost:5000/api/slope
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 100,
+  "place_name": "TestRegion",
+  "bands" : ["slope"]
+}
+
+### Aspect Calculation
+POST http://localhost:5000/api/aspect
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Hillshade Generation
+POST http://localhost:5000/api/hillshade
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "azimuth": 0,
+  "altitude": 0,
+  "scale": 1000,
+  "place_name": "TestRegion"
+}
+
+### Fire Detection
+POST http://localhost:5000/api/fire
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "threshold": 340,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Time Series Analysis
+POST http://localhost:5000/api/timeseries
+Content-Type: application/json
+
+{
+  "collection_id": "COPERNICUS/S2_HARMONIZED",
+ "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "index": "NDVI",
+  "interval": "month",
+  "place_name": "TestRegion"
+}
+
+### Agriculture Analysis
+POST http://localhost:5000/api/agriculture
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Zonal Statistics
+POST http://localhost:5000/api/zonal_stats
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Histogram
+POST http://localhost:5000/api/histogram
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "band": "B4",
+  "bins": 50,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Image URLs
+POST http://localhost:5000/api/image_urls
+Content-Type: application/json
+
+{
+  "collection_id": "COPERNICUS/S2_HARMONIZED",
+  "region": {"type": "Polygon", "coordinates": [[[10, 45], [11, 45], [11, 46], [10, 46], [10, 45]]]},
+  "place_name": "TestRegion",
+  "start_date": "2023-01-01",
+  "end_date": "2023-12-31",
+  "scale": 10,
+    "thumbnail_dimensions": "256x256",
+    "check_existing": false,
+  "vis_params": {
+    "bands": ["B4", "B3", "B2"],
+    "min": 0,
+    "max": 3000
+  }
+}
+
+### List Images
+get http://localhost:5000/drive/list_images
+Content-Type: application/json
+
+### Available Storage
+GET http://localhost:5000/drive/available_storage
+
+
+### Retrieve Image
+POST http://localhost:5000/drive/retrieve
+Content-Type: application/json
+
+{
+  "file_id": "1TR7nncsmwdCRzGoBqp59v3DL_NlpNH1H"
+}
+
+### Update Image
+POST http://localhost:5000/api/drive/update
+Content-Type: application/json
+
+{
+  "file_id": "16T8w-PfzRfFspOASVMx_jFbdB2uFIysF",
+  "place_name": "TestRegion_Renamed.tif"
+}
+
+### Delete Image
+DELETE http://localhost:5000/drive/delete_image/15Beb6x_OyQGakhZBcYDyHszcFXaaeDMS
+
+####
+POST http://localhost:5000/drive/delete_images
+Content-Type: application/json
+  
+{
+  "images": [
+    {
+      "id": "1-DHhqPCgqj8fGyE3xxFg5CA0a9wz6luU",
+      "name": "region_Slope_20250302_005815-0000032768-0000393216.tif",
+      "url": "https://drive.google.com/file/d/1-DHhqPCgqj8fGyE3xxFg5CA0a9wz6luU/view?usp=drivesdk"
+    },
+    {
+      "id": "1cSswXT2s9tf3FmBfmVnkenSwIDC9goi7",
+      "name": "region_Slope_20250302_005815-0000032768-0000360448.tif",
+      "url": "https://drive.google.com/file/d/1cSswXT2s9tf3FmBfmVnkenSwIDC9goi7/view?usp=drivesdk"
+    },
+    {
+      "id": "1Il8xjd_8U5Q0DN6XlxENcJE8tlOQji_T",
+      "name": "region_Slope_20250302_005815-0000032768-0000327680.tif",
+      "url": "https://drive.google.com/file/d/1Il8xjd_8U5Q0DN6XlxENcJE8tlOQji_T/view?usp=drivesdk"
+    },
+    {
+      "id": "1EOOBoFyUJ09hPKFV84Zf3sX0VPxwuhr6",
+      "name": "region_Slope_20250302_005815-0000032768-0000294912.tif",
+      "url": "https://drive.google.com/file/d/1EOOBoFyUJ09hPKFV84Zf3sX0VPxwuhr6/view?usp=drivesdk"
+    },
+    {
+      "id": "1yULlFPsxFFtxsCvyvoh6C0BV-W1xgFtX",
+      "name": "region_Slope_20250302_005815-0000032768-0000262144.tif",
+      "url": "https://drive.google.com/file/d/1yULlFPsxFFtxsCvyvoh6C0BV-W1xgFtX/view?usp=drivesdk"
+    },
+    {
+      "id": "1-HLHFLpuKIj_9v4thEsV70wOoHMoKAyv",
+      "name": "region_Slope_20250302_005815-0000032768-0000229376.tif",
+      "url": "https://drive.google.com/file/d/1-HLHFLpuKIj_9v4thEsV70wOoHMoKAyv/view?usp=drivesdk"
+    },
+    {
+      "id": "1hqOjsofKcB-x5ADE7wWEmPzcjyqD4ktp",
+      "name": "region_Slope_20250302_005815-0000032768-0000196608.tif",
+      "url": "https://drive.google.com/file/d/1hqOjsofKcB-x5ADE7wWEmPzcjyqD4ktp/view?usp=drivesdk"
+    },
+    {
+      "id": "15qrpnIWHOj1RnmbEZ6h_jq-xO8IiuXd1",
+      "name": "region_Slope_20250302_005815-0000032768-0000131072.tif",
+      "url": "https://drive.google.com/file/d/15qrpnIWHOj1RnmbEZ6h_jq-xO8IiuXd1/view?usp=drivesdk"
+    },
+    {
+      "id": "1i1Xqv7psLddIsE7sH8MiZQZw-ULnRoQd",
+      "name": "region_Slope_20250302_005815-0000032768-0000098304.tif",
+      "url": "https://drive.google.com/file/d/1i1Xqv7psLddIsE7sH8MiZQZw-ULnRoQd/view?usp=drivesdk"
+    },
+    {
+      "id": "1teFfNQ8wrW3nNkpqFJJgj-SuouAKih91",
+      "name": "region_Slope_20250302_005815-0000032768-0000065536.tif",
+      "url": "https://drive.google.com/file/d/1teFfNQ8wrW3nNkpqFJJgj-SuouAKih91/view?usp=drivesdk"
+    },
+    {
+      "id": "1BY0SEeEy5-Lu7HCQqueuQNGyltd38JHo",
+      "name": "region_Slope_20250302_005815-0000032768-0000032768.tif",
+      "url": "https://drive.google.com/file/d/1BY0SEeEy5-Lu7HCQqueuQNGyltd38JHo/view?usp=drivesdk"
+    },
+    {
+      "id": "1_BvxW23aS5eZ_GMjQSNip_fEwMCyIqBi",
+      "name": "region_Slope_20250302_005815-0000032768-0000000000.tif",
+      "url": "https://drive.google.com/file/d/1_BvxW23aS5eZ_GMjQSNip_fEwMCyIqBi/view?usp=drivesdk"
+    },
+    {
+      "id": "1pn6NFmZJ7Ul_lZJF2YRlMxhXRe8VMUxx",
+      "name": "region_Slope_20250302_005815-0000000000-0001310720.tif",
+      "url": "https://drive.google.com/file/d/1pn6NFmZJ7Ul_lZJF2YRlMxhXRe8VMUxx/view?usp=drivesdk"
+    },
+    {
+      "id": "1IPn6Njx2z8b9XMvg9bwL16VDNShsxSqB",
+      "name": "region_Slope_20250302_005815-0000000000-0001277952.tif",
+      "url": "https://drive.google.com/file/d/1IPn6Njx2z8b9XMvg9bwL16VDNShsxSqB/view?usp=drivesdk"
+    },
+    {
+      "id": "1thcyweIwRjYemIzSToiV35C0_Qk1mKWn",
+      "name": "region_Slope_20250302_005815-0000000000-0001245184.tif",
+      "url": "https://drive.google.com/file/d/1thcyweIwRjYemIzSToiV35C0_Qk1mKWn/view?usp=drivesdk"
+    },
+    {
+      "id": "15u_ewoN-MN4uudgV-4IsG3w_egfDDQAb",
+      "name": "region_Slope_20250302_005815-0000000000-0001212416.tif",
+      "url": "https://drive.google.com/file/d/15u_ewoN-MN4uudgV-4IsG3w_egfDDQAb/view?usp=drivesdk"
+    },
+    {
+      "id": "1fRkSS7fzYxYa8jitLX2nJsednuyL0vmp",
+      "name": "region_Slope_20250302_005815-0000000000-0001179648.tif",
+      "url": "https://drive.google.com/file/d/1fRkSS7fzYxYa8jitLX2nJsednuyL0vmp/view?usp=drivesdk"
+    },
+    {
+      "id": "1ipLG-FGFpeh7vNaMMmVfhnkX_x-UxOdk",
+      "name": "region_Slope_20250302_005815-0000000000-0001146880.tif",
+      "url": "https://drive.google.com/file/d/1ipLG-FGFpeh7vNaMMmVfhnkX_x-UxOdk/view?usp=drivesdk"
+    },
+    {
+      "id": "1V-JKYkxdV9dCOAD2SqwJihx59JVq-jLN",
+      "name": "region_Slope_20250302_005815-0000000000-0001114112.tif",
+      "url": "https://drive.google.com/file/d/1V-JKYkxdV9dCOAD2SqwJihx59JVq-jLN/view?usp=drivesdk"
+    },
+    {
+      "id": "1fzTF4kNxOv5CG01p2qE3rZ6QFDc9avxM",
+      "name": "region_Slope_20250302_005815-0000000000-0001081344.tif",
+      "url": "https://drive.google.com/file/d/1fzTF4kNxOv5CG01p2qE3rZ6QFDc9avxM/view?usp=drivesdk"
+    },
+    {
+      "id": "1-VQVZQe9UqCwbi_mlDWWPvcdo5QbGuE3",
+      "name": "region_Slope_20250302_005815-0000000000-0001048576.tif",
+      "url": "https://drive.google.com/file/d/1-VQVZQe9UqCwbi_mlDWWPvcdo5QbGuE3/view?usp=drivesdk"
+    },
+    {
+      "id": "10pQow_dFtdY6uMbnzFTVAFiBht3lg4WG",
+      "name": "region_Slope_20250302_005815-0000000000-0001015808.tif",
+      "url": "https://drive.google.com/file/d/10pQow_dFtdY6uMbnzFTVAFiBht3lg4WG/view?usp=drivesdk"
+    },
+    {
+      "id": "1NyITlryCjpmHJ1MnBt473Eg47IEaGmXK",
+      "name": "region_Slope_20250302_005815-0000000000-0000983040.tif",
+      "url": "https://drive.google.com/file/d/1NyITlryCjpmHJ1MnBt473Eg47IEaGmXK/view?usp=drivesdk"
+    },
+    {
+      "id": "1GykWYEcr8ZE5nCeJFNzt1ebwuO7Uuhtc",
+      "name": "region_Slope_20250302_005815-0000000000-0000950272.tif",
+      "url": "https://drive.google.com/file/d/1GykWYEcr8ZE5nCeJFNzt1ebwuO7Uuhtc/view?usp=drivesdk"
+    },
+    {
+      "id": "1dNadc7P9TpTFALb5Pkvb5SUC4Q0gWD6X",
+      "name": "region_Slope_20250302_005815-0000000000-0000917504.tif",
+      "url": "https://drive.google.com/file/d/1dNadc7P9TpTFALb5Pkvb5SUC4Q0gWD6X/view?usp=drivesdk"
+    },
+    {
+      "id": "1RpCsbFWRFIWkNfuM2ufGoguanbzJbJx3",
+      "name": "region_Slope_20250302_005815-0000000000-0000884736.tif",
+      "url": "https://drive.google.com/file/d/1RpCsbFWRFIWkNfuM2ufGoguanbzJbJx3/view?usp=drivesdk"
+    },
+    {
+      "id": "1h7JJGEjaVBRpOy_QADcvZiisZrzPT5jq",
+      "name": "region_Slope_20250302_005815-0000000000-0000851968.tif",
+      "url": "https://drive.google.com/file/d/1h7JJGEjaVBRpOy_QADcvZiisZrzPT5jq/view?usp=drivesdk"
+    },
+    {
+      "id": "1OqCNXBzlyNINjrHgx3DpVGQTjeGy0czt",
+      "name": "region_Slope_20250302_005815-0000000000-0000819200.tif",
+      "url": "https://drive.google.com/file/d/1OqCNXBzlyNINjrHgx3DpVGQTjeGy0czt/view?usp=drivesdk"
+    },
+    {
+      "id": "1YjFGTSwvzZIPbtfgJyJqEVJdqkLeAmI5",
+      "name": "region_Slope_20250302_005815-0000000000-0000786432.tif",
+      "url": "https://drive.google.com/file/d/1YjFGTSwvzZIPbtfgJyJqEVJdqkLeAmI5/view?usp=drivesdk"
+    },
+    {
+      "id": "1Qi4nERBV1_WVqag1z-WeKpRWRJjAssHl",
+      "name": "region_Slope_20250302_005815-0000000000-0000753664.tif",
+      "url": "https://drive.google.com/file/d/1Qi4nERBV1_WVqag1z-WeKpRWRJjAssHl/view?usp=drivesdk"
+    },
+    {
+      "id": "1BCawrKQ16etyqrwfH7S0r0YNf49y2QAd",
+      "name": "region_Slope_20250302_005815-0000000000-0000720896.tif",
+      "url": "https://drive.google.com/file/d/1BCawrKQ16etyqrwfH7S0r0YNf49y2QAd/view?usp=drivesdk"
+    },
+    {
+      "id": "1lxXcjKIB9vVEJaBmgBI5A30PsrHxyJ9R",
+      "name": "region_Slope_20250302_005815-0000000000-0000688128.tif",
+      "url": "https://drive.google.com/file/d/1lxXcjKIB9vVEJaBmgBI5A30PsrHxyJ9R/view?usp=drivesdk"
+    },
+    {
+      "id": "1_uw_w4mbFU5pzO6qszNsfV85tYONuRBG",
+      "name": "region_Slope_20250302_005815-0000000000-0000655360.tif",
+      "url": "https://drive.google.com/file/d/1_uw_w4mbFU5pzO6qszNsfV85tYONuRBG/view?usp=drivesdk"
+    },
+    {
+      "id": "1hdvLYDRa1PToLo4VrLeaKfSoGSha7pJR",
+      "name": "region_Slope_20250302_005815-0000000000-0000622592.tif",
+      "url": "https://drive.google.com/file/d/1hdvLYDRa1PToLo4VrLeaKfSoGSha7pJR/view?usp=drivesdk"
+    },
+    {
+      "id": "10RJUWOpjcLEOfqLWfYoLAj4hHzG_u-p7",
+      "name": "region_Slope_20250302_005815-0000000000-0000589824.tif",
+      "url": "https://drive.google.com/file/d/10RJUWOpjcLEOfqLWfYoLAj4hHzG_u-p7/view?usp=drivesdk"
+    },
+    {
+      "id": "107osHm-tMtw-RZhAHWCJ-vnZt0Wgvd-x",
+      "name": "region_Slope_20250302_005815-0000000000-0000557056.tif",
+      "url": "https://drive.google.com/file/d/107osHm-tMtw-RZhAHWCJ-vnZt0Wgvd-x/view?usp=drivesdk"
+    },
+    {
+      "id": "1lCHUu98kL9Ef8BbG5DkXd4J6RebvladX",
+      "name": "region_Slope_20250302_005815-0000000000-0000524288.tif",
+      "url": "https://drive.google.com/file/d/1lCHUu98kL9Ef8BbG5DkXd4J6RebvladX/view?usp=drivesdk"
+    },
+    {
+      "id": "1gPo3MppoXJFAZtH7O_pYb7Gk3NjPTSah",
+      "name": "region_Slope_20250302_005815-0000000000-0000491520.tif",
+      "url": "https://drive.google.com/file/d/1gPo3MppoXJFAZtH7O_pYb7Gk3NjPTSah/view?usp=drivesdk"
+    },
+    {
+      "id": "1ipf94Hx_7s_rWNMlYLAc9ktkW-2BcWZy",
+      "name": "region_Slope_20250302_005815-0000000000-0000458752.tif",
+      "url": "https://drive.google.com/file/d/1ipf94Hx_7s_rWNMlYLAc9ktkW-2BcWZy/view?usp=drivesdk"
+    },
+    {
+      "id": "1P0sUO6b6drJO8ZDJaua_60FulGhCNmKO",
+      "name": "region_Slope_20250302_005815-0000000000-0000425984.tif",
+      "url": "https://drive.google.com/file/d/1P0sUO6b6drJO8ZDJaua_60FulGhCNmKO/view?usp=drivesdk"
+    },
+    {
+      "id": "1j_w-xeAbLG-kmHlRLXpSiRxApRCLGBBU",
+      "name": "region_Slope_20250302_005815-0000000000-0000393216.tif",
+      "url": "https://drive.google.com/file/d/1j_w-xeAbLG-kmHlRLXpSiRxApRCLGBBU/view?usp=drivesdk"
+    },
+    {
+      "id": "1S_nJOvsn1ozTibxFzsqQc1ELg4AFWiMZ",
+      "name": "region_Slope_20250302_005815-0000000000-0000360448.tif",
+      "url": "https://drive.google.com/file/d/1S_nJOvsn1ozTibxFzsqQc1ELg4AFWiMZ/view?usp=drivesdk"
+    },
+    {
+      "id": "1up6lfkqeJgRpTWJebXFlizZoFCbhP5JK",
+      "name": "region_Slope_20250302_005815-0000000000-0000327680.tif",
+      "url": "https://drive.google.com/file/d/1up6lfkqeJgRpTWJebXFlizZoFCbhP5JK/view?usp=drivesdk"
+    },
+    {
+      "id": "1Z0khI1rGcKznv2KqIB62fBEPzRx7W0BJ",
+      "name": "region_Slope_20250302_005815-0000000000-0000294912.tif",
+      "url": "https://drive.google.com/file/d/1Z0khI1rGcKznv2KqIB62fBEPzRx7W0BJ/view?usp=drivesdk"
+    },
+    {
+      "id": "1iKGN5EWjfeek0bvBw2iJUb63X3W9AO9K",
+      "name": "region_Slope_20250302_005815-0000000000-0000262144.tif",
+      "url": "https://drive.google.com/file/d/1iKGN5EWjfeek0bvBw2iJUb63X3W9AO9K/view?usp=drivesdk"
+    },
+    {
+      "id": "1nEG0cU3gmjPcGeJKLw4AtfU2C8wSzEUy",
+      "name": "region_Slope_20250302_005815-0000000000-0000229376.tif",
+      "url": "https://drive.google.com/file/d/1nEG0cU3gmjPcGeJKLw4AtfU2C8wSzEUy/view?usp=drivesdk"
+    },
+    {
+      "id": "1kpNlA_ruIiF-Vi9t8rdM5c5ZGUVVODkv",
+      "name": "region_Slope_20250302_005815-0000000000-0000196608.tif",
+      "url": "https://drive.google.com/file/d/1kpNlA_ruIiF-Vi9t8rdM5c5ZGUVVODkv/view?usp=drivesdk"
+    },
+    {
+      "id": "1yp701AG9g9yZK4ZCUUkWgXswrsrjo7-U",
+      "name": "region_Slope_20250302_005815-0000000000-0000163840.tif",
+      "url": "https://drive.google.com/file/d/1yp701AG9g9yZK4ZCUUkWgXswrsrjo7-U/view?usp=drivesdk"
+    },
+    {
+      "id": "1_gFdn1bNuBFA7dojm-i4cqZL-9tf4dZJ",
+      "name": "region_Slope_20250302_005815-0000000000-0000131072.tif",
+      "url": "https://drive.google.com/file/d/1_gFdn1bNuBFA7dojm-i4cqZL-9tf4dZJ/view?usp=drivesdk"
+    },
+    {
+      "id": "1emkB4ykAReNg8vZXeVhfk2ky8n4Y0ewr",
+      "name": "region_Slope_20250302_005815-0000000000-0000098304.tif",
+      "url": "https://drive.google.com/file/d/1emkB4ykAReNg8vZXeVhfk2ky8n4Y0ewr/view?usp=drivesdk"
+    },
+    {
+      "id": "1K41Gt45GK3NL-8FiNOTA7rhLeb-3oTlg",
+      "name": "region_Slope_20250302_005815-0000000000-0000065536.tif",
+      "url": "https://drive.google.com/file/d/1K41Gt45GK3NL-8FiNOTA7rhLeb-3oTlg/view?usp=drivesdk"
+    },
+    {
+      "id": "1C3Sy1RzmsOwQgyKdGa7lTHhXzlks4aOV",
+      "name": "region_Slope_20250302_005815-0000000000-0000032768.tif",
+      "url": "https://drive.google.com/file/d/1C3Sy1RzmsOwQgyKdGa7lTHhXzlks4aOV/view?usp=drivesdk"
+    },
+    {
+      "id": "11U8laOyn4tM1_wtiyZsHxDyXa9Bsl7VS",
+      "name": "region_Slope_20250302_005815-0000000000-0000000000.tif",
+      "url": "https://drive.google.com/file/d/11U8laOyn4tM1_wtiyZsHxDyXa9Bsl7VS/view?usp=drivesdk"
+    },
+    {
+      "id": "1J3XZa_kxAt4vhTa44Y-u6uWUJrcdozsL",
+      "name": "region_NDVI_20250301_225331.tif",
+      "url": "https://drive.google.com/file/d/1J3XZa_kxAt4vhTa44Y-u6uWUJrcdozsL/view?usp=drivesdk"
+    },
+    {
+      "id": "1S1kYazTEnTsZsYU8rAnIDRpsZbQUV3_-",
+      "name": "France_GetImage_2025-03-01-0000026880-0000026880.tif",
+      "url": "https://drive.google.com/file/d/1S1kYazTEnTsZsYU8rAnIDRpsZbQUV3_-/view?usp=drivesdk"
+    },
+    {
+      "id": "1DCQ1gV1ZRwHsVMpp9UxMcu0h4ysBkjtQ",
+      "name": "France_GetImage_2025-03-01-0000026880-0000000000.tif",
+      "url": "https://drive.google.com/file/d/1DCQ1gV1ZRwHsVMpp9UxMcu0h4ysBkjtQ/view?usp=drivesdk"
+    },
+    {
+      "id": "1RfGln7pHCFGZdaam8GP7rc0dWOgkt2pV",
+      "name": "France_GetImage_2025-03-01-0000000000-0000026880.tif",
+      "url": "https://drive.google.com/file/d/1RfGln7pHCFGZdaam8GP7rc0dWOgkt2pV/view?usp=drivesdk"
+    },
+    {
+      "id": "1VGpYp1vAS9dEr1BiL6uGewwNDAGLlBsJ",
+      "name": "France_GetImage_2025-03-01-0000000000-0000000000.tif",
+      "url": "https://drive.google.com/file/d/1VGpYp1vAS9dEr1BiL6uGewwNDAGLlBsJ/view?usp=drivesdk"
+    },
+    {
+      "id": "1Zl33CVMSpTuxs_DNoj--srpzrVMBUKWR",
+      "name": "region_NDVI_2025-03-01.tif",
+      "url": "https://drive.google.com/file/d/1Zl33CVMSpTuxs_DNoj--srpzrVMBUKWR/view?usp=drivesdk"
+    },
+    {
+      "id": "11-KLdz00Ya_KDvpI7MAbU2uwS5qRgQYf",
+      "name": "region_FireHotspots_2025-03-01.tif",
+      "url": "https://drive.google.com/file/d/11-KLdz00Ya_KDvpI7MAbU2uwS5qRgQYf/view?usp=drivesdk"
+    },
+    {
+      "id": "1eY6udxofLPXtvwGvaUF5DTQC0nqII32m",
+      "name": "region_ChangeDetection_2025-03-01.tif",
+      "url": "https://drive.google.com/file/d/1eY6udxofLPXtvwGvaUF5DTQC0nqII32m/view?usp=drivesdk"
+    },
+    {
+      "id": "1RbkObfeIbHtMvseOnnHmY145ofFJjDcQ",
+      "name": "region_WaterBodies_2025-03-01.tif",
+      "url": "https://drive.google.com/file/d/1RbkObfeIbHtMvseOnnHmY145ofFJjDcQ/view?usp=drivesdk"
+    },
+    {
+      "id": "19wR_A8OfiDdAB9UQ2fpN0S2NL0lq_Hhz",
+      "name": "region_EVI_2025-03-01.tif",
+      "url": "https://drive.google.com/file/d/19wR_A8OfiDdAB9UQ2fpN0S2NL0lq_Hhz/view?usp=drivesdk"
+    },
+    {
+      "id": "1MtSe9LdwHcA_ux-6GaOaCQCRxTX1zV1s",
+      "name": "region_NDVI_2025-03-01.tif",
+      "url": "https://drive.google.com/file/d/1MtSe9LdwHcA_ux-6GaOaCQCRxTX1zV1s/view?usp=drivesdk"
+    },
+    {
+      "id": "1o4ZgxnokqwVDJi4GuIu0UbvC95xa0YZ7",
+      "name": "France_full_res_2023-01-01-0000026880-0000026880.tif",
+      "url": "https://drive.google.com/file/d/1o4ZgxnokqwVDJi4GuIu0UbvC95xa0YZ7/view?usp=drivesdk"
+    },
+    {
+      "id": "1QiN_DFJ3agZ6pYjOZxoEObCsn6cB9HyC",
+      "name": "France_full_res_2023-01-01-0000026880-0000000000.tif",
+      "url": "https://drive.google.com/file/d/1QiN_DFJ3agZ6pYjOZxoEObCsn6cB9HyC/view?usp=drivesdk"
+    },
+    {
+      "id": "1cJqQ_m_wqDMMNe7kN309H7FmG6V6c9y5",
+      "name": "France_full_res_2023-01-01-0000000000-0000026880.tif",
+      "url": "https://drive.google.com/file/d/1cJqQ_m_wqDMMNe7kN309H7FmG6V6c9y5/view?usp=drivesdk"
+    },
+    {
+      "id": "1mx9ZpF-b83xB409V5qmzDyu0ArvvSPHn",
+      "name": "France_full_res_2023-01-01-0000000000-0000000000.tif",
+      "url": "https://drive.google.com/file/d/1mx9ZpF-b83xB409V5qmzDyu0ArvvSPHn/view?usp=drivesdk"
+    }
+  ]
+}
+
+### Create Folder
+POST http://localhost:5000/api/drive/create_folder
+Content-Type: application/json
+
+{
+  "folder_name": "TestSubFolder"
+}
+
+### List Folders
+POST http://localhost:5000/api/drive/list_folders
+Content-Type: application/json
+
+{}
+
+### Update Folder
+POST http://localhost:5000/api/drive/update_folder
+Content-Type: application/json
+
+{
+  "folder_id": "your_folder_id",
+  "new_name": "new_folder_name",
+  "new_parent_id": "new_parent_folder_id"
+}
+
+### Delete Folder
+POST http://localhost:5000/api/drive/delete_folder
+Content-Type: application/json
+
+{
+  "folder_id": "1z1WloklMj3rFYkW4eq7BYSyontr_OlvE",
+  "recursive": true
+}
+
+### Get Image for Place
+POST http://localhost:5000/api/get-image
+Content-Type: application/json
+
+{
+  "place_name": "France",
+  "start_date": "2023-01-01",
+  "end_date": "2023-01-31",
+  "featureCollection": "FAO/GAUL/2015/level0",
+  "image_collection": "COPERNICUS/S2_HARMONIZED",
+  "vis_params_bands": ["B4", "B3", "B2"],
+  "vis_params_min": 0,
+  "vis_params_max": 3000,
+  "scale": 30
+}
+### Task progress
+GET http://localhost:5000/api/task_progress/QDKJEWLECOJVZCPVNBBHEMDQ
+
+### Drought Monitoring
+POST http://localhost:5000/api/drought/vegetation
+Content-Type: application/json
+
+{"collection_id": "MODIS/061/MOD13A1", "place_name": "San Francisco", "start_date": "2021-01-01", "end_date": "2021-12-31", "index": "EVI"}
+
+### Drought Monitoring
+POST http://localhost:5000/api/drought/precipitation
+Content-Type: application/json
+
+{"collection_id": "UCSB-CHG/CHIRPS/DAILY", "place_name": "San Francisco", "start_date": "2021-01-01", "end_date": "2021-12-31"}
+
+###
+POST http://localhost:5000/api/drought/vegetation
+Content-Type: application/json
+
+{
+  "collection_id": "MODIS/061/MOD13A1",
+  "place_name": "hfh",
+  "start_date": "2021-01-01",
+  "end_date": "2021-12-31",
+  "index": "EVI"
+}
+
+###
+POST http://localhost:5000/api/drought/vegetation
+Content-Type: application/json
+
+{
+  "image_id": "MODIS/061/MOD13A1/20210101",
+  "place_name": "San Francisco",
+  "index": "EVI"
+}
+
+###
+POST http://localhost:5000/api/drought/precipitation
+Content-Type: application/json
+
+{
+  "collection_id": "UCSB-CHG/CHIRPS/DAILY",
+  "place_name": "San Francisco",
+  "start_date": "2021-01-01",
+  "end_date": "2021-12-31"
+}
+
+
+###
+POST http://localhost:5000/api/drought/precipitation
+Content-Type: application/json
+
+{
+  "image_id": "UCSB-CHG/CHIRPS/DAILY/20210101",
+  "place_name": "San Francisco"
+}
+
+### Get Task Result
+GET http://localhost:5000/gee/task_result/5ae70ebf-8adc-499a-b0d0-a0bfb8cb3d3c
+
+
+### Test Task Cancellation
+POST http://0.0.0.0:8000/gee/time_series
+Content-Type: application/json
+
+{
+  "collection_id": "COPERNICUS/S2_HARMONIZED",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "index": "NDVI",
+  "interval": "month",
+  "place_name": "TestRegion"
+}
+
+### Cancel Task (replace task_id with actual ID from previous response)
+POST http://0.0.0.0:8000/cancel/<task_id>
+Content-Type: application/json
+
+{}
+
+### Test Task Cancellation
+POST http://0.0.0.0:8000/gee/time_series
+Content-Type: application/json
+
+{
+  "collection_id": "COPERNICUS/S2_HARMONIZED",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "index": "NDVI",
+  "interval": "month",
+  "place_name": "TestRegion"
+}
+
+### Cancel Task (replace task_id with actual ID from previous response)
+POST http://0.0.0.0:8000/cancel/
+# ### /gee/extract
+# POST http://localhost:5000/gee/extract
+# Content-Type: application/json
+
+# {
+#     "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+#     "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+#     "analysis_type": "ndvi",
+#     "start_date": "2023-01-01",
+#     "end_date": "2023-12-31",
+#     "place_name": "Zurich",
+#     "scale": 30,
+#     "bands": ["B8", "B4"],
+#     "custom_params":""
+# }
+
+# ###
+# GET http://127.0.0.1:5000/gee/status/af57a236-4ed8-4059-b587-a818731fe489
+
+
+### NDVI Calculation
+POST http://0.0.0.0:8000/gee/ndvi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "Zurich"
+}
+
+### EVI Calculation
+POST http://localhost:5000/gee/evi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Water Bodies Detection
+POST http://localhost:5000/gee/land_cover
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "threshold": 0.1,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Change Detection
+POST http://localhost:5000/api/change_detection
+Content-Type: application/json
+
+{
+  "imageIdBefore": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "imageIdAfter": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "threshold": 0.2,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Land Cover Analysis
+POST http://localhost:5000/gee/land_cover
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "classification_band":"Map",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 250,
+  "detailed_metrics":"True",
+    "temporal_analysis":"True",
+  "place_name": "TestRegion"
+}
+
+### Image Metadata
+POST http://localhost:5000/api/image_metadata
+Content-Type: application/json
+
+{
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "startDate": "2021-01-01",
+  "endDate": "2021-12-31",
+  "maxCloudCover": 20
+}
+
+### Slope Calculation
+POST http://localhost:5000/api/slope
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 100,
+  "place_name": "TestRegion",
+  "bands" : ["slope"]
+}
+
+### Aspect Calculation
+POST http://localhost:5000/api/aspect
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Hillshade Generation
+POST http://localhost:5000/api/hillshade
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "azimuth": 0,
+  "altitude": 0,
+  "scale": 1000,
+  "place_name": "TestRegion"
+}
+
+### Fire Detection
+POST http://localhost:5000/api/fire
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "threshold": 340,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Time Series Analysis
+POST http://localhost:5000/api/timeseries
+Content-Type: application/json
+
+{
+  "collection_id": "COPERNICUS/S2_HARMONIZED",
+ "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "index": "NDVI",
+  "interval": "month",
+  "place_name": "TestRegion"
+}
+
+### Agriculture Analysis
+POST http://localhost:5000/api/agriculture
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Zonal Statistics
+POST http://localhost:5000/api/zonal_stats
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Histogram
+POST http://localhost:5000/api/histogram
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2/20210223T102929_20210223T103716_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "band": "B4",
+  "bins": 50,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Image URLs
+POST http://localhost:5000/api/image_urls
+Content-Type: application/json
+
+{
+  "collection_id": "COPERNICUS/S2_HARMONIZED",
+  "region": {"type": "Polygon", "coordinates": [[[10, 45], [11, 45], [11, 46], [10, 46], [10, 45]]]},
+  "place_name": "TestRegion",
+  "start_date": "2023-01-01",
+  "end_date": "2023-12-31",
+  "scale": 10,
+    "thumbnail_dimensions": "256x256",
+    "check_existing": false,
+  "vis_params": {
+    "bands": ["B4", "B3", "B2"],
+    "min": 0,
+    "max": 3000
+  }
+}
+
+### List Images
+POST http://localhost:5000/api/drive/list
+Content-Type: application/json
+
+{
+    "place_name": "test"
+}
+
+### Retrieve Image
+POST http://localhost:5000/api/drive/retrieve
+Content-Type: application/json
+
+{
+  "file_id": "16T8w-PfzRfFspOASVMx_jFbdB2uFIysF"
+}
+
+### Update Image
+POST http://localhost:5000/api/drive/update
+Content-Type: application/json
+
+{
+  "file_id": "16T8w-PfzRfFspOASVMx_jFbdB2uFIysF",
+  "place_name": "TestRegion_Renamed.tif"
+}
+
+### Delete Image
+POST http://localhost:5000/api/drive/delete
+Content-Type: application/json
+
+{
+  "file_id": "16T8w-PfzRfFspOASVMx_jFbdB2uFIysF"
+}
+
+### Create Folder
+POST http://localhost:5000/api/drive/create_folder
+Content-Type: application/json
+
+{
+  "folder_name": "TestSubFolder"
+}
+
+### List Folders
+POST http://localhost:5000/api/drive/list_folders
+Content-Type: application/json
+
+{}
+
+### Update Folder
+POST http://localhost:5000/api/drive/update_folder
+Content-Type: application/json
+
+{
+  "folder_id": "your_folder_id",
+  "new_name": "new_folder_name",
+  "new_parent_id": "new_parent_folder_id"
+}
+
+### Delete Folder
+POST http://localhost:5000/api/drive/delete_folder
+Content-Type: application/json
+
+{
+  "folder_id": "1z1WloklMj3rFYkW4eq7BYSyontr_OlvE",
+  "recursive": true
+}
+
+### Get Image for Place
+POST http://localhost:5000/api/get-image
+Content-Type: application/json
+
+{
+  "place_name": "France",
+  "start_date": "2023-01-01",
+  "end_date": "2023-01-31",
+  "featureCollection": "FAO/GAUL/2015/level0",
+  "image_collection": "COPERNICUS/S2_HARMONIZED",
+  "vis_params_bands": ["B4", "B3", "B2"],
+  "vis_params_min": 0,
+  "vis_params_max": 3000,
+  "scale": 30
+}
+### Task progress
+GET http://localhost:5000/api/task_progress/QDKJEWLECOJVZCPVNBBHEMDQ
+
+### Drought Monitoring
+POST http://localhost:5000/api/drought/vegetation
+Content-Type: application/json
+
+{"collection_id": "MODIS/061/MOD13A1", "place_name": "San Francisco", "start_date": "2021-01-01", "end_date": "2021-12-31", "index": "EVI"}
+
+### Drought Monitoring
+POST http://localhost:5000/api/drought/precipitation
+Content-Type: application/json
+
+{"collection_id": "UCSB-CHG/CHIRPS/DAILY", "place_name": "San Francisco", "start_date": "2021-01-01", "end_date": "2021-12-31"}
+
+###
+POST http://localhost:5000/api/drought/vegetation
+Content-Type: application/json
+
+{
+  "collection_id": "MODIS/061/MOD13A1",
+  "place_name": "hfh",
+  "start_date": "2021-01-01",
+  "end_date": "2021-12-31",
+  "index": "EVI"
+}
+
+###
+POST http://localhost:5000/api/drought/vegetation
+Content-Type: application/json
+
+{
+  "image_id": "MODIS/061/MOD13A1/20210101",
+  "place_name": "San Francisco",
+  "index": "EVI"
+}
+
+###
+POST http://localhost:5000/api/drought/precipitation
+Content-Type: application/json
+
+{
+  "collection_id": "UCSB-CHG/CHIRPS/DAILY",
+  "place_name": "San Francisco",
+  "start_date": "2021-01-01",
+  "end_date": "2021-12-31"
+}
+
+
+###
+POST http://localhost:5000/api/drought/precipitation
+Content-Type: application/json
+
+{
+  "image_id": "UCSB-CHG/CHIRPS/DAILY/20210101",
+  "place_name": "San Francisco"
+}

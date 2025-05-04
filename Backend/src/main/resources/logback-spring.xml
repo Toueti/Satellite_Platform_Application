@@ -1,0 +1,79 @@
+<configuration debug="true"> <!-- Add debug="true" for more verbose Logback internal status -->
+
+    <!-- Add JUL bridge listener -->
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+    <!-- Add status listener to print internal Logback status messages -->
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- Apply highlighting to the entire log line based on level -->
+            <pattern>%highlight(%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n)</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Removed QUEUE appender definition -->
+
+    <!-- Set root level to INFO to reduce overall verbosity -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <!-- Removed QUEUE appender reference -->
+    </root>
+
+    <!-- Set specific loggers to INFO or WARN to control verbosity -->
+    <!-- Increase level for AMQP to DEBUG for more details -->
+    <logger name="org.springframework.amqp" level="DEBUG"/>
+    <logger name="org.mongodb.driver" level="INFO"/>
+    <logger name="org.springframework.security.web" level="INFO"/>
+    <logger name="io.lettuce.core" level="INFO"/>
+    <logger name="org.springframework.data.mongodb" level="INFO"/> <!-- Added to reduce MongoDB debug logs -->
+    <logger name="com.enit.satellite_platform.config.rateLimiter.RateLimitingFilter" level="WARN"/>
+    <logger name="com.enit.satellite_platform.config.RequestResponseLoggingFilter" level="INFO"/>
+    <!-- Removed duplicate logger definition -->
+
+    <!-- Set main package to DEBUG to ensure logs are generated -->
+    <logger name="com.enit.satellite_platform" level="DEBUG" additivity="false">
+         <!-- Keep existing appenders if needed -->
+         <appender-ref ref="CONSOLE" />
+         <!-- Removed QUEUE appender reference -->
+         <appender-ref ref="APP_FILE" /> <!-- Add appender for general logs -->
+         <!-- <appender-ref ref="AUDIT_FILE" /> --> <!-- Assuming audit logs are handled separately -->
+    </logger>
+
+    <!-- Removed logger configuration for deleted LogQueueProcessor -->
+
+    <!-- Appender for general application logs -->
+    <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/app.log</file> <!-- Log file name -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>logs/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/audit.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Configure audit logging for the audit package -->
+    <logger name="com.enit.satellite_platform.audit" level="INFO" additivity="false">
+        <appender-ref ref="AUDIT_FILE" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+</configuration>

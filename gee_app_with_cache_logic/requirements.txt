@@ -1,0 +1,12 @@
+# requirements.txt
+fastapi>=0.68.0
+uvicorn>=0.15.0
+earthengine-api>=0.1.343
+pydantic>=1.8.2
+python-dotenv>=0.19.0
+numpy>=1.21.0
+httpx>=0.23.0
+flask>=2.0.1
+waitress>=2.0.0
+redis>=4.0.2
+requests>=2.25.1 # Added for image downloading

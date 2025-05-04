@@ -1,0 +1,66 @@
+@baseUrl = http://localhost:8080/api/admin/audit
+@adminToken = # PASTE_ADMIN_TOKEN_HERE (Get from signing in as an ADMIN user)
+@date = 2025-04-02 # Example date yyyy-MM-dd
+@startDate = 2025-04-01
+@endDate = 2025-04-03
+@filterUsername = testuser
+@filterAction = LOGIN_SUCCESS
+
+### Get Latest Audit Logs (Default 100 lines)
+GET {{baseUrl}}/latest
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Get Latest 50 Audit Logs
+GET {{baseUrl}}/latest?lines=50
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Get Latest Audit Logs filtered by Username
+GET {{baseUrl}}/latest?username={{filterUsername}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Get Latest Audit Logs filtered by Action
+GET {{baseUrl}}/latest?action={{filterAction}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Get Latest Audit Logs filtered by Username and Action
+GET {{baseUrl}}/latest?username={{filterUsername}}&action={{filterAction}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Get Audit Logs by Specific Date
+GET {{baseUrl}}/by-date/{{date}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Get Audit Logs by Specific Date with Filters
+GET {{baseUrl}}/by-date/{{date}}?username={{filterUsername}}&action={{filterAction}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Get Audit Logs by Date Range
+GET {{baseUrl}}/by-range?startDate={{startDate}}&endDate={{endDate}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### Get Audit Logs by Date Range with Filters
+GET {{baseUrl}}/by-range?startDate={{startDate}}&endDate={{endDate}}&username={{filterUsername}}&action={{filterAction}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+
+### List Available Log Dates
+GET {{baseUrl}}/available-dates
+Authorization: Bearer {{adminToken}}
+Accept: application/json

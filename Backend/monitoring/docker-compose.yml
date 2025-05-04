@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml # Mount Prometheus config
+      - prometheus_data:/prometheus # Persist Prometheus data
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle' # Allows reloading config via API if needed
+    ports:
+      - "9090:9090" # Expose Prometheus UI
+    networks:
+      - monitoring_net
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    volumes:
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasource.yml # Mount datasource config
+      - ./grafana-dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json # Mount dashboard definition
+      - grafana_data:/var/lib/grafana # Persist Grafana data
+    environment:
+      - GF_PROVISIONING_PATH=/etc/grafana/provisioning # Point Grafana to provisioning path
+      - GF_DASHBOARDS_JSON_ENABLED=true # Enable dashboard provisioning from JSON
+      - GF_DASHBOARDS_JSON_PATH=/etc/grafana/provisioning/dashboards # Path for dashboard JSONs
+      # Default admin user/password: admin/admin (change if needed via other env vars)
+    ports:
+      - "3001:3000" # Expose Grafana UI
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring_net
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+
+networks:
+  monitoring_net:
+    driver: bridge

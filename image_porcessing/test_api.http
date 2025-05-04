@@ -1,0 +1,78 @@
+### Test the root endpoint
+GET http://localhost:8000/
+
+### Calculate NDVI
+# This endpoint returns a multipart response with both metadata and the image file
+POST http://localhost:8000/calculate/NDVI > ndvi_response.json
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="image.tif"
+Content-Type: image/tiff
+
+< ./image.tif
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="metadata"
+
+{"redBand": 1, "nirBand": 2}
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+>
+# The response contains:
+# 1. Metadata as JSON (processing time, statistics, etc.)
+# 2. The processed image file
+#
+# To save the response to a file:
+# GET http://localhost:8000/calculate/NDVI > ndvi_response.json
+# Or for just the image:
+# GET http://localhost:8000/download/filename.png > saved_image.png
+# You can save the response to a file using > operator or use the /download endpoint
+
+### Calculate EVI
+POST http://localhost:8000/calculate/EVI
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="image.tif"
+Content-Type: image/tiff
+
+< ./image.tif
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="metadata"
+
+{"redBand": 1, "nirBand": 2, "blueBand": 3, "G": 2.5, "C1": 6.0, "C2": 7.5, "L": 1.0}
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Calculate SAVI
+POST http://localhost:8000/calculate/SAVI
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="image.tif"
+Content-Type: image/tiff
+
+< ./image.tif
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="metadata"
+
+{"redBand": 1, "nirBand": 2, "L": 0.5}
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Calculate NDWI
+POST http://localhost:8000/calculate/NDWI
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="image.tif"
+Content-Type: image/tiff
+
+< ./image.tif
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="metadata"
+
+{"nirBand": 3}
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Download a processed file
+# Use the filename from a previous calculation response
+GET http://localhost:8000/download/upload_1744498481_19b5abb4_ndvi.png

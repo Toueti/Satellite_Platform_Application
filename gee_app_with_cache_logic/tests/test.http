@@ -1,0 +1,500 @@
+### GEE Download Endpoint Test
+POST http://localhost:5000/gee/download
+Content-Type: application/json
+
+{
+  "collection_id": "COPERNICUS/S2_SR_HARMONIZED",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[9.5, 36.5], [10.5, 36.5], [10.5, 37.5], [9.5, 37.5], [9.5, 36.5]]]
+  },
+  "start_date": "2023-06-01",
+  "end_date": "2023-06-30",
+  "max_cloud_cover": 20,
+  "images_number": 2,
+  "bands": ["B4", "B3", "B2"],
+  "scale": 10,
+  "place_name": "Tunisia_Test_Download"
+}
+
+###
+
+### retrive images
+POST http://localhost:5000/api/drive/list
+Content-Type: application/json
+
+{
+    "place_name": "TestRegion"
+}
+
+###retrieve an image
+POST http://127.0.0.1:5000/api/drive/retrieve
+Content-Type: application/json
+
+{
+  "file_id": "16T8w-PfzRfFspOASVMx_jFbdB2uFIysF"
+}
+
+###update an image
+POST http://127.0.0.1:5000/api/drive/update
+Content-Type: application/json
+
+{
+  "file_id": "16T8w-PfzRfFspOASVMx_jFbdB2uFIysF",
+  "place_name": "TestRegion_Renamed.tif"
+}
+
+###delete an image
+http://127.0.0.1:5000/api/drive/delete
+Content-Type: application/json
+
+{
+  "file_id": "16T8w-PfzRfFspOASVMx_jFbdB2uFIysF"
+}
+
+###create a folder
+POST http://127.0.0.1:5000/api/drive/create_folder
+Content-Type: application/json
+
+{
+  "folder_name": "TestSubFolder1"
+}
+
+###create a folder inside a folder
+POST http://127.0.0.1:5000/api/drive/create_folder
+Content-Type: application/json
+
+{"folder_name": "NestedFolder", "parent_id": "1g8E82Xu_ozhEpmblIFU0lJNslJcgcMli"}
+
+###show all files in a folder
+POSt http://127.0.0.1:5000/api/drive/list_folders
+Content-Type: application/json
+
+{}
+
+###update a folder
+POST http://127.0.0.1:5000/api/drive/update_folder
+Content-Type: application/json
+
+{"folder_id": "1g8E82Xu_ozhEpmblIFU0lJNslJcgcMli", "new_name": "UpdatedSubFolder"}
+
+
+###delete a folder
+POST http://127.0.0.1:5000/api/drive/delete_folder
+Content-Type: application/json
+
+{"folder_id": "1g8E82Xu_ozhEpmblIFU0lJNslJcgcMli"}
+
+### Image Endpoint OK
+POST http://localhost:5000/api/image_urls
+Content-Type: application/json
+
+{
+    "start_date": "2023-01-01",
+    "end_date": "2023-12-31",
+    "max_cloud_cover": 10,
+    "region": "{\"type\": \"Polygon\", \"coordinates\": [[[10, 45], [11, 45], [11, 46], [10, 46], [10, 45]]]}",
+    "bands": ["B4", "B3", "B2"],
+    "scale": 10,
+    "thumbnail_dimensions": "256x256",
+    "place_name": "TestRegion",
+    "check_existing": false
+}
+
+### NDVI Endpoint OK
+POST http://localhost:5000/api/ndvi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "Zurich"
+}
+
+### Invalid NDVI Request OK (Now Valid, Adjusted for Invalidity Below)
+POST http://localhost:5000/api/ndvi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "scale": 30,
+  "minNdvi": -0.5,
+  "maxNdvi": 1.0,
+  "bands": ["B8", "B4"]
+  // "region" omitted to make it invalid
+}
+
+### EVI Endpoint OK
+POST http://localhost:5000/api/evi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Water Bodies Detection OK
+POST http://localhost:5000/api/water_bodies
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "threshold": 0.3,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Change Detection OK
+POST http://localhost:5000/api/change_detection
+Content-Type: application/json
+
+{
+  "imageIdBefore": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "imageIdAfter": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "threshold": 0.2,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Land Cover Analysis OK
+POST http://localhost:5000/api/land_cover
+Content-Type: application/json
+
+{
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "year": 2020,
+  "scale": 10,
+  "place_name": "TestRegion"
+}
+
+### Image Metadata OK
+POST http://localhost:5000/api/metadata
+Content-Type: application/json
+
+{
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "startDate": "2021-01-01",
+  "endDate": "2021-12-31",
+  "maxCloudCover": 20
+}
+
+### Slope Calculation OK
+POST http://localhost:5000/api/slope
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Aspect Calculation OK
+POST http://localhost:5000/api/aspect
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Hillshade Generation OK
+POST http://localhost:5000/api/hillshade
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "azimuth": 0,
+  "altitude": 0,
+  "scale": 1000,
+  "place_name": "TestRegion"
+}
+
+### Fire Detection OK
+POST http://localhost:5000/api/fire
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "threshold": 340,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Time Series Analysis MAYBE
+POST http://localhost:5000/api/timeseries
+Content-Type: application/json
+
+{
+  "collection_id": "COPERNICUS/S2_HARMONIZED",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "index": "NDVI",
+  "interval": "month",
+  "place_name": "TestRegion"
+}
+
+### Agriculture Analysis OK
+POST http://localhost:5000/api/agriculture
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Zonal Statistics OK
+POST http://localhost:5000/api/zonal_stats
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Histogram Generation OK
+POST http://localhost:5000/api/histogram
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "band": "B4",
+  "bins": 50,
+  "scale": 30,
+  "place_name": "TestRegion"
+}
+
+### Get Image
+POST http://localhost:5000/api/get-image
+Content-Type: application/json
+
+{
+  "place_name": "France",
+  "start_date": "2023-01-01",
+  "end_date": "2023-12-31",
+  "scale": 30
+}
+
+
+
+
+
+
+### NDVI Endpoint ok
+POST http://localhost:5000/api/ndvi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "scale": 30
+}
+
+
+
+### Invalid NDVI Request ok
+POST http://localhost:5000/api/ndvi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  },
+  "scale": 30,
+  "minNdvi": -0.5,
+  "maxNdvi": 1.0,
+  "bands": ["B8", "B4"]
+}
+
+### EVI Endpoint ok
+POST http://localhost:5000/api/evi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  },
+  "scale": 30
+}
+
+### Water Bodies Detection ok
+POST http://localhost:5000/api/water_bodies
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  },
+  "threshold": 0.3
+}
+
+### Change Detection ok
+POST http://localhost:5000/api/change_detection
+Content-Type: application/json
+
+{
+  "imageIdBefore": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "imageIdAfter": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  },
+  "threshold": 0.2
+}
+
+### Land Cover Analysis ok
+POST http://localhost:5000/api/land_cover
+Content-Type: application/json
+
+{
+  "region": {"type": "Polygon", "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]},
+  "year": 2020
+}
+
+### Image Metadata ok
+POST http://localhost:5000/api/metadata
+Content-Type: application/json
+
+{
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  },
+  "startDate": "2021-01-01",
+  "endDate": "2021-12-31",
+  "maxCloudCover": 20
+}
+
+### Slope Calculation ok
+POST http://localhost:5000/api/slope
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  }
+}
+
+### Aspect Calculation ok
+POST http://localhost:5000/api/aspect
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  }
+}
+
+### Hillshade Generation ok
+POST http://localhost:5000/api/hillshade
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  },
+  "azimuth": 315,
+  "altitude": 45
+}
+
+### Fire Detection ok
+POST http://localhost:5000/api/fire
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  },
+  "threshold": 340
+}
+
+### Time Series Analysis maybe
+POST http://localhost:5000/api/timeseries
+Content-Type: application/json
+
+{
+  "collection_id": "COPERNICUS/S2_HARMONIZED",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  },
+  "index": "NDVI",
+  "interval": "month"
+}
+
+### Agriculture Analysis ok
+POST http://localhost:5000/api/agriculture
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  }
+}
+
+### Zonal Statistics ok
+POST http://localhost:5000/api/zonal_stats
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  },
+  "scale": 30
+}
+
+### Histogram Generation ok
+POST http://localhost:5000/api/histogram
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "region": {
+    "type": "Polygon",
+    "coordinates": [[[8.5, 47.3], [8.6, 47.3], [8.6, 47.4], [8.5, 47.4], [8.5, 47.3]]]
+  },
+  "band": "B4",
+  "bins": 50,
+  "scale": 30
+}
+
+### Get Image
+POST http://localhost:5000/api/get-image 
+Content-Type: application/json
+
+{
+    "place_name": "France",
+    "start_date": "2023-01-01",
+    "end_date": "2023-12-31"
+}

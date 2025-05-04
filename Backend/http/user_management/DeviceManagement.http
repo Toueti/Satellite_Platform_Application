@@ -1,0 +1,54 @@
+@baseUrl = http://localhost:8080/api
+@token = # Will be captured from signin response
+@deviceId = # Will be set after getting device list
+
+### Get all user devices
+GET {{baseUrl}}/devices
+Authorization: Bearer {{token}}
+
+### Get active user devices
+GET {{baseUrl}}/devices/active
+Authorization: Bearer {{token}}
+
+### Approve a device (Admin only)
+POST {{baseUrl}}/devices/{{deviceId}}/approve
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Revoke a device (Admin or device owner)
+POST {{baseUrl}}/devices/{{deviceId}}/revoke
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Clean up inactive devices (Admin only)
+POST {{baseUrl}}/devices/cleanup
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### Example Response Format for Device List:
+# {
+#   "data": [
+#     {
+#       "id": "device123",
+#       "deviceType": "DESKTOP",
+#       "operatingSystem": "Windows",
+#       "browser": "Chrome",
+#       "lastKnownLocation": "192.168.1.1",
+#       "lastUsedAt": "2025-04-18T12:00:00",
+#       "firstSeenAt": "2025-04-17T12:00:00",
+#       "isCurrentDevice": true,
+#       "isApproved": true,
+#       "approvedAt": "2025-04-17T13:00:00"
+#     }
+#   ],
+#   "status": "SUCCESS",
+#   "message": null,
+#   "timestamp": "2025-04-18T12:00:00"
+# }
+
+### Example Error Response:
+# {
+#   "status": "ERROR",
+#   "message": "Device not found: device123",
+#   "timestamp": "2025-04-18T12:00:00"
+# }

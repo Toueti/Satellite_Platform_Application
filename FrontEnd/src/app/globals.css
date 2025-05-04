@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 31, 41, 55;
+  --background-color: #ffffff;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background-color: var(--background-color);
+  overflow-x: hidden;
+}
+
+.header-background {
+  background-image: url('/images/image.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  min-height: 64px;
+}
+
+.header-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(15, 13, 78, 0.9) 0%, rgba(15, 13, 78, 0.7) 100%);
+  z-index: 1;
+}
+
+.header-content {
+  position: relative;
+  z-index: 2;
+}
+
+.auth-background {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(90deg, #0F0D4E 1.27%, rgba(0, 129, 250, 0) 98.96%);
+  overflow: hidden;
+}
+
+.background-image-1 {
+  position: absolute;
+  width: 484px;
+  height: 266px;
+  left: -43px;
+  top: 236px;
+  background-image: url('/images/Images/bg-pattern-1.png');
+  mix-blend-mode: screen;
+}
+
+.background-image-2 {
+  position: absolute;
+  width: 866px;
+  height: 649px;
+  right: -162px;
+  top: 177px;
+  background-image: url('/images/Images/bg-pattern-2.png');
+  mix-blend-mode: screen;
+  transform: rotate(-180deg);
+}
+
+.background-image-3 {
+  position: absolute;
+  width: 239px;
+  height: 179px;
+  left: 1px;
+  bottom: 0;
+  background-image: url('/images/Images/bg-pattern-3.png');
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  transform: rotate(-180deg);
+}
+
+.auth-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}

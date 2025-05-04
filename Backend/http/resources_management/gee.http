@@ -1,0 +1,30 @@
+@baseUrl = http://localhost:8080/geospatial/gee
+@token =eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1RIRU1BVElDSUFOIl0sIm5hbWUiOiJ5b2J0b3Q4QGdtYWlsLmNvbSIsInN1YiI6InlvYnRvdDhAZ21haWwuY29tIiwiaWF0IjoxNzQ0NDE1ODgxLCJleHAiOjE3NDQ1MDIyODF9.VLi17E2TWytsscb6HLN-r3roUzeT0ZpUQuPNnzG1giU
+
+POST {{baseUrl}}/service
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+"serviceType":"get_images",
+"parameters": {
+    "collection_id": "COPERNICUS/S2_HARMONIZED",
+    "region": {"type": "Polygon", "coordinates": [[[8.4, 47.2], [8.7, 47.2], [8.7, 47.5], [8.4, 47.5], [8.4, 47.2]]]},
+    "start_date": "2021-05-15",
+    "end_date": "2021-07-15",
+    "max_cloud_cover": 40,
+    "images_number": 1,
+    "bands": ["B4", "B3", "B2"],
+    "visualization_params": {
+        "bands": ["B4", "B3", "B2"],
+        "min": 0,
+        "max": 3000
+    },
+    "dimensions": {"width": 2048, "height": 2048},
+    "scale": 10,
+    "crs": "EPSG:4326",
+    "export_format": "GeoTIFF",
+    "export_destination": "Google Drive",
+    "metadata": true
+    }
+}

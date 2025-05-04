@@ -1,0 +1,55 @@
+### Dashboard API Tests
+@baseUrl=http://localhost:8080
+@authToken=eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoieW9idG90OEBnbWFpbC5jb20iLCJlbWFpbCI6InlvYnRvdDhAZ21haWwuY29tIiwicm9sZXMiOlsiUk9MRV9USEVNQVRJQ0lBTiJdLCJzdWIiOiJ5b2J0b3Q4QGdtYWlsLmNvbSIsImlhdCI6MTc0NDI3MjMxNCwiZXhwIjoxNzQ0MzU4NzE0fQ.t0abF5mB5tt4aBE9ZYloASbbY8Gp4U9DQsNf9Iu2cO0
+
+
+
+### Get Dashboard Statistics for Authenticated User
+# @name getDashboardStats
+GET {{baseUrl}}/api/dashboard/stats
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+### Expected Response (200 OK):
+# The response body should be a JSON object matching the structure of DashboardStatsDto.
+# It will contain various statistics like:
+# - totalProjects: Number of projects owned by the user.
+# - totalImages: Total number of images across all owned projects.
+# - totalTreatments: Total number of processing results across all images.
+# - totalProjectAccesses: Count of times the user accessed projects (based on audit logs).
+# - lastProjectAccessTime: Timestamp of the last project access.
+# - lastPlatformLoginTime: Timestamp of the last successful login.
+# - recentActivityFeed: List of recent actions (login, project access, etc.).
+# - mostFrequentAction: The action type performed most often.
+# - activityTrend: Comparison of activity in the last 7 days vs. the previous 7.
+# - recentlyAccessedProjects: List of recently viewed projects (owned or shared).
+# - sharedByUserCount: Number of projects the user owns and has shared.
+# - sharedWithUserCount: Number of projects shared with the user by others.
+# - recentImageUploads: List of recently uploaded images.
+# - totalStorageUsedBytes: Total size of all images owned by the user.
+# - processingStatusSummary: Counts of processing results by status (PENDING, COMPLETED, etc.).
+# - mostUsedProcessingType: The most frequent type of image processing requested.
+# - averageImagesPerProject: Average number of images per owned project.
+# - averageTreatmentsPerImage: Average number of processing results per image.
+#
+# Example Snippet:
+# {
+#   "totalProjects": 5,
+#   "totalImages": 123,
+#   "totalTreatments": 45,
+#   "totalProjectAccesses": 50,
+#   "lastProjectAccessTime": "2025-04-04T01:50:00Z",
+#   "lastPlatformLoginTime": "2025-04-04T00:30:00Z",
+#   "recentActivityFeed": [ ... ],
+#   "mostFrequentAction": "PROJECT_ACCESS_SUCCESS",
+#   "activityTrend": { "last7DaysCount": 15, "previous7DaysCount": 10 },
+#   "recentlyAccessedProjects": [ ... ],
+#   "sharedByUserCount": 2,
+#   "sharedWithUserCount": 1,
+#   "recentImageUploads": [ ... ],
+#   "totalStorageUsedBytes": 1234567890,
+#   "processingStatusSummary": { "pendingCount": 1, "processingCount": 0, "completedCount": 40, "failedCount": 4 },
+#   "mostUsedProcessingType": "NDVI",
+#   "averageImagesPerProject": 24.6,
+#   "averageTreatmentsPerImage": 0.365
+# }

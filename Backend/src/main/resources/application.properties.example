@@ -1,0 +1,35 @@
+# Application Configuration
+spring.application.name=Satellite_Platform_Application
+
+
+# MongoDB Configuration
+spring.data.mongodb.uri=mongodb://localhost:27017/satellite_platform
+logging.level.org.springframework.data.mongodb=DEBUG
+spring.data.mongodb.auto-index-creation=true
+
+# JWT Configuration
+jwt.secret=your-secret-key-here
+jwt.expiration=86400000
+
+#image config
+python.backend.url=http://localhost:5000
+storage.filesystem.directory=C:\\Tmp
+thread.pool.size=4
+
+# Spring Boot Configuration
+# spring.jpa.show-sql=true
+# spring.jpa.properties.hibernate.format_sql=true
+logging.level.org.springframework=DEBUG
+
+# Spring Boot Actuator Configuration
+management.endpoints.web.exposure.include=*
+
+springdoc.swagger-ui.path=/swagger-ui.html
+
+# Rate Limiting
+rate_limit.max_requests=10
+rate_limit.time_window_millis=60000
+
+# Analysis Types
+analysis.valid_types=ndvi,evi,water-bodies,change-detection,land-cover,slope,aspect
+

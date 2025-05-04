@@ -1,0 +1,165 @@
+2025-04-29 13:35:08,393 - gee_app - WARNING - ⚠️ PYTHONIOENCODING environment variable is not set to UTF-8. Emojis may not display correctly in the console.
+2025-04-29 13:35:08,418 - gee_app.utils.auth - INFO - GEE_SERVICE_ACCOUNT: satellite-platform-application@satellite-platform-application.iam.gserviceaccount.com
+2025-04-29 13:35:08,418 - gee_app.utils.auth - INFO - GEE_KEY_FILE: satellite-platform-application-f7154aa5ce46.json
+2025-04-29 13:35:08,438 - gee_app.utils.auth - INFO - Credentials set. Initializing EE...
+2025-04-29 13:35:11,434 - gee_app.utils.auth - INFO - ✅ GEE initialized successfully
+2025-04-29 13:35:15,491 - gee_app - WARNING - ⚠️ PYTHONIOENCODING environment variable is not set to UTF-8. Emojis may not display correctly in the console.
+2025-04-29 13:35:15,521 - gee_app.utils.auth - INFO - GEE_SERVICE_ACCOUNT: satellite-platform-application@satellite-platform-application.iam.gserviceaccount.com
+2025-04-29 13:35:15,521 - gee_app.utils.auth - INFO - GEE_KEY_FILE: satellite-platform-application-f7154aa5ce46.json
+2025-04-29 13:35:15,526 - gee_app.utils.auth - INFO - Credentials set. Initializing EE...
+2025-04-29 13:35:21,208 - gee_app.utils.auth - INFO - ✅ GEE initialized successfully
+2025-04-29 13:35:21,490 - gee_app - WARNING - ⚠️ PYTHONIOENCODING environment variable is not set to UTF-8. Emojis may not display correctly in the console.
+2025-04-29 13:35:21,546 - gee_app.utils.auth - INFO - GEE_SERVICE_ACCOUNT: satellite-platform-application@satellite-platform-application.iam.gserviceaccount.com
+2025-04-29 13:35:21,547 - gee_app.utils.auth - INFO - GEE_KEY_FILE: satellite-platform-application-f7154aa5ce46.json
+2025-04-29 13:35:21,553 - gee_app.utils.auth - INFO - Credentials set. Initializing EE...
+2025-04-29 13:35:22,257 - gee_app.utils.auth - INFO - ✅ GEE initialized successfully
+2025-04-29 13:47:17,234 - gee_app - DEBUG - Received request for metadata: {'collection_id': 'COPERNICUS/S2_HARMONIZED', 'start_date': '2020-12-01', 'end_date': '2021-12-02', 'max_cloud_cover': 40, 'images_number': 1, 'bands': ['B4', 'B3', 'B2'], 'visualization_params': {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}, 'dimensions': {'width': 2048, 'height': 2048}, 'scale': 10, 'crs': 'EPSG:4326', 'export_format': 'GeoTIFF', 'export_destination': 'Google Drive', 'metadata': True, 'region': {'type': 'Polygon', 'coordinates': [[[9.721091, 37.296919], [9.721091, 37.347155], [9.867002, 37.347155], [9.867002, 37.296919], [9.721091, 37.296919]]]}}
+2025-04-29 13:47:18,285 - gee_app - DEBUG - Validated GEE asset: COPERNICUS/S2_HARMONIZED
+2025-04-29 13:47:30,562 - gee_app - DEBUG - Fetching Google Drive storage quota...
+2025-04-29 13:47:32,874 - gee_app - INFO - Drive Storage - Limit: 15.00 GB, Usage: 0.00 GB, Available: 15.00 GB (16106127360 bytes)
+2025-04-29 13:47:32,877 - gee_app - DEBUG - Available Drive storage: 15360.00 MB
+2025-04-29 13:47:33,126 - gee_app - DEBUG - 🔍 GEE Geometry created: {'type': 'Polygon', 'coordinates': [[[9.721091, 37.296919], [9.867002, 37.296919], [9.867002, 37.347155], [9.721091, 37.347155], [9.721091, 37.296919]]]}
+2025-04-29 13:47:33,495 - gee_app - DEBUG - 🔍 Images retrieved: 1 images found
+2025-04-29 13:47:33,496 - gee_app - DEBUG - Visualization params: {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}
+2025-04-29 13:47:33,497 - gee_app - INFO - 🔍 Processing image number: 1
+2025-04-29 13:47:33,782 - gee_app - DEBUG - Selected bands: ['B4', 'B3', 'B2']
+2025-04-29 13:47:37,164 - gee_app - DEBUG - Successfully downloaded and encoded preview for COPERNICUS/S2_HARMONIZED/20201201T100401_20201201T100404_T32SNG
+2025-04-29 13:47:37,351 - gee_app - INFO - Successfully fetched metadata for collection: COPERNICUS/S2_HARMONIZED (1 results)
+2025-04-29 13:47:37,358 - gee_app - DEBUG - Received request for metadata: {'collection_id': 'COPERNICUS/S2_HARMONIZED', 'start_date': '2020-12-01', 'end_date': '2021-12-02', 'max_cloud_cover': 40, 'images_number': 1, 'bands': ['B4', 'B3', 'B2'], 'visualization_params': {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}, 'dimensions': {'width': 2048, 'height': 2048}, 'scale': 10, 'crs': 'EPSG:4326', 'export_format': 'GeoTIFF', 'export_destination': 'Google Drive', 'metadata': True, 'region': {'type': 'Polygon', 'coordinates': [[[9.721091, 37.296919], [9.721091, 37.347155], [9.867002, 37.347155], [9.867002, 37.296919], [9.721091, 37.296919]]]}}
+2025-04-29 13:47:37,775 - gee_app - DEBUG - Validated GEE asset: COPERNICUS/S2_HARMONIZED
+2025-04-29 13:47:38,981 - gee_app - DEBUG - Fetching Google Drive storage quota...
+2025-04-29 13:47:40,407 - gee_app - INFO - Drive Storage - Limit: 15.00 GB, Usage: 0.00 GB, Available: 15.00 GB (16106127360 bytes)
+2025-04-29 13:47:40,408 - gee_app - DEBUG - Available Drive storage: 15360.00 MB
+2025-04-29 13:47:41,206 - gee_app - DEBUG - 🔍 GEE Geometry created: {'type': 'Polygon', 'coordinates': [[[9.721091, 37.296919], [9.867002, 37.296919], [9.867002, 37.347155], [9.721091, 37.347155], [9.721091, 37.296919]]]}
+2025-04-29 13:47:42,100 - gee_app - DEBUG - 🔍 Images retrieved: 1 images found
+2025-04-29 13:47:42,100 - gee_app - DEBUG - Visualization params: {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}
+2025-04-29 13:47:42,100 - gee_app - INFO - 🔍 Processing image number: 1
+2025-04-29 13:47:42,364 - gee_app - DEBUG - Selected bands: ['B4', 'B3', 'B2']
+2025-04-29 13:47:45,781 - gee_app - DEBUG - Successfully downloaded and encoded preview for COPERNICUS/S2_HARMONIZED/20201201T100401_20201201T100404_T32SNG
+2025-04-29 13:47:46,120 - gee_app - INFO - Successfully fetched metadata for collection: COPERNICUS/S2_HARMONIZED (1 results)
+2025-04-29 13:48:57,964 - gee_app - DEBUG - Received request for metadata: {'collection_id': 'COPERNICUS/S2_HARMONIZED', 'start_date': '2020-12-02', 'end_date': '2021-12-01', 'max_cloud_cover': 20, 'images_number': 1, 'bands': ['B4', 'B3', 'B2'], 'visualization_params': {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}, 'dimensions': {'width': 2048, 'height': 2048}, 'scale': 10, 'crs': 'EPSG:4326', 'export_format': 'GeoTIFF', 'export_destination': 'Google Drive', 'metadata': True, 'region': {'type': 'Polygon', 'coordinates': [[[21.268036, 53.532832], [21.268036, 54.180795], [22.493007, 54.180795], [22.493007, 53.532832], [21.268036, 53.532832]]]}}
+2025-04-29 13:48:58,250 - gee_app - DEBUG - Validated GEE asset: COPERNICUS/S2_HARMONIZED
+2025-04-29 13:49:05,903 - gee_app - DEBUG - Fetching Google Drive storage quota...
+2025-04-29 13:49:09,111 - gee_app - INFO - Drive Storage - Limit: 15.00 GB, Usage: 0.00 GB, Available: 15.00 GB (16106127360 bytes)
+2025-04-29 13:49:09,116 - gee_app - DEBUG - Available Drive storage: 15360.00 MB
+2025-04-29 13:49:09,901 - gee_app - DEBUG - 🔍 GEE Geometry created: {'type': 'Polygon', 'coordinates': [[[21.268036, 53.532832], [22.493007, 53.532832], [22.493007, 54.180795], [21.268036, 54.180795], [21.268036, 53.532832]]]}
+2025-04-29 13:49:10,342 - gee_app - DEBUG - 🔍 Images retrieved: 1 images found
+2025-04-29 13:49:10,345 - gee_app - DEBUG - Visualization params: {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}
+2025-04-29 13:49:10,354 - gee_app - INFO - 🔍 Processing image number: 1
+2025-04-29 13:49:10,640 - gee_app - DEBUG - Selected bands: ['B4', 'B3', 'B2']
+2025-04-29 13:49:35,302 - gee_app - DEBUG - Successfully downloaded and encoded preview for COPERNICUS/S2_HARMONIZED/20210117T095341_20210117T095359_T34UEE
+2025-04-29 13:49:36,098 - gee_app - INFO - Successfully fetched metadata for collection: COPERNICUS/S2_HARMONIZED (1 results)
+2025-04-29 13:49:36,102 - gee_app - DEBUG - Received request for metadata: {'collection_id': 'COPERNICUS/S2_HARMONIZED', 'start_date': '2020-12-02', 'end_date': '2021-12-01', 'max_cloud_cover': 20, 'images_number': 1, 'bands': ['B4', 'B3', 'B2'], 'visualization_params': {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}, 'dimensions': {'width': 2048, 'height': 2048}, 'scale': 10, 'crs': 'EPSG:4326', 'export_format': 'GeoTIFF', 'export_destination': 'Google Drive', 'metadata': True, 'region': {'type': 'Polygon', 'coordinates': [[[21.268036, 53.532832], [21.268036, 54.180795], [22.493007, 54.180795], [22.493007, 53.532832], [21.268036, 53.532832]]]}}
+2025-04-29 13:49:36,360 - gee_app - DEBUG - Validated GEE asset: COPERNICUS/S2_HARMONIZED
+2025-04-29 13:49:36,589 - gee_app - DEBUG - Fetching Google Drive storage quota...
+2025-04-29 13:49:40,739 - gee_app - INFO - Drive Storage - Limit: 15.00 GB, Usage: 0.00 GB, Available: 15.00 GB (16106127360 bytes)
+2025-04-29 13:49:40,740 - gee_app - DEBUG - Available Drive storage: 15360.00 MB
+2025-04-29 13:49:40,971 - gee_app - DEBUG - 🔍 GEE Geometry created: {'type': 'Polygon', 'coordinates': [[[21.268036, 53.532832], [22.493007, 53.532832], [22.493007, 54.180795], [21.268036, 54.180795], [21.268036, 53.532832]]]}
+2025-04-29 13:49:41,841 - gee_app - DEBUG - 🔍 Images retrieved: 1 images found
+2025-04-29 13:49:41,842 - gee_app - DEBUG - Visualization params: {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}
+2025-04-29 13:49:41,842 - gee_app - INFO - 🔍 Processing image number: 1
+2025-04-29 13:49:42,076 - gee_app - DEBUG - Selected bands: ['B4', 'B3', 'B2']
+2025-04-29 13:49:44,874 - gee_app - DEBUG - Successfully downloaded and encoded preview for COPERNICUS/S2_HARMONIZED/20210117T095341_20210117T095359_T34UEE
+2025-04-29 13:49:45,104 - gee_app - INFO - Successfully fetched metadata for collection: COPERNICUS/S2_HARMONIZED (1 results)
+2025-04-29 13:50:29,921 - gee_app - DEBUG - Received request for metadata: {'collection_id': 'COPERNICUS/S2_HARMONIZED', 'start_date': '2020-12-01', 'end_date': '2021-02-22', 'max_cloud_cover': 20, 'images_number': 1, 'bands': ['B4', 'B3', 'B2'], 'visualization_params': {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}, 'dimensions': {'width': 2048, 'height': 2048}, 'scale': 10, 'crs': 'EPSG:4326', 'export_format': 'GeoTIFF', 'export_destination': 'Google Drive', 'metadata': True, 'region': {'type': 'Polygon', 'coordinates': [[[9.625693, 37.296139], [9.625693, 37.354973], [9.767657, 37.354973], [9.767657, 37.296139], [9.625693, 37.296139]]]}}
+2025-04-29 13:50:30,751 - gee_app - DEBUG - Validated GEE asset: COPERNICUS/S2_HARMONIZED
+2025-04-29 13:50:38,015 - gee_app - DEBUG - Fetching Google Drive storage quota...
+2025-04-29 13:50:39,392 - gee_app - INFO - Drive Storage - Limit: 15.00 GB, Usage: 0.00 GB, Available: 15.00 GB (16106127360 bytes)
+2025-04-29 13:50:39,393 - gee_app - DEBUG - Available Drive storage: 15360.00 MB
+2025-04-29 13:50:39,660 - gee_app - DEBUG - 🔍 GEE Geometry created: {'type': 'Polygon', 'coordinates': [[[9.625693, 37.296139], [9.767657, 37.296139], [9.767657, 37.354973], [9.625693, 37.354973], [9.625693, 37.296139]]]}
+2025-04-29 13:50:40,200 - gee_app - DEBUG - 🔍 Images retrieved: 1 images found
+2025-04-29 13:50:40,201 - gee_app - DEBUG - Visualization params: {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}
+2025-04-29 13:50:40,202 - gee_app - INFO - 🔍 Processing image number: 1
+2025-04-29 13:50:40,479 - gee_app - DEBUG - Selected bands: ['B4', 'B3', 'B2']
+2025-04-29 13:50:43,654 - gee_app - DEBUG - Successfully downloaded and encoded preview for COPERNICUS/S2_HARMONIZED/20201201T100401_20201201T100404_T32SNG
+2025-04-29 13:50:43,888 - gee_app - INFO - Successfully fetched metadata for collection: COPERNICUS/S2_HARMONIZED (1 results)
+2025-04-29 13:50:43,893 - gee_app - DEBUG - Received request for metadata: {'collection_id': 'COPERNICUS/S2_HARMONIZED', 'start_date': '2020-12-01', 'end_date': '2021-02-22', 'max_cloud_cover': 20, 'images_number': 1, 'bands': ['B4', 'B3', 'B2'], 'visualization_params': {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}, 'dimensions': {'width': 2048, 'height': 2048}, 'scale': 10, 'crs': 'EPSG:4326', 'export_format': 'GeoTIFF', 'export_destination': 'Google Drive', 'metadata': True, 'region': {'type': 'Polygon', 'coordinates': [[[9.625693, 37.296139], [9.625693, 37.354973], [9.767657, 37.354973], [9.767657, 37.296139], [9.625693, 37.296139]]]}}
+2025-04-29 13:50:44,748 - gee_app - DEBUG - Validated GEE asset: COPERNICUS/S2_HARMONIZED
+2025-04-29 13:50:45,958 - gee_app - DEBUG - Fetching Google Drive storage quota...
+2025-04-29 13:50:47,285 - gee_app - INFO - Drive Storage - Limit: 15.00 GB, Usage: 0.00 GB, Available: 15.00 GB (16106127360 bytes)
+2025-04-29 13:50:47,286 - gee_app - DEBUG - Available Drive storage: 15360.00 MB
+2025-04-29 13:50:47,456 - gee_app - DEBUG - 🔍 GEE Geometry created: {'type': 'Polygon', 'coordinates': [[[9.625693, 37.296139], [9.767657, 37.296139], [9.767657, 37.354973], [9.625693, 37.354973], [9.625693, 37.296139]]]}
+2025-04-29 13:50:48,132 - gee_app - DEBUG - 🔍 Images retrieved: 1 images found
+2025-04-29 13:50:48,132 - gee_app - DEBUG - Visualization params: {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}
+2025-04-29 13:50:48,133 - gee_app - INFO - 🔍 Processing image number: 1
+2025-04-29 13:50:48,368 - gee_app - DEBUG - Selected bands: ['B4', 'B3', 'B2']
+2025-04-29 13:50:52,739 - gee_app - DEBUG - Successfully downloaded and encoded preview for COPERNICUS/S2_HARMONIZED/20201201T100401_20201201T100404_T32SNG
+2025-04-29 13:50:53,003 - gee_app - INFO - Successfully fetched metadata for collection: COPERNICUS/S2_HARMONIZED (1 results)
+2025-04-29 13:52:14,152 - gee_app - DEBUG - Received request for metadata: {'collection_id': 'COPERNICUS/S2_HARMONIZED', 'start_date': '2020-12-02', 'end_date': '2021-12-02', 'max_cloud_cover': 20, 'images_number': 1, 'bands': ['B4', 'B3', 'B2'], 'visualization_params': {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}, 'dimensions': {'width': 2048, 'height': 2048}, 'scale': 10, 'crs': 'EPSG:4326', 'export_format': 'GeoTIFF', 'export_destination': 'Google Drive', 'metadata': True, 'region': {'type': 'Polygon', 'coordinates': [[[9.791128, 37.313304], [9.791128, 37.340878], [9.820997, 37.340878], [9.820997, 37.313304], [9.791128, 37.313304]]]}}
+2025-04-29 13:52:14,402 - gee_app - DEBUG - Validated GEE asset: COPERNICUS/S2_HARMONIZED
+2025-04-29 13:52:14,705 - gee_app - DEBUG - Fetching Google Drive storage quota...
+2025-04-29 13:52:18,806 - gee_app - INFO - Drive Storage - Limit: 15.00 GB, Usage: 0.00 GB, Available: 15.00 GB (16106127360 bytes)
+2025-04-29 13:52:18,808 - gee_app - DEBUG - Available Drive storage: 15360.00 MB
+2025-04-29 13:52:19,042 - gee_app - DEBUG - 🔍 GEE Geometry created: {'type': 'Polygon', 'coordinates': [[[9.791128, 37.313304], [9.820997, 37.313304], [9.820997, 37.340878], [9.791128, 37.340878], [9.791128, 37.313304]]]}
+2025-04-29 13:52:19,379 - gee_app - DEBUG - 🔍 Images retrieved: 1 images found
+2025-04-29 13:52:19,379 - gee_app - DEBUG - Visualization params: {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}
+2025-04-29 13:52:19,380 - gee_app - INFO - 🔍 Processing image number: 1
+2025-04-29 13:52:20,171 - gee_app - DEBUG - Selected bands: ['B4', 'B3', 'B2']
+2025-04-29 13:52:23,890 - gee_app - DEBUG - Successfully downloaded and encoded preview for COPERNICUS/S2_HARMONIZED/20201204T101411_20201204T101413_T32SNG
+2025-04-29 13:52:24,102 - gee_app - INFO - Successfully fetched metadata for collection: COPERNICUS/S2_HARMONIZED (1 results)
+2025-04-29 13:52:24,106 - gee_app - DEBUG - Received request for metadata: {'collection_id': 'COPERNICUS/S2_HARMONIZED', 'start_date': '2020-12-02', 'end_date': '2021-12-02', 'max_cloud_cover': 20, 'images_number': 1, 'bands': ['B4', 'B3', 'B2'], 'visualization_params': {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}, 'dimensions': {'width': 2048, 'height': 2048}, 'scale': 10, 'crs': 'EPSG:4326', 'export_format': 'GeoTIFF', 'export_destination': 'Google Drive', 'metadata': True, 'region': {'type': 'Polygon', 'coordinates': [[[9.791128, 37.313304], [9.791128, 37.340878], [9.820997, 37.340878], [9.820997, 37.313304], [9.791128, 37.313304]]]}}
+2025-04-29 13:52:24,349 - gee_app - DEBUG - Validated GEE asset: COPERNICUS/S2_HARMONIZED
+2025-04-29 13:52:27,584 - gee_app - DEBUG - Fetching Google Drive storage quota...
+2025-04-29 13:52:28,732 - gee_app - INFO - Drive Storage - Limit: 15.00 GB, Usage: 0.00 GB, Available: 15.00 GB (16106127360 bytes)
+2025-04-29 13:52:28,733 - gee_app - DEBUG - Available Drive storage: 15360.00 MB
+2025-04-29 13:52:29,537 - gee_app - DEBUG - 🔍 GEE Geometry created: {'type': 'Polygon', 'coordinates': [[[9.791128, 37.313304], [9.820997, 37.313304], [9.820997, 37.340878], [9.791128, 37.340878], [9.791128, 37.313304]]]}
+2025-04-29 13:52:29,890 - gee_app - DEBUG - 🔍 Images retrieved: 1 images found
+2025-04-29 13:52:29,891 - gee_app - DEBUG - Visualization params: {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}
+2025-04-29 13:52:29,891 - gee_app - INFO - 🔍 Processing image number: 1
+2025-04-29 13:52:30,114 - gee_app - DEBUG - Selected bands: ['B4', 'B3', 'B2']
+2025-04-29 13:52:32,451 - gee_app - DEBUG - Successfully downloaded and encoded preview for COPERNICUS/S2_HARMONIZED/20201204T101411_20201204T101413_T32SNG
+2025-04-29 13:52:32,668 - gee_app - INFO - Successfully fetched metadata for collection: COPERNICUS/S2_HARMONIZED (1 results)
+2025-05-04 15:45:20,637 - gee_app - WARNING - ⚠️ PYTHONIOENCODING environment variable is not set to UTF-8. Emojis may not display correctly in the console.
+2025-05-04 15:45:20,697 - gee_app.utils.auth - INFO - GEE_SERVICE_ACCOUNT: satellite-platform-application@satellite-platform-application.iam.gserviceaccount.com
+2025-05-04 15:45:20,698 - gee_app.utils.auth - INFO - GEE_KEY_FILE: satellite-platform-application-f7154aa5ce46.json
+2025-05-04 15:45:20,738 - gee_app.utils.auth - INFO - Credentials set. Initializing EE...
+2025-05-04 15:45:24,329 - gee_app.utils.auth - INFO - ✅ GEE initialized successfully
+2025-05-04 15:45:31,220 - gee_app - WARNING - ⚠️ PYTHONIOENCODING environment variable is not set to UTF-8. Emojis may not display correctly in the console.
+2025-05-04 15:45:31,256 - gee_app.utils.auth - INFO - GEE_SERVICE_ACCOUNT: satellite-platform-application@satellite-platform-application.iam.gserviceaccount.com
+2025-05-04 15:45:31,257 - gee_app.utils.auth - INFO - GEE_KEY_FILE: satellite-platform-application-f7154aa5ce46.json
+2025-05-04 15:45:31,262 - gee_app.utils.auth - INFO - Credentials set. Initializing EE...
+2025-05-04 15:45:34,336 - gee_app.utils.auth - INFO - ✅ GEE initialized successfully
+2025-05-04 15:45:34,478 - gee_app - WARNING - ⚠️ PYTHONIOENCODING environment variable is not set to UTF-8. Emojis may not display correctly in the console.
+2025-05-04 15:45:34,509 - gee_app.utils.auth - INFO - GEE_SERVICE_ACCOUNT: satellite-platform-application@satellite-platform-application.iam.gserviceaccount.com
+2025-05-04 15:45:34,509 - gee_app.utils.auth - INFO - GEE_KEY_FILE: satellite-platform-application-f7154aa5ce46.json
+2025-05-04 15:45:34,514 - gee_app.utils.auth - INFO - Credentials set. Initializing EE...
+2025-05-04 15:45:36,042 - gee_app.utils.auth - INFO - ✅ GEE initialized successfully
+2025-05-04 20:41:25,643 - gee_app - WARNING - ⚠️ PYTHONIOENCODING environment variable is not set to UTF-8. Emojis may not display correctly in the console.
+2025-05-04 20:41:25,702 - gee_app.utils.auth - INFO - GEE_SERVICE_ACCOUNT: satellite-platform-application@satellite-platform-application.iam.gserviceaccount.com
+2025-05-04 20:41:25,703 - gee_app.utils.auth - INFO - GEE_KEY_FILE: satellite-platform-application-f7154aa5ce46.json
+2025-05-04 20:41:25,749 - gee_app.utils.auth - INFO - Credentials set. Initializing EE...
+2025-05-04 20:41:40,163 - gee_app.utils.auth - INFO - ✅ GEE initialized successfully
+2025-05-04 20:41:52,434 - gee_app - WARNING - ⚠️ PYTHONIOENCODING environment variable is not set to UTF-8. Emojis may not display correctly in the console.
+2025-05-04 20:41:52,542 - gee_app.utils.auth - INFO - GEE_SERVICE_ACCOUNT: satellite-platform-application@satellite-platform-application.iam.gserviceaccount.com
+2025-05-04 20:41:52,544 - gee_app.utils.auth - INFO - GEE_KEY_FILE: satellite-platform-application-f7154aa5ce46.json
+2025-05-04 20:41:52,552 - gee_app.utils.auth - INFO - Credentials set. Initializing EE...
+2025-05-04 20:41:57,273 - gee_app.utils.auth - INFO - ✅ GEE initialized successfully
+2025-05-04 20:41:57,365 - gee_app - WARNING - ⚠️ PYTHONIOENCODING environment variable is not set to UTF-8. Emojis may not display correctly in the console.
+2025-05-04 20:41:57,389 - gee_app.utils.auth - INFO - GEE_SERVICE_ACCOUNT: satellite-platform-application@satellite-platform-application.iam.gserviceaccount.com
+2025-05-04 20:41:57,389 - gee_app.utils.auth - INFO - GEE_KEY_FILE: satellite-platform-application-f7154aa5ce46.json
+2025-05-04 20:41:57,393 - gee_app.utils.auth - INFO - Credentials set. Initializing EE...
+2025-05-04 20:42:00,490 - gee_app.utils.auth - INFO - ✅ GEE initialized successfully
+2025-05-04 20:53:27,244 - gee_app - DEBUG - Received request for metadata: {'collection_id': 'COPERNICUS/S2_HARMONIZED', 'start_date': '2020-12-02', 'end_date': '2021-12-02', 'max_cloud_cover': 40, 'images_number': 1, 'bands': ['B4', 'B3', 'B2'], 'visualization_params': {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}, 'dimensions': {'width': 2048, 'height': 2048}, 'scale': 10, 'crs': 'EPSG:4326', 'export_format': 'GeoTIFF', 'export_destination': 'Google Drive', 'metadata': True, 'region': {'type': 'Polygon', 'coordinates': [[[35.309235, 10.482164], [35.309235, 10.549638], [35.391289, 10.549638], [35.391289, 10.482164], [35.309235, 10.482164]]]}}
+2025-05-04 20:53:29,178 - gee_app - DEBUG - Validated GEE asset: COPERNICUS/S2_HARMONIZED
+2025-05-04 20:53:31,662 - gee_app - DEBUG - Fetching Google Drive storage quota...
+2025-05-04 20:53:34,386 - gee_app - INFO - Drive Storage - Limit: 15.00 GB, Usage: 0.00 GB, Available: 15.00 GB (16106127360 bytes)
+2025-05-04 20:53:34,387 - gee_app - DEBUG - Available Drive storage: 15360.00 MB
+2025-05-04 20:53:34,906 - gee_app - DEBUG - 🔍 GEE Geometry created: {'type': 'Polygon', 'coordinates': [[[35.309235, 10.482164], [35.391289, 10.482164], [35.391289, 10.549638], [35.309235, 10.549638], [35.309235, 10.482164]]]}
+2025-05-04 20:53:35,424 - gee_app - DEBUG - 🔍 Images retrieved: 1 images found
+2025-05-04 20:53:35,425 - gee_app - DEBUG - Visualization params: {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}
+2025-05-04 20:53:35,425 - gee_app - INFO - 🔍 Processing image number: 1
+2025-05-04 20:53:35,710 - gee_app - DEBUG - Selected bands: ['B4', 'B3', 'B2']
+2025-05-04 20:53:40,927 - gee_app - DEBUG - Successfully downloaded and encoded preview for COPERNICUS/S2_HARMONIZED/20201205T080311_20201205T080314_T36PYS
+2025-05-04 20:53:41,288 - gee_app - INFO - Successfully fetched metadata for collection: COPERNICUS/S2_HARMONIZED (1 results)
+2025-05-04 20:53:41,299 - gee_app - DEBUG - Received request for metadata: {'collection_id': 'COPERNICUS/S2_HARMONIZED', 'start_date': '2020-12-02', 'end_date': '2021-12-02', 'max_cloud_cover': 40, 'images_number': 1, 'bands': ['B4', 'B3', 'B2'], 'visualization_params': {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}, 'dimensions': {'width': 2048, 'height': 2048}, 'scale': 10, 'crs': 'EPSG:4326', 'export_format': 'GeoTIFF', 'export_destination': 'Google Drive', 'metadata': True, 'region': {'type': 'Polygon', 'coordinates': [[[35.309235, 10.482164], [35.309235, 10.549638], [35.391289, 10.549638], [35.391289, 10.482164], [35.309235, 10.482164]]]}}
+2025-05-04 20:53:42,190 - gee_app - DEBUG - Validated GEE asset: COPERNICUS/S2_HARMONIZED
+2025-05-04 20:53:43,522 - gee_app - DEBUG - Fetching Google Drive storage quota...
+2025-05-04 20:53:46,165 - gee_app - INFO - Drive Storage - Limit: 15.00 GB, Usage: 0.00 GB, Available: 15.00 GB (16106127360 bytes)
+2025-05-04 20:53:46,166 - gee_app - DEBUG - Available Drive storage: 15360.00 MB
+2025-05-04 20:53:46,574 - gee_app - DEBUG - 🔍 GEE Geometry created: {'type': 'Polygon', 'coordinates': [[[35.309235, 10.482164], [35.391289, 10.482164], [35.391289, 10.549638], [35.309235, 10.549638], [35.309235, 10.482164]]]}
+2025-05-04 20:53:47,013 - gee_app - DEBUG - 🔍 Images retrieved: 1 images found
+2025-05-04 20:53:47,014 - gee_app - DEBUG - Visualization params: {'bands': ['B4', 'B3', 'B2'], 'min': 0, 'max': 3000}
+2025-05-04 20:53:47,014 - gee_app - INFO - 🔍 Processing image number: 1
+2025-05-04 20:53:47,491 - gee_app - DEBUG - Selected bands: ['B4', 'B3', 'B2']
+2025-05-04 20:53:52,336 - gee_app - DEBUG - Successfully downloaded and encoded preview for COPERNICUS/S2_HARMONIZED/20201205T080311_20201205T080314_T36PYS
+2025-05-04 20:53:53,084 - gee_app - INFO - Successfully fetched metadata for collection: COPERNICUS/S2_HARMONIZED (1 results)

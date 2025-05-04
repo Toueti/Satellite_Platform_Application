@@ -1,0 +1,405 @@
+@baseUrl = http://localhost:8080/geospatial/processing
+@token= eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1RIRU1BVElDSUFOIl0sIm5hbWUiOiJ5b2J0b3Q4QGdtYWlsLmNvbSIsInN1YiI6InlvYnRvdDhAZ21haWwuY29tIiwiaWF0IjoxNzQ1MDgxNTQ1LCJleHAiOjE3NDUxNjc5NDV9.zhvJoxhoPiLJaxDhwyFKEC_GoCDWZCX8KNvlqHdHQXI
+
+# Assume an existing image ID and result ID for testing
+@imageId = 67febb0ff8770168cadada37
+@resultId = 68043fa4e3923628dcdfbe10
+@deletedResultId = 68043fa4e3923628dcdfbe10
+@projectId = 67fe938929322a67a5a7d7fb
+
+### Save processing results (Metadata only)
+# @name saveResultMetadataOnly
+POST {{baseUrl}}/save
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=BoundaryMetadata
+
+--BoundaryMetadata
+Content-Disposition: form-data; name="metadata"
+Content-Type: application/json
+
+{
+  "imageId": "{{imageId}}",
+  "data": {
+    "indexType": "NDVI",
+    "meanValue": 0.75,
+    "minValue": 0.1,
+    "maxValue": 0.9,
+    "processingTimeMs": 1234
+  },
+  "date": "2025-04-16T19:30:00.123456",
+  "type": "VEGETATION_INDEX",
+  "status": "COMPLETED"
+}
+--BoundaryMetadata--
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201 CREATED");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.message === "Processing results saved successfully.", "Response message is incorrect");
+        client.assert(response.body.data !== null, "Response data should not be null");
+        client.assert(response.body.data.id !== undefined, "Saved result ID is missing");
+        client.assert(response.body.data.imageId === client.global.get("imageId"), "Image ID mismatch");
+        client.assert(response.body.data.type === "VEGETATION_INDEX", "Type mismatch");
+    });
+%}
+
+
+### Save processing results (With File)
+# @name saveResultWithFile
+POST {{baseUrl}}/save
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=BoundaryWithFile
+
+--BoundaryWithFile
+Content-Disposition: form-data; name="metadata"
+Content-Type: application/json
+
+{
+  "imageId": "{{imageId}}",
+  "data": {
+    "indexType": "SAVI",
+    "meanValue": 0.65,
+    "processingTimeMs": 987
+  },
+  "date": "2025-04-16T19:35:00.987654",
+  "type": "VEGETATION_INDEX",
+  "status": "COMPLETED"
+}
+--BoundaryWithFile
+Content-Disposition: form-data; name="file"; filename="result_savi.csv"
+Content-Type: image/tif
+
+< ./TestImages/image.tif
+--BoundaryWithFile--
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201 CREATED");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.message === "Processing results saved successfully.", "Response message is incorrect");
+        client.assert(response.body.data !== null, "Response data should not be null");
+        client.assert(response.body.data.id !== undefined, "Saved result ID is missing");
+        client.assert(response.body.data.imageId === client.global.get("imageId"), "Image ID mismatch");
+        client.assert(response.body.data.type === "VEGETATION_INDEX", "Type mismatch");
+        client.assert(response.body.data.fileId !== undefined, "Saved result File ID is missing"); // Check for fileId
+    });
+%}
+
+
+### Get processing results by ID
+# @name getResultById
+GET {{baseUrl}}/{{resultId}}
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200 OK");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.data !== null, "Response data should not be null");
+        client.assert(response.body.data.id === client.global.get("resultId"), "Result ID mismatch");
+    });
+%}
+
+# Example: Get non-existent result by ID (should fail with 404)
+# GET {{baseUrl}}/invalid-id-format
+# Authorization: Bearer {{token}}
+# > {%
+#     client.test("Request failed as expected", function() {
+#         client.assert(response.status === 404, "Response status is not 404 NOT FOUND");
+#         client.assert(response.body.status === "FAILURE", "Response status field is not FAILURE");
+#         client.assert(response.body.message.includes("not found or invalid ID"), "Response message is incorrect");
+#     });
+# %}
+
+
+
+### Get processing result file by ID
+# @name getResultFileById
+GET {{baseUrl}}/{{resultId}}/file
+Authorization: Bearer {{token}}
+Accept: application/octet-stream
+
+# Save the response to a file
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.writeFile("./TestFiles/downloaded_result_file", response.body);
+%}
+
+
+### Get processing results by image ID
+# @name getResultsByImageId
+GET {{baseUrl}}/image/{{imageId}}
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200 OK");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(Array.isArray(response.body.data), "Response data should be an array");
+        // Optionally check if data is not empty if you expect results
+        // client.assert(response.body.data.length > 0, "Expected results for this image ID");
+    });
+%}
+
+
+### Get all processing results (Paginated)
+# @name getAllResults
+GET {{baseUrl}}?page=0&size=5&sort=date,desc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200 OK");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.data !== null, "Response data should not be null");
+        client.assert(response.body.data.content !== undefined, "Response data is missing 'content' field");
+        client.assert(Array.isArray(response.body.data.content), "Response data.content should be an array");
+        client.assert(response.body.data.totalPages !== undefined, "Response data is missing 'totalPages' field");
+        client.assert(response.body.data.totalElements !== undefined, "Response data is missing 'totalElements' field");
+        client.assert(response.body.data.number === 0, "Response data page number should be 0");
+        client.assert(response.body.data.size === 5, "Response data page size should be 5");
+    });
+%}
+
+
+### Soft delete processing results by ID
+# @name softDeleteResultById
+DELETE {{baseUrl}}/{{resultId}}
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200 OK"); // Changed from 204
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.message === "Results soft deleted successfully.", "Response message is incorrect");
+        client.assert(response.body.data === null, "Response data should be null");
+    });
+%}
+
+
+### Soft delete processing results by image ID and results ID
+# @name softDeleteResultByImageAndId
+DELETE {{baseUrl}}/image/{{imageId}}/{{resultId}}
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200 OK"); // Changed from 204
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.message === "Results soft deleted successfully.", "Response message is incorrect");
+        client.assert(response.body.data === null, "Response data should be null");
+    });
+%}
+
+
+### Update processing results (Metadata only example)
+# @name updateResult
+PUT {{baseUrl}}/{{resultId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "imageId": "{{imageId}}",
+  "data": {
+    "indexType": "NDVI",
+    "meanValue": 0.78, # Updated value
+    "minValue": 0.1,
+    "maxValue": 0.9,
+    "processingTimeMs": 1300,
+    "notes": "Updated after review"
+  },
+  "date": "2025-04-16T19:30:00.123456",
+  "type": "VEGETATION_INDEX",
+  "status": "COMPLETED"
+}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200 OK");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.message === "Results updated successfully.", "Response message is incorrect");
+        client.assert(response.body.data !== null, "Response data should not be null");
+        client.assert(response.body.data.id === client.global.get("resultId"), "Result ID mismatch");
+        client.assert(response.body.data.data.meanValue === 0.78, "Updated value not reflected");
+        client.assert(response.body.data.data.notes === "Updated after review", "Updated notes not reflected");
+    });
+%}
+
+
+### Bulk Save processing results (Metadata Only Example)
+# @name bulkSaveResultsMetadataOnly
+POST {{baseUrl}}/bulk-save
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=BulkMetaBoundary
+
+--BulkMetaBoundary
+Content-Disposition: form-data; name="metadataList"
+Content-Type: application/json
+
+[
+  {
+    "imageId": "{{imageId}}",
+    "data": {"type": "Classification", "accuracy": 0.92},
+    "date": "2025-04-16T20:00:00.000000",
+    "type": "CLASSIFICATION",
+    "status": "COMPLETED"
+  },
+  {
+    "imageId": "{{imageId}}",
+    "data": {"type": "Change Detection", "area_changed_km2": 15.5},
+    "date": "2025-04-16T20:05:00.000000",
+    "type": "CHANGE_DETECTION",
+    "status": "COMPLETED"
+  }
+]
+--BulkMetaBoundary--
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201 CREATED");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.message === "Bulk results saved successfully.", "Response message is incorrect");
+        client.assert(Array.isArray(response.body.data), "Response data should be an array");
+        client.assert(response.body.data.length === 2, "Expected 2 results to be saved");
+        client.assert(response.body.data[0].id !== undefined, "First saved result ID is missing");
+        client.assert(response.body.data[1].id !== undefined, "Second saved result ID is missing");
+    });
+%}
+
+
+### Bulk Save processing results (With Files Example)
+# @name bulkSaveResultsWithFiles
+POST {{baseUrl}}/bulk-save
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=BulkFilesBoundary
+
+--BulkFilesBoundary
+Content-Disposition: form-data; name="metadataList"
+Content-Type: application/json
+
+[
+  {
+    "imageId": "{{imageId}}",
+    "data": {"type": "Report", "title": "Analysis Report 1"},
+    "date": "2025-04-16T20:10:00.000000",
+    "type": "REPORT",
+    "status": "COMPLETED"
+  },
+  {
+    "imageId": "{{imageId}}",
+    "data": {"type": "Visualization", "format": "PNG"},
+    "date": "2025-04-16T20:15:00.000000",
+    "type": "VISUALIZATION",
+    "status": "COMPLETED"
+  }
+]
+--BulkFilesBoundary
+Content-Disposition: form-data; name="file_0"; filename="report_1.pdf"
+Content-Type: application/pdf
+
+< ./TestFiles/sample_report.pdf
+--BulkFilesBoundary
+Content-Disposition: form-data; name="file_1"; filename="visualization.png"
+Content-Type: image/png
+
+< ./TestFiles/sample_viz.png
+--BulkFilesBoundary--
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201 CREATED");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.message === "Bulk results saved successfully.", "Response message is incorrect");
+        client.assert(Array.isArray(response.body.data), "Response data should be an array");
+        client.assert(response.body.data.length === 2, "Expected 2 results to be saved");
+        client.assert(response.body.data[0].id !== undefined, "First saved result ID is missing");
+        client.assert(response.body.data[0].fileId !== undefined, "First saved result file ID is missing");
+        client.assert(response.body.data[1].id !== undefined, "Second saved result ID is missing");
+        client.assert(response.body.data[1].fileId !== undefined, "Second saved result file ID is missing");
+    });
+%}
+
+
+### Restore Soft-Deleted Result
+# Requires valid resultId of a soft-deleted result
+# @name restoreResult
+POST {{baseUrl}}/{{deletedResultId}}/restore
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200 OK");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.message === "Results restored successfully.", "Response message is incorrect");
+        client.assert(response.body.data !== null, "Response data should not be null");
+        client.assert(response.body.data.id === client.global.get("deletedResultId"), "Restored result ID mismatch");
+        client.assert(response.body.data.deleted === false, "Result should not be marked as deleted");
+    });
+%}
+
+# Example: Restore non-deleted result (should fail with 400)
+# POST {{baseUrl}}/{{resultId}}/restore
+# Authorization: Bearer {{token}}
+# > {%
+#     client.test("Request failed as expected", function() {
+#         client.assert(response.status === 400, "Response status is not 400 BAD REQUEST");
+#         client.assert(response.body.status === "FAILURE", "Response status field is not FAILURE");
+#         client.assert(response.body.message.includes("not deleted"), "Response message is incorrect");
+#     });
+# %}
+
+
+### Force Permanent Delete Result
+# Requires valid resultId
+# Use with extreme caution!
+# @name forceDeleteResult
+DELETE {{baseUrl}}/{{resultId}}/force
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200 OK"); // Changed from 204
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.message === "Results permanently deleted successfully.", "Response message is incorrect");
+        client.assert(response.body.data === null, "Response data should be null");
+    });
+%}
+
+
+### Get Soft-Deleted Results (Paginated)
+# @name getDeletedResults
+GET {{baseUrl}}/deleted?page=0&size=10
+Authorization: Bearer {{token}}
+Accept: application/json
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200 OK");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(response.body.data !== null, "Response data should not be null");
+        client.assert(response.body.data.content !== undefined, "Response data is missing 'content' field");
+        client.assert(Array.isArray(response.body.data.content), "Response data.content should be an array");
+        // Check if items in content are actually deleted (if any exist)
+        if (response.body.data.content.length > 0) {
+            client.assert(response.body.data.content[0].deleted === true, "First item should be marked as deleted");
+        }
+    });
+%}
+
+### Get processing results by project ID
+# @name getResultsByProjectId
+GET {{baseUrl}}/project/{{projectId}}
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200 OK");
+        client.assert(response.body.status === "SUCCESS", "Response status field is not SUCCESS");
+        client.assert(Array.isArray(response.body.data), "Response data should be an array");
+        // Optionally check if data is not empty if you expect results for the projectId
+        // client.assert(response.body.data.length > 0, "Expected results for this project ID");
+    });
+%}

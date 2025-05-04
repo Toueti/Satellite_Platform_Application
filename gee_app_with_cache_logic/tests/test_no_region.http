@@ -1,0 +1,148 @@
+### NDVI Endpoint - No Region -tested: works
+POST http://localhost:5000/api/ndvi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}
+
+### EVI Endpoint - No Region -tested: works
+POST http://localhost:5000/api/evi
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}
+
+### Water Bodies Detection - No Region -tested: works
+POST http://localhost:5000/api/water_bodies
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "threshold": 0.3,
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}
+
+### Change Detection - No Region -tested: works
+POST http://localhost:5000/api/change_detection
+Content-Type: application/json
+
+{
+  "imageIdBefore": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "imageIdAfter": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "threshold": 0.2,
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}
+
+### Land Cover Analysis - No Region - tested :works
+POST http://localhost:5000/api/land_cover
+Content-Type: application/json
+
+{
+  "year": 2020,
+  "scale": 10,
+  "place_name": "NoRegionTest"
+}
+
+### Image Metadata - No Region - tested: works, but have requestsize error
+POST http://localhost:5000/api/metadata
+Content-Type: application/json
+
+{
+  "startDate": "2021-01-01",
+  "endDate": "2021-12-31",
+  "maxCloudCover": 20
+}
+
+### Slope Calculation - No Region -tested:works
+POST http://localhost:5000/api/slope
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}
+
+### Aspect Calculation - No Region -tested: works
+POST http://localhost:5000/api/aspect
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}
+
+### Hillshade Generation - No Region -tested: works
+POST http://localhost:5000/api/hillshade
+Content-Type: application/json
+
+{
+  "dem_collection": "USGS/SRTMGL1_003",
+  "azimuth": 315,
+  "altitude": 45,
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}
+
+### Fire Detection - No Region -tested: works
+POST http://localhost:5000/api/fire
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "threshold": 340,
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}
+
+### Time Series Analysis - No Region -tested: doesn't works
+POST http://localhost:5000/api/timeseries
+Content-Type: application/json
+
+{
+  "collection_id": "COPERNICUS/S2_HARMONIZED",
+  "index": "NDVI",
+  "interval": "month",
+  "place_name": "NoRegionTest"
+}
+
+### Agriculture Analysis - No Region -tested: doesn't works
+POST http://localhost:5000/api/agriculture
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}
+
+### Zonal Statistics - No Region -tested: works
+POST http://localhost:5000/api/zonal_stats
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}
+
+### Histogram Generation - No Region -tested: works
+POST http://localhost:5000/api/histogram
+Content-Type: application/json
+
+{
+  "image_id": "COPERNICUS/S2_HARMONIZED/20210101T102329_20210101T102357_T32TMT",
+  "band": "B4",
+  "bins": 50,
+  "scale": 30,
+  "place_name": "NoRegionTest"
+}

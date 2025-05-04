@@ -1,0 +1,136 @@
+### Test drought_analysis_precipitation (Single Image Mode)
+POST http://localhost:5000/gee/extract HTTP/1.1
+Content-Type: application/json
+
+{
+    "analysis_type": "drought_precipitation",
+    "image_id": "UCSB-CHG/CHIRPS/DAILY/20230101",
+    "region": {
+        "type": "Polygon",
+        "coordinates": [[[-122.5, 37.7], [-122.3, 37.7], [-122.3, 37.9], [-122.5, 37.9], [-122.5, 37.7]]]
+    },
+    "place_name": "San Francisco"
+}
+
+### Test drought_analysis_precipitation (Collection Mode)
+POST http://localhost:5000/gee/extract HTTP/1.1
+Content-Type: application/json
+
+{
+    "analysis_type": "drought_precipitation",
+    "collection_id": "UCSB-CHG/CHIRPS/DAILY",
+    "region": {
+        "type": "Polygon",
+        "coordinates": [[[-122.5, 37.7], [-122.3, 37.7], [-122.3, 37.9], [-122.5, 37.9], [-122.5, 37.7]]]
+    },
+    "start_date": "2023-01-01",
+    "end_date": "2023-12-31",
+    "time_scale": 3,
+    "place_name": "San Francisco"
+}
+
+### Test drought_analysis_vegetation (Single Image Mode)
+POST http://localhost:5000/gee/extract HTTP/1.1
+Content-Type: application/json
+
+{
+    "analysis_type": "drought_vegetation",
+    "image_id": "LANDSAT/LC08/C02/T1_L2/LC08_044034_20230101",
+    "region": {
+        "type": "Polygon",
+        "coordinates": [[[-122.5, 37.7], [-122.3, 37.7], [-122.3, 37.9], [-122.5, 37.9], [-122.5, 37.7]]]
+    },
+    "index": "NDVI",
+    "scale": 30,
+    "place_name": "San Francisco"
+}
+
+### Test drought_analysis_vegetation (Collection Mode)
+POST http://localhost:5000/gee/extract HTTP/1.1
+Content-Type: application/json
+
+{
+    "analysis_type": "drought_vegetation",
+    "collection_id": "LANDSAT/LC08/C02/T1_L2",
+    "region": {
+        "type": "Polygon",
+        "coordinates": [[[-122.5, 37.7], [-122.3, 37.7], [-122.3, 37.9], [-122.5, 37.9], [-122.5, 37.7]]]
+    },
+    "index": "NDVI",
+    "start_date": "2023-01-01",
+    "end_date": "2023-12-31",
+    "interval": "month",
+    "scale": 30,
+    "place_name": "San Francisco"
+}
+
+### Test land_cover_analysis
+POST http://localhost:5000/gee/extract HTTP/1.1
+Content-Type: application/json
+
+{
+    "analysis_type": "land_cover",
+    "image_id": "LANDSAT/LC08/C02/T1_L2/LC08_044034_20230101",
+    "region": {
+        "type": "Polygon",
+        "coordinates": [[[-122.5, 37.7], [-122.3, 37.7], [-122.3, 37.9], [-122.5, 37.9], [-122.5, 37.7]]]
+    },
+    "scale": 30,
+    "place_name": "San Francisco",
+    "classification_band": "NDVI",
+    "temporal_analysis": false,
+    "detailed_metrics": true
+}
+
+### Test generate_histogram
+POST http://localhost:5000/gee/extract HTTP/1.1
+Content-Type: application/json
+
+{
+    "analysis_type": "histogram",
+    "image_id": "LANDSAT/LC08/C02/T1_L2/LC08_044034_20230101",
+    "region": {
+        "type": "Polygon",
+        "coordinates": [[[-122.5, 37.7], [-122.3, 37.7], [-122.3, 37.9], [-122.5, 37.9], [-122.5, 37.7]]]
+    },
+    "band": "SR_B4",
+    "bins": 50,
+    "scale": 30,
+    "place_name": "San Francisco"
+}
+
+### Test zonal_statistics
+POST http://localhost:5000/gee/extract HTTP/1.1
+Content-Type: application/json
+
+{
+    "analysis_type": "zonal_stats",
+    "image_id": "LANDSAT/LC08/C02/T1_L2/LC08_044034_20230101",
+    "region": {
+        "type": "Polygon",
+        "coordinates": [[[-122.5, 37.7], [-122.3, 37.7], [-122.3, 37.9], [-122.5, 37.9], [-122.5, 37.7]]]
+    },
+    "scale": 30,
+    "place_name": "San Francisco"
+}
+
+### Test detect_change_between_images
+POST http://localhost:5000/gee/extract HTTP/1.1
+Content-Type: application/json
+
+{
+    "analysis_type": "change_detection",
+    "image_id_before": "LANDSAT/LC08/C02/T1_L2/LC08_044034_20220101",
+    "image_id_after": "LANDSAT/LC08/C02/T1_L2/LC08_044034_20230101",
+    "region": {
+        "type": "Polygon",
+        "coordinates": [[[-122.5, 37.7], [-122.3, 37.7], [-122.3, 37.9], [-122.5, 37.9], [-122.5, 37.7]]]
+    },
+    "bands": ["SR_B4", "SR_B5"],
+    "threshold": 0.2,
+    "scale": 30,
+    "place_name": "San Francisco"
+}
+
+### Check Task Status (Replace <task_id> with the actual ID from a previous response)
+GET http://localhost:5000/gee/status/<task_id> HTTP/1.1

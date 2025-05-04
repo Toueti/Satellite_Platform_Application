@@ -1,0 +1,50 @@
+{
+  "name": "satellite-image-processing-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@headlessui/react": "^1.7.18",
+    "@heroicons/react": "^2.2.0",
+    "@mui/icons-material": "^7.0.1",
+    "@mui/material": "^7.0.1",
+    "@mui/x-date-pickers": "^7.28.2",
+    "@types/react-modal": "^3.16.3",
+    "axios": "^1.6.7",
+    "d3": "^7.8.5",
+    "date-fns": "^2.30.0",
+    "dayjs": "^1.11.13",
+    "jsonwebtoken": "^9.0.2",
+    "leaflet": "^1.9.4",
+    "next": "14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-leaflet": "^4.2.1",
+    "react-leaflet-draw": "^0.20.6",
+    "react-modal": "^3.16.3",
+    "react-zoom-pan-pinch": "^3.7.0",
+    "recharts": "^2.12.0",
+    "use-debounce": "^10.0.4"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.17",
+    "@types/node": "^20.11.17",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.1.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.3.3"
+  }
+}

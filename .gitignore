@@ -1,0 +1,34 @@
+# Existing entries
+app.log
+start_backend.ps1
+
+# Added entries
+
+# Backend (Maven/Java)
+Backend/target/
+Backend/logs/
+Backend/.env
+
+# Frontend (Node.js)
+FrontEnd/node_modules/
+FrontEnd/.env
+# FrontEnd/package-lock.json # Usually committed, uncomment if needed
+
+# GEE App (Python)
+gee_app_with_cache_logic/.env
+gee_app_with_cache_logic/cache/
+gee_app_with_cache_logic/downloads/
+gee_app_with_cache_logic/__pycache__/
+gee_app_with_cache_logic/*.pyc
+gee_app_with_cache_logic/venv/
+gee_app_with_cache_logic/*.venv
+
+# Image Processing (Python)
+image_porcessing/output/
+image_porcessing/__pycache__/
+image_porcessing/*.pyc
+image_porcessing/venv/
+image_porcessing/*.venv
+
+# General Node
+node_modules/

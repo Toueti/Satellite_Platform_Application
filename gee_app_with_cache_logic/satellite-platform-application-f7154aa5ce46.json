@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "satellite-platform-application",
+  "private_key_id": "f7154aa5ce464dc7fdb47d4c14ca6fc674fb6aaa",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCor5JoJR448seE\nENWq7G47bjKboRZGy7IHxyTURH3mf43aq/KjJlEqWQRACsuUMI5o1dfuFriIY+LB\nPmyaIdTh2M8jQhEljNlVU6mmMQoTnfOo2+dc90O6vXSMeNTzDrLUma337eKCXDi0\nxi2LvH9zp6VAvcxwc7pRODWWKn+NDaewVDguls0UiqO4mYLf78T1tiGO4ZMDQ+Am\nRZhTb5MYCisUwjtWBvn86pb6C1MOJt6/Lb0Po8n6/8oJI0T09xXj5HBaUEqxsNC7\nvuY0fi/XgOFSUzR6A6caghhrXwAo13lsgNI0HIlJgrH/JB3UTBUXpnmSxeTkEBVH\nrzvAOw2TAgMBAAECggEAIVruSVelnT8sgonNpkmwFmJY8Xst63vVzUHsn2iXuJ9a\nTnYXuXkXLZeChqNb1Aax8jruwq6NeLK/oNSWJvgvnyT++IrU1yb9xqiPcERcKLrf\n9nDdU/20z9UsmaY+/XzXkcB9rPvGAV74+44AbZQtY5Iv1Bhzt3y6x9qkhfgLVrmd\nL/afFAPGfKh0HuGXSfRZYfYpXa4mrpB+AWgF6xc0jpoGsQCEyccPYYAo9UPmsCQt\nf7ZCbl1pxZHtU7+OgDodsrL6Az8l8YlN5yX38R1xCxSzJsBFj8LRjP3HSUWcnahW\n2IhYtNONKqBsFNpmCl9AMQ5vLC6pX9JkpR0SaGqiiQKBgQDcLw1sqJFAERxZ/vx2\nXD1zb4CKVj5SkN3xOhF20QjXfM6ARbTTLIRvLh101lfG4wmO3AjAh9IxeXd4bPEG\njhW5PfFbRg4mohQxH6zxnSNYL53lOLRY6n9CR8sLvuASvVQnsIWW4L+eMO49N7rP\nQutT10/kn3y3zSBcOtMRt1KrBwKBgQDEIAdDa+OkWtON82vRKSsXa3h5LXdUgN/3\nTPYONPX18hAVL9N4g1tdnjG8Cgr7fBxuIj7Xp/ZqZiiXCMUYOHHeTSizuVgu6Zla\n9BRYDdXe+XVhsGs7kT+A29C+qW+UjvQgvtJ+NhnuO8Vf1WhriF01KlG3udzKlWPp\nBjBE3yVKFQKBgQC18Z+rOUQFZ95As8bU23XgDLRwG8IWIiV0L2K9BxDCWByfvHom\nwjORV875fCE+dN+yEDqfNdzICzJg7czheMmUsA3gOWx6GhaLXTxgz1OkjHxyLMBC\ndUvBbmfnhcvNUGvY/DH3sjJFOvOy3HleyVKCjnozVmMN0tA5xlYh3pXOQwKBgBxq\n56KFR37RCkZPNxgfdvb1w4cLZ3b/FXSn2h9E3T69zEbFn0afAeYWve4ZJm46FYR/\nwctNsw7Hrqnzw1s3Eoi7dWJVQMnLX0UmiKwZlRux2ahF/8Op0CHDuANoWZqU/Bqi\ni61t+WPjlT3FllO+doL1ltGgRLW137wsAWJ5UtXhAoGAbCSzA49nW4e9mtyaxFwq\nVnz93ROtd7QMCjwu3TTldkc9B5Z1cfGCvvqH1HiDTp+ckotcgPHUXovliWxYauzH\nSZEmd5+qM16BxELcuDPCEp5VGLYd/V5LENieidZu169j2fhJcyxdWcIKLysI/r+x\npFc8Xu3/t55jpu8PmVsg5xY=\n-----END PRIVATE KEY-----\n",
+  "client_email": "satellite-platform-application@satellite-platform-application.iam.gserviceaccount.com",
+  "client_id": "103928808857394638649",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/satellite-platform-application%40satellite-platform-application.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

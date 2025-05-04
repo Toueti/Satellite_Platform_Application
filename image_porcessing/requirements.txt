@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+numpy
+rasterio
+opencv-python
+Pillow
+matplotlib
+scikit-image

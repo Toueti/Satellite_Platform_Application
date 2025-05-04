@@ -1,0 +1,247 @@
+{"properties": [
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "Secret key used for signing and validating JWT tokens for authentication"
+  },
+  {
+    "name": "jwt.expiration",
+    "type": "java.lang.String",
+    "description": "Time duration in milliseconds before JWT tokens expire"
+  },
+  {
+    "name": "thread.pool.size",
+    "type": "java.lang.String",
+    "description": "Maximum number of threads available in the application thread pool for concurrent operations"
+  },
+  {
+    "name": "storage.filesystem.directory",
+    "type": "java.lang.String",
+    "description": "Absolute path to the directory where satellite imagery and other files will be stored"
+  },
+  {
+    "name": "python.backend.url",
+    "type": "java.lang.String",
+    "description": "Base URL endpoint for the Python backend service responsible for image processing and analysis"
+  },
+  {
+    "name": "rate_limit.max_requests",
+    "type": "java.lang.String",
+    "description": "Maximum number of API requests allowed within the specified time window"
+  },
+  {
+    "name": "rate_limit.time_window_millis",
+    "type": "java.lang.String",
+    "description": "Time window in milliseconds during which the maximum request limit applies"
+  },
+  {
+    "name": "analysis.valid_types",
+    "type": "java.lang.String",
+    "description": "Comma-separated list of valid satellite image analysis types supported by the platform"
+  },
+  {
+    "name": "cache.redis.ttl_seconds",
+    "type": "java.lang.String",
+    "description": "Default time-to-live in seconds for Redis cache entries before automatic expiration"
+  },
+  {
+    "name": "cache.redis.prefix",
+    "type": "java.lang.String",
+    "description": "Prefix added to all Redis cache keys to prevent collisions with other applications"
+  },
+  {
+    "name": "cache.cleanup.max_infrequent_access_count",
+    "type": "java.lang.String",
+    "description": "Maximum allowed access count threshold below which cache entries are considered infrequently used and eligible for cleanup"
+  },
+  {
+    "name": "cache.cleanup.inactivity_threshold_days",
+    "type": "java.lang.String",
+    "description": "Number of days of inactivity after which cache entries become eligible for cleanup"
+  },
+  {
+    "name": "cache.cleanup.cron",
+    "type": "java.lang.String",
+    "description": "Cron expression that defines the schedule for automatic cache cleanup operations"
+  },
+  {
+    "name": "project.base.path",
+    "type": "java.lang.String",
+    "description": "Base directory path for project-specific resources and configurations"
+  },
+  {
+    "name": "rate-limit.cleanup-interval",
+    "type": "java.lang.String",
+    "description": "Time interval in milliseconds between rate limit cache cleanup operations"
+  },
+  {
+    "name": "audit.log.path",
+    "type": "java.lang.String",
+    "description": "File path where application audit logs will be stored for security and compliance purposes"
+  },
+  {
+    "name": "app.initial.admin.enabled",
+    "type": "java.lang.String",
+    "description": "Flag to enable or disable automatic creation of an initial administrator account on application startup"
+  },
+  {
+    "name": "app.initial.admin.username",
+    "type": "java.lang.String",
+    "description": "Username for the initial administrator account created during application bootstrap"
+  },
+  {
+    "name": "app.initial.admin.email",
+    "type": "java.lang.String",
+    "description": "Email address for the initial administrator account created during application bootstrap"
+  },
+  {
+    "name": "app.initial.admin.password",
+    "type": "java.lang.String",
+    "description": "Password for the initial administrator account (should be changed after first login)"
+  },
+  {
+    "name": "messaging.attachments.max.size",
+    "type": "java.lang.String",
+    "description": "Maximum allowed size in bytes for files attached to messages within the platform"
+  },
+  {
+    "name": "messaging.attachments.allowed.types",
+    "type": "java.lang.String",
+    "description": "Comma-separated list of MIME types allowed for file attachments in the messaging system"
+  },
+  {
+    "name": "messaging.user-to-admin.enabled",
+    "type": "java.lang.String",
+    "description": "Flag to enable or disable direct communication channels between users and administrators for support"
+  },
+  {
+    "name": "messaging.user-to-bot.enabled",
+    "type": "java.lang.String",
+    "description": "Flag to enable or disable AI chatbot support for user assistance and basic queries"
+  },
+  {
+    "name": "messaging.user-to-user.enabled",
+    "type": "java.lang.String",
+    "description": "Flag to enable or disable direct messaging between platform users for collaboration"
+  },
+  {
+    "name": "messaging.cleanup.enabled",
+    "type": "java.lang.String",
+    "description": "Flag to enable or disable automatic cleanup of old or expired messages to conserve storage"
+  },
+  {
+    "name": "messaging.rabbitmq.enabled",
+    "type": "java.lang.String",
+    "description": "Flag to globally enable or disable the RabbitMQ-based messaging functionality within the application"
+  },
+  {
+    "name": "communication.type",
+    "type": "java.lang.String",
+    "description": "Communication protocol type used for inter-service communication (e.g., REST, gRPC, AMQP)"
+  },
+  {
+    "name": "messaging.queue.dlx.enabled",
+    "type": "java.lang.String",
+    "description": "Flag to enable or disable Dead Letter Exchange functionality for handling failed message deliveries"
+  },
+  {
+    "name": "messaging.retry.max-attempts",
+    "type": "java.lang.String",
+    "description": "Maximum number of retry attempts for failed message deliveries before sending to DLX"
+  },
+  {
+    "name": "messaging.retry.initial-interval",
+    "type": "java.lang.String",
+    "description": "Initial wait time in milliseconds before the first retry attempt for failed messages"
+  },
+  {
+    "name": "messaging.retry.multiplier",
+    "type": "java.lang.String",
+    "description": "Multiplicative factor applied to the retry interval for each subsequent retry attempt"
+  },
+  {
+    "name": "external.app.endpoints.image_processor",
+    "type": "java.lang.String",
+    "description": "URL endpoint for the external image processing service used for satellite imagery analysis"
+  },
+  {
+    "name": "communication.file.size.threshold",
+    "type": "java.lang.String",
+    "description": "File size threshold in bytes that determines when to switch from in-memory to disk-based file transfer"
+  },
+  {
+    "name": "grpc.client.address",
+    "type": "java.lang.String",
+    "description": "Hostname or IP address of the gRPC server for remote procedure calls"
+  },
+  {
+    "name": "grpc.client.port",
+    "type": "java.lang.String",
+    "description": "Network port number on which the gRPC server is listening"
+  },
+  {
+    "name": "grpc.client.max-message_size_mb",
+    "type": "java.lang.String",
+    "description": "Maximum allowed size in megabytes for gRPC message payloads"
+  },
+  {
+    "name": "grpc.client.use_transport_security",
+    "type": "java.lang.String",
+    "description": "Flag to enable or disable TLS/SSL encryption for secure gRPC communications"
+  },
+  {
+    "name": "grpc.client.shutdown_timeout_seconds",
+    "type": "java.lang.String",
+    "description": "Maximum time in seconds to wait for graceful shutdown of gRPC client connections"
+  },
+  {
+    "name": "storage.temporary.redis-prefix",
+    "type": "java.lang.String",
+    "description": "Prefix used for Redis keys that store temporary file references and metadata"
+  },
+  {
+    "name": "storage.temporary.filesystem-path",
+    "type": "java.lang.String",
+    "description": "Directory path where temporary files are stored before processing or permanent storage"
+  },
+  {
+    "name": "storage.temporary.inactivity-duration",
+    "type": "java.lang.String",
+    "description": "Maximum duration in seconds that temporary files can remain unused before becoming eligible for cleanup"
+  },
+  {
+    "name": "storage.temporary.post-access-duration",
+    "type": "java.lang.String",
+    "description": "Duration in seconds that temporary files are retained after their last access before cleanup"
+  },
+  {
+    "name": "storage.temporary.cleanup-cron",
+    "type": "java.lang.String",
+    "description": "Cron expression defining the schedule for temporary file cleanup operations"
+  },
+  {
+    "name": "spring.webflux.max-in-memory-size",
+    "type": "java.lang.String",
+    "description": "Maximum size in bytes of data buffers that can be held in memory when processing web requests"
+  },
+  {
+    "name": "web_client.memory.buffer.size",
+    "type": "java.lang.String",
+    "description": "Size in bytes of the memory buffer used by WebClient for processing HTTP request/response data"
+  },
+  {
+    "name": "cache.redis.max_infrequent_access_count",
+    "type": "java.lang.String",
+    "description": "Maximum access count threshold for Redis cache entries below which they are considered infrequently used"
+  },
+  {
+    "name": "cache.redis.inactivity_threshold_days",
+    "type": "java.lang.String",
+    "description": "Number of days of inactivity after which Redis cache entries become eligible for eviction"
+  },
+  {
+    "name": "spring.cloud.config.enabled",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.cloud.config.enabled'"
+  }
+]}

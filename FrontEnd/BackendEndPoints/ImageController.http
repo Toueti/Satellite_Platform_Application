@@ -1,0 +1,133 @@
+@baseUrl = http://localhost:8080/geospatial/images
+@token= eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1RIRU1BVElDSUFOIl0sIm5hbWUiOiJoeXBlcmFyNjlAZ21haWwuY29tIiwic3ViIjoiaHlwZXJhcjY5QGdtYWlsLmNvbSIsImlhdCI6MTc0NTQ0OTA4MiwiZXhwIjoxNzQ1NTM1NDgyfQ.fBMN7nS1X4LTQfDv2rhA8-ya38Q_tbH2PKq-4VARsBY
+
+@projectId=67fe938929322a67a5a7d7fb
+
+@imageId=67febb0ff8770168cadada37
+
+@imageName = Landsat_Image_1.tif
+
+@newImageName = Sentinel_Image_2.tif
+
+### Upload an image to a project
+POST {{baseUrl}}/add
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="projectId"
+
+{{projectId}}
+--MyBoundary
+Content-Disposition: form-data; name="imageName"
+
+{{imageName}}
+--MyBoundary
+Content-Disposition: form-data; name="metadata"
+Content-Type: application/json
+
+{ "description": "This is a test image", "otherMetadata": "value" }
+--MyBoundary
+Content-Disposition: form-data; name="file"; filename="image.tif"
+Content-Type: image/tiff
+
+< ./TestImages/image.tif
+--MyBoundary--
+# Removed storageType part as it's now determined by the backend configuration
+
+
+### Rename image
+# @name renameImage
+PUT {{baseUrl}}/{{imageId}}/rename?newName={{newImageName}}&projectId={{projectId}}
+Authorization: Bearer {{token}}
+
+### Get all images with pagination
+# @name getAllImages
+GET {{baseUrl}}?page=0&size=10
+Authorization: Bearer {{token}}
+
+### Get image by name and project ID
+# @name getImageByName
+GET {{baseUrl}}/name/{{projectId}}/{{imageName}}
+Authorization: Bearer {{token}}
+
+### Get image by ID
+# @name getImageById
+GET {{baseUrl}}/{{imageId}}
+Authorization: Bearer {{token}}
+
+### Get image data
+GEt {{baseUrl}}/{{imageId}}/data
+Authorization: Bearer {{token}}
+Accept: application/octet-stream
+
+# Save the response to a file
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    // Save the response body (binary data) to a file
+    client.global.set("image_data", response.body);
+    // Save with a more specific path and name
+    client.writeFile("./TestImages/downloaded_image.tif", response.body);
+%}
+
+
+### Delete an image by ID
+# @name deleteImage
+DELETE {{baseUrl}}/{{imageId}}
+Authorization: Bearer {{token}}
+
+### Get all images for a project
+# @name getImagesByProject
+GET {{baseUrl}}/by-project/{{projectId}}
+Authorization: Bearer {{token}}
+
+### Delete all images for a project
+# @name deleteAllImagesByProject
+DELETE {{baseUrl}}/by-project/{{projectId}}
+Authorization: Bearer {{token}}
+
+### Get image by ID and project ID
+# @name getImageByImageIdAndProject
+GET {{baseUrl}}/65e4494799452b2b15d33c99/project/65e4494799452b2b15d33c99
+Authorization: Bearer {{token}}
+
+### Delete image by ID and project ID
+# @name deleteImageByProject
+DELETE {{baseUrl}}/67fe6cb0b10c735cdc21ec7e/project/65e4494799452b2b15d33c99
+Authorization: Bearer {{token}}
+
+### Bulk delete images by IDs
+# @name bulkDeleteImages
+DELETE {{baseUrl}}/bulk-delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+[
+  "65e4494799452b2b15d33c99",
+  "65e4494799452b2b15d33c98"
+]
+
+### Count images in a project
+# @name countImagesByProject
+GET {{baseUrl}}/count/{{projectId}}
+Authorization: Bearer {{token}}
+
+### Restore Soft-Deleted Image
+# Requires valid imageId of a soft-deleted image
+POST {{baseUrl}}/{{imageId}}/restore
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+
+
+### Force Permanent Delete Image
+# Requires valid imageId
+# Use with extreme caution! This bypasses the retention period.
+DELETE {{baseUrl}}/{{imageId}}/force
+# Authorization: Bearer {{token}} # Uncomment if auth is required
+
+
+### Get Soft-Deleted Images (Paginated)
+GET {{baseUrl}}/deleted?page=0&size=10
+Authorization: Bearer {{token}}
+Accept: application/json
