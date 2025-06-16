@@ -36,15 +36,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/projects/[id]/page.js"
     ],
-    "/map/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/map/layout.js"
-    ],
     "/map/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/map/page.js"
+    ],
+    "/map/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/map/layout.js"
     ],
     "/analysis/page": [
       "static/chunks/webpack.js",

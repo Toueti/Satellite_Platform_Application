@@ -1,7 +1,8 @@
-import './globals.css'
-import { Inter } from 'next/font/google'
-import Header from '@/components/Header'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
+import './globals.css';
+import { Inter } from 'next/font/google';
+import Header from '@/components/Header';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AuthProvider } from '@/hooks/useAuth'; // Import AuthProvider
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,12 +19,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ErrorBoundary>
-          <Header title="SatelliteIP" /> {/* Added default title prop */}
-          <main className="min-h-screen">
-            {children}
-          </main>
-        </ErrorBoundary>
+        <AuthProvider> {/* Wrap with AuthProvider */}
+          <ErrorBoundary>
+            <Header title="SatelliteIP" /> {/* Added default title prop */}
+            <main className="min-h-screen">
+              {children}
+            </main>
+          </ErrorBoundary>
+        </AuthProvider>
       </body>
     </html>
   )

@@ -1,11 +1,11 @@
 @baseUrl = http://localhost:8080/geospatial/processing
-@token= eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiaHlwZXJhcjY5QGdtYWlsLmNvbSIsInJvbGVzIjpbIlJPTEVfVEhFTUFUSUNJQU4iXSwic3ViIjoiaHlwZXJhcjY5QGdtYWlsLmNvbSIsImlhdCI6MTc0NTUxNjMwMywiZXhwIjoxNzQ1NjAyNzAzfQ.iVyeWN_gv8KG8LAG6hkopvOVYRICynIab_WMBoeJcTM
+@token= eyJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiaHlwZXJhcjY5QGdtYWlsLmNvbSIsInJvbGVzIjpbIlJPTEVfVEhFTUFUSUNJQU4iXSwic3ViIjoiaHlwZXJhcjY5QGdtYWlsLmNvbSIsImlhdCI6MTc0NjQwNDU5NiwiZXhwIjoxNzQ2NDkwOTk2fQ.azX5eUnlS7-g43M1XIOa0vZ4SyJfzVTmZ2aNDd4-MYY
 
 # Assume an existing image ID and result ID for testing
 @imageId = 68053cf24c6a9a4143c7dffd
-@resultId = 680a6b2a73c6fd29691e3e60
+@resultId = 6817c62890ef8a676fdc72b0
 @deletedResultId = 68043fa4e3923628dcdfbe10
-@projectId = 67fe938929322a67a5a7d7fb
+@projectId = 6817933dd3cdbc015449f7c9
 
 ### Save processing results (Metadata only)
 # @name saveResultMetadataOnly
@@ -391,7 +391,7 @@ Accept: application/json
 
 ### Get processing results by project ID
 # @name getResultsByProjectId
-GET {{baseUrl}}/project/{{{{projectId}}}}
+GET {{baseUrl}}/project/{{projectId}}
 Authorization: Bearer {{token}}
 
 > {%

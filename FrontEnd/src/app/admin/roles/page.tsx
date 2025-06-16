@@ -1,81 +1,36 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-
-interface Role {
-  id: string;
-  name: string;
-  description?: string;
-}
+import React, { useState, useEffect, useCallback } from 'react'; // Import useCallback
+import { Authority } from '@/types/auth';
+import { adminService } from '@/services/admin.service';
 
 export default function RoleManagement() {
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [roles, setRoles] = useState<Authority[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newRole, setNewRole] = useState({
-    name: '',
-    description: '',
-  });
+  const [showCreateModal, setShowCreateModal] = useState(false); // State for create modal
+  const [newRoleName, setNewRoleName] = useState('');
 
-  useEffect(() => {
-    fetchRoles();
-  }, []);
-
-  const fetchRoles = async () => {
+  // Define fetchRoles using useCallback
+  const fetchRoles = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch('/api/admin/roles', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch roles');
-      const data = await response.json();
-      setRoles(data.data);
+      const fetchedRoles = await adminService.getAllRoles();
+      setRoles(fetchedRoles);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Failed to fetch roles');
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Empty dependency array: function is created once
 
-  const handleCreateRole = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('/api/admin/roles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(newRole),
-      });
-      if (!response.ok) throw new Error('Failed to create role');
-      await fetchRoles();
-      setShowCreateModal(false);
-      setNewRole({ name: '', description: '' });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    }
-  };
+  // Effect to fetch roles on mount
+  useEffect(() => {
+    fetchRoles();
+  }, [fetchRoles]); // Depend on fetchRoles
 
-  const handleDeleteRole = async (roleName: string) => {
-    if (!confirm('Are you sure you want to delete this role?')) return;
-    try {
-      const response = await fetch(`/api/admin/roles/${roleName}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to delete role');
-      await fetchRoles();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    }
-  };
-
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>Loading roles...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
@@ -90,23 +45,28 @@ export default function RoleManagement() {
         </button>
       </div>
 
+      {/* Role Table */}
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <table className="min-w-full">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              {/* Add other columns if needed, e.g., ID */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
+            {roles.length === 0 && !loading && (
+              <tr>
+                <td colSpan={2} className="px-6 py-4 text-center text-gray-500">No roles found.</td>
+              </tr>
+            )}
             {roles.map((role) => (
-              <tr key={role.id}>
-                <td className="px-6 py-4 whitespace-nowrap">{role.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{role.description || '-'}</td>
+              <tr key={role.id || role.roleName}>
+                <td className="px-6 py-4 whitespace-nowrap">{role.roleName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
-                    onClick={() => handleDeleteRole(role.name)}
+                    onClick={() => handleDeleteRole(role.roleName)} // Attach delete handler
                     className="text-red-600 hover:text-red-900"
                   >
                     Delete
@@ -118,34 +78,34 @@ export default function RoleManagement() {
         </table>
       </div>
 
+      {/* Create Role Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-96">
             <h2 className="text-xl font-bold mb-4">Create New Role</h2>
+            {/* Display error specific to creation if needed */}
             <form onSubmit={handleCreateRole}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">Role Name</label>
                 <input
                   type="text"
-                  value={newRole.name}
-                  onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value.toUpperCase())} // Often roles are uppercase
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   required
+                  autoFocus
+                  placeholder="E.g., MANAGER"
                 />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea
-                  value={newRole.description}
-                  onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  rows={3}
-                />
+                 <p className="text-xs text-gray-500 mt-1">Role names are typically uppercase.</p>
               </div>
               <div className="flex justify-end space-x-2">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setNewRoleName(''); // Reset input on cancel
+                    setError(null); // Clear errors on cancel
+                  }}
                   className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                 >
                   Cancel
@@ -163,4 +123,52 @@ export default function RoleManagement() {
       )}
     </div>
   );
-} 
+
+  // Handler function for creating a role (moved inside the component)
+  async function handleCreateRole(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newRoleName.trim()) {
+      setError("Role name cannot be empty.");
+      return;
+    }
+    setError(null); // Clear previous errors
+    try {
+      await adminService.createRole(newRoleName.trim());
+      setShowCreateModal(false); // Close modal on success
+      setNewRoleName(''); // Reset input
+      await fetchRoles(); // Refresh the roles list
+      alert(`Role "${newRoleName.trim()}" created successfully.`); // Optional success message
+    } catch (err) {
+      console.error("Create role error:", err); // Log the full error
+      // Attempt to parse backend error message if available
+      let errorMessage = 'Failed to create role.';
+      if (err instanceof Error) {
+          // Check if it's a custom error structure from httpClient or a standard error
+          // This depends on how httpClient throws errors
+          errorMessage = err.message || errorMessage;
+      }
+      setError(errorMessage);
+      // Keep modal open on error
+    }
+  }
+
+  // Handler function for deleting a role
+  async function handleDeleteRole(roleName: string) {
+    if (!confirm(`Are you sure you want to delete the role "${roleName}"? This action cannot be undone.`)) {
+      return;
+    }
+    setError(null); // Clear previous errors
+    try {
+      await adminService.deleteRole(roleName);
+      await fetchRoles(); // Refresh the roles list
+      alert(`Role "${roleName}" deleted successfully.`); // Optional success message
+    } catch (err) {
+      console.error("Delete role error:", err); // Log the full error
+      let errorMessage = 'Failed to delete role.';
+       if (err instanceof Error) {
+          errorMessage = err.message || errorMessage;
+      }
+      setError(errorMessage);
+    }
+  }
+}

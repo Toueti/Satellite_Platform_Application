@@ -98,6 +98,20 @@ export const getProject = async (id: string): Promise<Project> => {
         return response.data.data;
     } catch (error) {
         console.error('Error fetching project:', error);
+        if (axios.isAxiosError(error)) {
+            const status = error.response?.status;
+            const message = error.response?.data?.message || error.message;
+            if (status === 404) {
+                throw new Error(`Project not found (404)`);
+            } else if (status === 401) {
+                 throw new Error('Authentication token expired. Please log in again.');
+            } else if (status === 403) {
+                 throw new Error('Not authorized to view this project');
+            }
+            // Include status in the generic message if available
+            throw new Error(`Failed to fetch project: ${message}${status ? ` (Status: ${status})` : ''}`);
+        }
+        // Fallback for non-Axios errors
         throw new Error('Failed to fetch project');
     }
 };
